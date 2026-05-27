@@ -9,7 +9,12 @@ import java.time.OffsetDateTime;
 import java.util.UUID;
 
 @Entity
-@Table(name = "addresses")
+@Table(
+    name = "addresses",
+    indexes = {
+        @Index(name = "idx_addresses_user_default", columnList = "user_id, is_default")
+    }
+)
 @Getter
 @Setter
 @NoArgsConstructor
