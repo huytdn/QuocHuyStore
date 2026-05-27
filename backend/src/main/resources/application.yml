@@ -40,6 +40,8 @@ app:
   jwt:
     secret: ${JWT_SECRET_KEY}
     expiration-ms: ${JWT_EXPIRATION_MS:86400000} # Default 24 Hours
+  security:
+    pepper: ${APP_SECURITY_PEPPER}
 
 logging:
   level:

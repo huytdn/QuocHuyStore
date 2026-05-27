@@ -36,7 +36,7 @@ public class AuthServiceImpl implements AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider tokenProvider;
 
-    @Value("${app.security.pepper:PEPPER_SECRET_KEY_MUST_BE_SECURE_AND_HIGH_ENTROPY}")
+    @Value("${app.security.pepper}")
     private String pepperSecret;
 
     @Value("${app.jwt.refresh-expiration-ms:604800000}")
