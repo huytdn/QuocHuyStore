@@ -39,7 +39,7 @@ public class AuthServiceImpl implements AuthService {
     @Value("${app.security.pepper}")
     private String pepperSecret;
 
-    @Value("${app.jwt.refresh-expiration-ms:604800000}")
+    @Value("${app.jwt.refresh-expiration-ms}")
     private long jwtRefreshExpirationInMs;
 
     @Override

@@ -39,7 +39,8 @@ server:
 app:
   jwt:
     secret: ${JWT_SECRET_KEY}
-    expiration-ms: ${JWT_EXPIRATION_MS:86400000} # Default 24 Hours
+    expiration-ms: ${JWT_EXPIRATION_MS}
+    refresh-expiration-ms: ${JWT_REFRESH_EXPIRATION_MS}
   security:
     pepper: ${APP_SECURITY_PEPPER}
 
