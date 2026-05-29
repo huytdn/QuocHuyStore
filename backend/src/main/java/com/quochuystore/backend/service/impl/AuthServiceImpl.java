@@ -25,6 +25,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.OffsetDateTime;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.HexFormat;
 
 @Service
 @RequiredArgsConstructor
@@ -36,11 +40,33 @@ public class AuthServiceImpl implements AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider tokenProvider;
 
-    @Value("${app.security.pepper:PEPPER_SECRET_KEY_MUST_BE_SECURE_AND_HIGH_ENTROPY}")
+    @Value("${app.security.pepper}")
     private String pepperSecret;
 
-    @Value("${app.jwt.refresh-expiration-ms:604800000}")
+    @Value("${app.jwt.refresh-expiration-ms}")
     private long jwtRefreshExpirationInMs;
+
+    private String hashToken(String token) {
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            String input = token + pepperSecret;
+            byte[] hash = digest.digest(input.getBytes(StandardCharsets.UTF_8));
+            return HexFormat.of().formatHex(hash);
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException("SHA-256 algorithm not found", e);
+        }
+    }
+
+    private String getProcessedPassword(String password) {
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            String input = password + pepperSecret;
+            byte[] hash = digest.digest(input.getBytes(StandardCharsets.UTF_8));
+            return HexFormat.of().formatHex(hash);
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException("SHA-256 algorithm not found", e);
+        }
+    }
 
     @Override
     @Transactional
@@ -49,7 +75,7 @@ public class AuthServiceImpl implements AuthService {
             throw new BadRequestException("Username is already taken");
         }
 
-        String processedPassword = request.getPassword() + pepperSecret;
+        String processedPassword = getProcessedPassword(request.getPassword());
         String hashedPassword = passwordEncoder.encode(processedPassword);
 
         User user = User.builder()
@@ -76,7 +102,7 @@ public class AuthServiceImpl implements AuthService {
             throw new DisabledException("Account is disabled/inactive");
         }
 
-        String processedPassword = request.getPassword() + pepperSecret;
+        String processedPassword = getProcessedPassword(request.getPassword());
         if (!passwordEncoder.matches(processedPassword, user.getPassword())) {
             throw new BadCredentialsException("Invalid username or password");
         }
@@ -84,9 +110,10 @@ public class AuthServiceImpl implements AuthService {
         UserPrincipal principal = UserPrincipal.create(user);
         String accessToken = tokenProvider.generateAccessToken(principal);
         String refreshTokenString = tokenProvider.generateRefreshToken(principal);
+        String hashedToken = hashToken(refreshTokenString);
 
         RefreshToken refreshToken = RefreshToken.builder()
-                .token(refreshTokenString)
+                .token(hashedToken)
                 .user(user)
                 .isUsed(false)
                 .expiryDate(OffsetDateTime.now().plusSeconds(jwtRefreshExpirationInMs / 1000))
@@ -110,7 +137,8 @@ public class AuthServiceImpl implements AuthService {
             throw new UnauthorizedException("Invalid refresh token");
         }
 
-        RefreshToken storedToken = refreshTokenRepository.findByToken(tokenStr)
+        String hashedToken = hashToken(tokenStr);
+        RefreshToken storedToken = refreshTokenRepository.findByToken(hashedToken)
                 .orElseThrow(() -> new UnauthorizedException("Refresh token not found"));
 
         User user = storedToken.getUser();
@@ -137,9 +165,10 @@ public class AuthServiceImpl implements AuthService {
         UserPrincipal principal = UserPrincipal.create(user);
         String newAccessToken = tokenProvider.generateAccessToken(principal);
         String newRefreshTokenStr = tokenProvider.generateRefreshToken(principal);
+        String newHashedToken = hashToken(newRefreshTokenStr);
 
         RefreshToken newRefreshToken = RefreshToken.builder()
-                .token(newRefreshTokenStr)
+                .token(newHashedToken)
                 .user(user)
                 .isUsed(false)
                 .expiryDate(OffsetDateTime.now().plusSeconds(jwtRefreshExpirationInMs / 1000))
