@@ -32,4 +32,8 @@ public class ProductColor {
 
     @Column(name = "image_public_id", nullable = false, columnDefinition = "TEXT")
     private String imagePublicId;
+
+    @Column(name = "is_active", nullable = false)
+    @Builder.Default
+    private Boolean isActive = true;
 }
