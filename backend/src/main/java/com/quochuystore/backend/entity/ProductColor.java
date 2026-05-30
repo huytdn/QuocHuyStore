@@ -4,10 +4,8 @@ import jakarta.persistence.*;
 import lombok.*;
 
 @Entity
-@Table(
-    name = "product_colors",
-    uniqueConstraints = @UniqueConstraint(name = "unique_prod_color_name", columnNames = {"product_id", "color_name"})
-)
+@Table(name = "product_colors", uniqueConstraints = @UniqueConstraint(name = "unique_prod_color_name", columnNames = {
+        "product_id", "color_name" }))
 @Getter
 @Setter
 @NoArgsConstructor
@@ -32,4 +30,8 @@ public class ProductColor {
 
     @Column(name = "image_public_id", nullable = false, columnDefinition = "TEXT")
     private String imagePublicId;
+
+    @Column(name = "is_active", nullable = false)
+    @Builder.Default
+    private Boolean isActive = true;
 }

@@ -40,8 +40,7 @@ public class AddressServiceImpl implements AddressService {
         Pageable sortedPageable = PageRequest.of(
                 pageable.getPageNumber(),
                 pageable.getPageSize(),
-                Sort.by(Sort.Direction.DESC, "isDefault")
-        );
+                Sort.by(Sort.Direction.DESC, "isDefault"));
 
         Page<Address> addressPage = addressRepository.findByUser(user, sortedPageable);
 
@@ -98,7 +97,8 @@ public class AddressServiceImpl implements AddressService {
                 .orElseThrow(() -> new ResourceNotFoundException("Address not found with id: " + addressId));
 
         if (!address.getUser().getId().equals(userId)) {
-            log.warn("Security check failed: User {} attempted to access address {} belonging to a different user", userId, addressId);
+            log.warn("Security check failed: User {} attempted to access address {} belonging to a different user",
+                    userId, addressId);
             throw new ResourceNotFoundException("Address not found with id: " + addressId);
         }
 
@@ -113,7 +113,8 @@ public class AddressServiceImpl implements AddressService {
                 .orElseThrow(() -> new ResourceNotFoundException("Address not found with id: " + addressId));
 
         if (!address.getUser().getId().equals(userId)) {
-            log.warn("Security check failed: User {} attempted to update address {} belonging to a different user", userId, addressId);
+            log.warn("Security check failed: User {} attempted to update address {} belonging to a different user",
+                    userId, addressId);
             throw new ResourceNotFoundException("Address not found with id: " + addressId);
         }
 
@@ -146,7 +147,8 @@ public class AddressServiceImpl implements AddressService {
                 .orElseThrow(() -> new ResourceNotFoundException("Address not found with id: " + addressId));
 
         if (!address.getUser().getId().equals(userId)) {
-            log.warn("Security check failed: User {} attempted to delete address {} belonging to a different user", userId, addressId);
+            log.warn("Security check failed: User {} attempted to delete address {} belonging to a different user",
+                    userId, addressId);
             throw new ResourceNotFoundException("Address not found with id: " + addressId);
         }
 

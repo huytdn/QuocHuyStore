@@ -8,6 +8,8 @@ import java.util.UUID;
 
 public interface UserService {
     UserDetailResponseDto getProfile(UUID userId);
+
     UserResponseDto updateProfile(UUID userId, UserUpdateRequestDto request);
+
     void softDelete(UUID userId);
 }
