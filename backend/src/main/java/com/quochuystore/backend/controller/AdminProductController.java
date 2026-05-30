@@ -1,6 +1,6 @@
 package com.quochuystore.backend.controller;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import com.quochuystore.backend.dto.product.request.ProductCreateRequestDto;
 import com.quochuystore.backend.dto.product.request.ProductUpdateRequestDto;
 import com.quochuystore.backend.dto.product.response.ProductDetailResponseDto;
