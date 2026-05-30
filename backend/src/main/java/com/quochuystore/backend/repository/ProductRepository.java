@@ -25,13 +25,20 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
 
     Optional<Product> findBySlug(String slug);
 
-    @Query("SELECT p FROM Product p LEFT JOIN FETCH p.category WHERE " +
+    @Query(value = "SELECT p FROM Product p LEFT JOIN FETCH p.category WHERE " +
             "(:categoryId IS NULL OR p.category.id = :categoryId) AND " +
             "(CAST(:search AS string) IS NULL OR LOWER(p.name) LIKE CONCAT('%', LOWER(CAST(:search AS string)), '%')) AND "
             +
             "(:minPrice IS NULL OR p.minPrice >= :minPrice) AND " +
             "(:maxPrice IS NULL OR p.minPrice <= :maxPrice) AND " +
-            "(p.isActive = true)")
+            "(p.isActive = true)",
+            countQuery = "SELECT COUNT(p) FROM Product p LEFT JOIN p.category WHERE " +
+                    "(:categoryId IS NULL OR p.category.id = :categoryId) AND " +
+                    "(CAST(:search AS string) IS NULL OR LOWER(p.name) LIKE CONCAT('%', LOWER(CAST(:search AS string)), '%')) AND "
+                    +
+                    "(:minPrice IS NULL OR p.minPrice >= :minPrice) AND " +
+                    "(:maxPrice IS NULL OR p.minPrice <= :maxPrice) AND " +
+                    "(p.isActive = true)")
     Page<Product> findActiveProductsWithFilters(
             @Param("categoryId") Long categoryId,
             @Param("search") String search,
