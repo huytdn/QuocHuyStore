@@ -1,4 +1,4 @@
-package com.quochuystore.backend.service.base;
+package com.quochuystore.backend.service;
 
 import com.quochuystore.backend.dto.product.response.ProductColorResponseDto;
 import org.springframework.web.multipart.MultipartFile;

@@ -1,5 +1,6 @@
 package com.quochuystore.backend.dto.auth.response;
 
+import com.quochuystore.backend.dto.user.response.UserResponseDto;
 import lombok.*;
 
 @Getter

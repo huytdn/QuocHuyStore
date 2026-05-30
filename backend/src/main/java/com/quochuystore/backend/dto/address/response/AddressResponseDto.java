@@ -1,4 +1,4 @@
-package com.quochuystore.backend.dto.auth.response;
+package com.quochuystore.backend.dto.address.response;
 
 import lombok.*;
 import java.util.UUID;

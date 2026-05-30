@@ -1,8 +1,8 @@
-package com.quochuystore.backend.service.base;
+package com.quochuystore.backend.service;
 
 import com.quochuystore.backend.dto.PageResponseDto;
-import com.quochuystore.backend.dto.auth.request.AddressRequestDto;
-import com.quochuystore.backend.dto.auth.response.AddressResponseDto;
+import com.quochuystore.backend.dto.address.request.AddressRequestDto;
+import com.quochuystore.backend.dto.address.response.AddressResponseDto;
 import org.springframework.data.domain.Pageable;
 
 import java.util.UUID;

@@ -5,12 +5,14 @@ import tools.jackson.databind.ObjectMapper;
 import com.quochuystore.backend.dto.PageResponseDto;
 import com.quochuystore.backend.dto.product.request.CategoryRequestDto;
 import com.quochuystore.backend.dto.product.response.CategoryResponseDto;
+import com.quochuystore.backend.config.CacheKeyConstants;
+import com.quochuystore.backend.dto.mapper.ProductMapper;
 import com.quochuystore.backend.entity.Category;
 import com.quochuystore.backend.exception.BadRequestException;
 import com.quochuystore.backend.exception.ResourceNotFoundException;
 import com.quochuystore.backend.repository.CategoryRepository;
 import com.quochuystore.backend.repository.ProductRepository;
-import com.quochuystore.backend.service.base.CategoryService;
+import com.quochuystore.backend.service.CategoryService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Pageable;
@@ -32,9 +34,6 @@ public class CategoryServiceImpl implements CategoryService {
     private final StringRedisTemplate redisTemplate;
     private final ObjectMapper objectMapper;
 
-    private static final String CACHE_KEY = "qhs:categories:all";
-    private static final long CACHE_TTL_HOURS = 24;
-
     @Override
     @Transactional(readOnly = true)
     public PageResponseDto<CategoryResponseDto> getCategories(String search, Pageable pageable) {
@@ -43,9 +42,9 @@ public class CategoryServiceImpl implements CategoryService {
 
         // 1. Try to fetch from Redis Cache
         try {
-            String cachedJson = redisTemplate.opsForValue().get(CACHE_KEY);
+            String cachedJson = redisTemplate.opsForValue().get(CacheKeyConstants.CATEGORY_ALL_KEY);
             if (cachedJson != null) {
-                log.info("Cache Hit for categories key: {}", CACHE_KEY);
+                log.info("Cache Hit for categories key: {}", CacheKeyConstants.CATEGORY_ALL_KEY);
                 allCategories = objectMapper.readValue(cachedJson, new TypeReference<List<CategoryResponseDto>>() {
                 });
             }
@@ -55,17 +54,17 @@ public class CategoryServiceImpl implements CategoryService {
 
         // 2. Cache Miss: fetch from database and write back to Redis
         if (allCategories == null) {
-            log.info("Cache Miss for categories key: {}. Loading from database.", CACHE_KEY);
+            log.info("Cache Miss for categories key: {}. Loading from database.", CacheKeyConstants.CATEGORY_ALL_KEY);
             List<Category> dbCategories = categoryRepository.findAll();
             allCategories = dbCategories.stream()
-                    .map(this::mapToCategoryResponseDto)
+                    .map(ProductMapper::toCategoryResponseDto)
                     .toList();
 
             try {
                 String jsonToCache = objectMapper.writeValueAsString(allCategories);
-                redisTemplate.opsForValue().set(CACHE_KEY, jsonToCache, CACHE_TTL_HOURS, TimeUnit.HOURS);
-                log.info("Successfully populated categories cache key: {} with TTL of {} hours", CACHE_KEY,
-                        CACHE_TTL_HOURS);
+                redisTemplate.opsForValue().set(CacheKeyConstants.CATEGORY_ALL_KEY, jsonToCache, CacheKeyConstants.CATEGORY_CACHE_TTL_HOURS, TimeUnit.HOURS);
+                log.info("Successfully populated categories cache key: {} with TTL of {} hours", CacheKeyConstants.CATEGORY_ALL_KEY,
+                        CacheKeyConstants.CATEGORY_CACHE_TTL_HOURS);
             } catch (Exception e) {
                 log.error("Failed to write categories to Redis cache", e);
             }
@@ -125,7 +124,7 @@ public class CategoryServiceImpl implements CategoryService {
         // Evict Cache
         evictCache();
 
-        return mapToCategoryResponseDto(savedCategory);
+        return ProductMapper.toCategoryResponseDto(savedCategory);
     }
 
     @Override
@@ -148,7 +147,7 @@ public class CategoryServiceImpl implements CategoryService {
         // Evict Cache
         evictCache();
 
-        return mapToCategoryResponseDto(updatedCategory);
+        return ProductMapper.toCategoryResponseDto(updatedCategory);
     }
 
     @Override
@@ -175,23 +174,15 @@ public class CategoryServiceImpl implements CategoryService {
 
     private void evictCache() {
         try {
-            Boolean deleted = redisTemplate.delete(CACHE_KEY);
+            Boolean deleted = redisTemplate.delete(CacheKeyConstants.CATEGORY_ALL_KEY);
             if (Boolean.TRUE.equals(deleted)) {
-                log.info("Successfully evicted categories cache key: {}", CACHE_KEY);
+                log.info("Successfully evicted categories cache key: {}", CacheKeyConstants.CATEGORY_ALL_KEY);
             } else {
-                log.info("Categories cache key: {} was not present for eviction", CACHE_KEY);
+                log.info("Categories cache key: {} was not present for eviction", CacheKeyConstants.CATEGORY_ALL_KEY);
             }
         } catch (Exception e) {
-            log.error("Failed to evict categories cache key: {} from Redis", CACHE_KEY, e);
+            log.error("Failed to evict categories cache key: {} from Redis", CacheKeyConstants.CATEGORY_ALL_KEY, e);
         }
     }
 
-    private CategoryResponseDto mapToCategoryResponseDto(Category category) {
-        return CategoryResponseDto.builder()
-                .id(category.getId())
-                .name(category.getName())
-                .createdAt(category.getCreatedAt())
-                .updatedAt(category.getUpdatedAt())
-                .build();
-    }
 }

@@ -1,4 +1,4 @@
-package com.quochuystore.backend.dto.auth.request;
+package com.quochuystore.backend.dto.user.request;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;

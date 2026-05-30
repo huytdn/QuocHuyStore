@@ -12,14 +12,16 @@ import com.quochuystore.backend.entity.Category;
 import com.quochuystore.backend.entity.Product;
 import com.quochuystore.backend.entity.ProductColor;
 import com.quochuystore.backend.entity.ProductVariation;
+import com.quochuystore.backend.config.CacheKeyConstants;
+import com.quochuystore.backend.dto.mapper.ProductMapper;
 import com.quochuystore.backend.exception.BadRequestException;
 import com.quochuystore.backend.exception.ResourceNotFoundException;
 import com.quochuystore.backend.repository.CategoryRepository;
 import com.quochuystore.backend.repository.ProductColorRepository;
 import com.quochuystore.backend.repository.ProductRepository;
 import com.quochuystore.backend.repository.ProductVariationRepository;
-import com.quochuystore.backend.service.base.ImageService;
-import com.quochuystore.backend.service.base.ProductService;
+import com.quochuystore.backend.service.ImageService;
+import com.quochuystore.backend.service.ProductService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -47,9 +49,6 @@ public class ProductServiceImpl implements ProductService {
     private final StringRedisTemplate redisTemplate;
     private final ObjectMapper objectMapper;
 
-    private static final String CACHE_KEY_PREFIX = "qhs:products:slug:";
-    private static final long CACHE_TTL_MINUTES = 120;
-
     @Override
     @Transactional(readOnly = true)
     public PageResponseDto<ProductListResponseDto> getProducts(
@@ -65,7 +64,7 @@ public class ProductServiceImpl implements ProductService {
                 categoryId, search, minPrice, maxPrice, pageable);
 
         List<ProductListResponseDto> content = productPage.getContent().stream()
-                .map(this::mapToProductListResponseDto)
+                .map(ProductMapper::toProductListResponseDto)
                 .toList();
 
         return PageResponseDto.<ProductListResponseDto>builder()
@@ -82,7 +81,7 @@ public class ProductServiceImpl implements ProductService {
     @Transactional(readOnly = true)
     public ProductDetailResponseDto getProductBySlug(String slug) {
         log.info("Fetching product detail by slug: {}", slug);
-        String cacheKey = CACHE_KEY_PREFIX + slug;
+        String cacheKey = CacheKeyConstants.PRODUCT_SLUG_PREFIX + slug;
 
         // 1. Try Cache
         try {
@@ -100,13 +99,13 @@ public class ProductServiceImpl implements ProductService {
         Product product = productRepository.findBySlugAndIsActive(slug, true)
                 .orElseThrow(() -> new ResourceNotFoundException("Product not found with slug: " + slug));
 
-        ProductDetailResponseDto responseDto = mapToProductDetailResponseDto(product);
+        ProductDetailResponseDto responseDto = getProductDetailResponseDto(product);
 
         // 3. Write Cache
         try {
             String json = objectMapper.writeValueAsString(responseDto);
-            redisTemplate.opsForValue().set(cacheKey, json, CACHE_TTL_MINUTES, TimeUnit.MINUTES);
-            log.info("Successfully cached product slug: {} with TTL of {} minutes", slug, CACHE_TTL_MINUTES);
+            redisTemplate.opsForValue().set(cacheKey, json, CacheKeyConstants.PRODUCT_CACHE_TTL_MINUTES, TimeUnit.MINUTES);
+            log.info("Successfully cached product slug: {} with TTL of {} minutes", slug, CacheKeyConstants.PRODUCT_CACHE_TTL_MINUTES);
         } catch (Exception e) {
             log.error("Failed to write product slug: {} to cache", slug, e);
         }
@@ -146,7 +145,7 @@ public class ProductServiceImpl implements ProductService {
         Product savedProduct = productRepository.save(product);
         log.info("Successfully created product with id: {}", savedProduct.getId());
 
-        return mapToProductDetailResponseDto(savedProduct);
+        return getProductDetailResponseDto(savedProduct);
     }
 
     @Override
@@ -193,7 +192,7 @@ public class ProductServiceImpl implements ProductService {
         evictCache(oldSlug);
         evictCache(updatedProduct.getSlug());
 
-        return mapToProductDetailResponseDto(updatedProduct);
+        return getProductDetailResponseDto(updatedProduct);
     }
 
     @Override
@@ -220,7 +219,7 @@ public class ProductServiceImpl implements ProductService {
     }
 
     private void evictCache(String slug) {
-        String cacheKey = CACHE_KEY_PREFIX + slug;
+        String cacheKey = CacheKeyConstants.PRODUCT_SLUG_PREFIX + slug;
         try {
             Boolean deleted = redisTemplate.delete(cacheKey);
             if (Boolean.TRUE.equals(deleted)) {
@@ -231,21 +230,7 @@ public class ProductServiceImpl implements ProductService {
         }
     }
 
-    private ProductListResponseDto mapToProductListResponseDto(Product product) {
-        return ProductListResponseDto.builder()
-                .id(product.getId())
-                .name(product.getName())
-                .slug(product.getSlug())
-                .thumbnailUrl(product.getThumbnailUrl())
-                .thumbnailPublicId(product.getThumbnailPublicId())
-                .minPrice(product.getMinPrice())
-                .categoryName(product.getCategory() != null ? product.getCategory().getName() : null)
-                .averageStar(product.getAverageStar() != null ? product.getAverageStar().doubleValue() : 0.0)
-                .reviewCount(product.getReviewCount())
-                .build();
-    }
-
-    private ProductDetailResponseDto mapToProductDetailResponseDto(Product product) {
+    private ProductDetailResponseDto getProductDetailResponseDto(Product product) {
         // Fetch active colors
         List<ProductColor> colors = productColorRepository.findByProductIdAndIsActive(product.getId(), true);
         List<Long> colorIds = colors.stream().map(ProductColor::getId).toList();
@@ -259,40 +244,12 @@ public class ProductServiceImpl implements ProductService {
                 .map(color -> {
                     List<ProductVariation> variations = variationsByColorId.getOrDefault(color.getId(), List.of());
                     List<ProductVariationResponseDto> variationResponseDtos = variations.stream()
-                            .map(this::mapToProductVariationResponseDto)
+                            .map(ProductMapper::toProductVariationResponseDto)
                             .toList();
-                    return ProductColorResponseDto.builder()
-                            .colorId(color.getId())
-                            .colorName(color.getColorName())
-                            .imageUrl(color.getImageUrl())
-                            .imagePublicId(color.getImagePublicId())
-                            .variations(variationResponseDtos)
-                            .build();
+                    return ProductMapper.toProductColorResponseDto(color, variationResponseDtos);
                 })
                 .toList();
 
-        return ProductDetailResponseDto.builder()
-                .id(product.getId())
-                .name(product.getName())
-                .slug(product.getSlug())
-                .thumbnailUrl(product.getThumbnailUrl())
-                .thumbnailPublicId(product.getThumbnailPublicId())
-                .description(product.getDescription())
-                .categoryName(product.getCategory() != null ? product.getCategory().getName() : null)
-                .averageStar(product.getAverageStar() != null ? product.getAverageStar().doubleValue() : 0.0)
-                .reviewCount(product.getReviewCount())
-                .feedbackCount(product.getFeedbackCount())
-                .colors(colorResponseDtos)
-                .build();
-    }
-
-    private ProductVariationResponseDto mapToProductVariationResponseDto(ProductVariation variation) {
-        return ProductVariationResponseDto.builder()
-                .variationId(variation.getId())
-                .size(variation.getSize())
-                .unitPrice(variation.getUnitPrice())
-                .stockQuantity(variation.getStockQuantity())
-                .isActive(variation.getIsActive())
-                .build();
+        return ProductMapper.toProductDetailResponseDto(product, colorResponseDtos);
     }
 }

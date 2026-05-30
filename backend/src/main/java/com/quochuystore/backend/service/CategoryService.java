@@ -1,4 +1,4 @@
-package com.quochuystore.backend.service.base;
+package com.quochuystore.backend.service;
 
 import com.quochuystore.backend.dto.PageResponseDto;
 import com.quochuystore.backend.dto.product.request.CategoryRequestDto;

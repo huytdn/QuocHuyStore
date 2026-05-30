@@ -1,4 +1,4 @@
-package com.quochuystore.backend.service.base;
+package com.quochuystore.backend.service;
 
 import org.springframework.web.multipart.MultipartFile;
 import java.util.Map;

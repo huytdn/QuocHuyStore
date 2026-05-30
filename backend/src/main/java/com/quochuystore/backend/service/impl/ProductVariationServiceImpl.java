@@ -2,14 +2,17 @@ package com.quochuystore.backend.service.impl;
 
 import com.quochuystore.backend.dto.product.request.VariationRequestDto;
 import com.quochuystore.backend.dto.product.request.VariationStockUpdateRequestDto;
+import com.quochuystore.backend.dto.product.request.VariationStockUpdateRequestDto;
 import com.quochuystore.backend.dto.product.response.ProductVariationResponseDto;
+import com.quochuystore.backend.dto.mapper.ProductMapper;
+import com.quochuystore.backend.config.CacheKeyConstants;
 import com.quochuystore.backend.entity.ProductColor;
 import com.quochuystore.backend.entity.ProductVariation;
 import com.quochuystore.backend.exception.BadRequestException;
 import com.quochuystore.backend.exception.ResourceNotFoundException;
 import com.quochuystore.backend.repository.ProductColorRepository;
 import com.quochuystore.backend.repository.ProductVariationRepository;
-import com.quochuystore.backend.service.base.ProductVariationService;
+import com.quochuystore.backend.service.ProductVariationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -24,8 +27,6 @@ public class ProductVariationServiceImpl implements ProductVariationService {
     private final ProductVariationRepository productVariationRepository;
     private final ProductColorRepository productColorRepository;
     private final StringRedisTemplate redisTemplate;
-
-    private static final String CACHE_KEY_PREFIX = "qhs:products:slug:";
 
     @Override
     @Transactional
@@ -54,7 +55,7 @@ public class ProductVariationServiceImpl implements ProductVariationService {
         // Evict product cache
         evictProductCache(color.getProduct().getSlug());
 
-        return mapToProductVariationResponseDto(savedVariation);
+        return ProductMapper.toProductVariationResponseDto(savedVariation);
     }
 
     @Override
@@ -84,7 +85,7 @@ public class ProductVariationServiceImpl implements ProductVariationService {
         // Evict product cache
         evictProductCache(color.getProduct().getSlug());
 
-        return mapToProductVariationResponseDto(updatedVariation);
+        return ProductMapper.toProductVariationResponseDto(updatedVariation);
     }
 
     @Override
@@ -102,7 +103,7 @@ public class ProductVariationServiceImpl implements ProductVariationService {
         // Evict product cache
         evictProductCache(variation.getProductColor().getProduct().getSlug());
 
-        return mapToProductVariationResponseDto(updatedVariation);
+        return ProductMapper.toProductVariationResponseDto(updatedVariation);
     }
 
     @Override
@@ -127,7 +128,7 @@ public class ProductVariationServiceImpl implements ProductVariationService {
     }
 
     private void evictProductCache(String slug) {
-        String cacheKey = CACHE_KEY_PREFIX + slug;
+        String cacheKey = CacheKeyConstants.PRODUCT_SLUG_PREFIX + slug;
         try {
             Boolean deleted = redisTemplate.delete(cacheKey);
             if (Boolean.TRUE.equals(deleted)) {
@@ -138,13 +139,4 @@ public class ProductVariationServiceImpl implements ProductVariationService {
         }
     }
 
-    private ProductVariationResponseDto mapToProductVariationResponseDto(ProductVariation variation) {
-        return ProductVariationResponseDto.builder()
-                .variationId(variation.getId())
-                .size(variation.getSize())
-                .unitPrice(variation.getUnitPrice())
-                .stockQuantity(variation.getStockQuantity())
-                .isActive(variation.getIsActive())
-                .build();
-    }
 }
