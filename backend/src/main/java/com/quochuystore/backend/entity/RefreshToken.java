@@ -9,12 +9,9 @@ import java.time.OffsetDateTime;
 import java.util.UUID;
 
 @Entity
-@Table(
-    name = "refresh_tokens",
-    indexes = {
+@Table(name = "refresh_tokens", indexes = {
         @Index(name = "idx_refresh_tokens_user_id", columnList = "user_id")
-    }
-)
+})
 @Getter
 @Setter
 @NoArgsConstructor

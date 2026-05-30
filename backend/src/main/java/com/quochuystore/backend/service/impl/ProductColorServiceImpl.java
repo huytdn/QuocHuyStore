@@ -35,7 +35,6 @@ public class ProductColorServiceImpl implements ProductColorService {
 
     private static final String CACHE_KEY_PREFIX = "qhs:products:slug:";
 
-
     @Override
     @Transactional
     public ProductColorResponseDto createColor(Long productId, String colorName, MultipartFile file) {
@@ -82,8 +81,10 @@ public class ProductColorServiceImpl implements ProductColorService {
 
         Product product = color.getProduct();
 
-        if (productColorRepository.existsByProductIdAndColorNameIgnoreCaseAndIdNot(product.getId(), colorName.trim(), id)) {
-            log.warn("Color update failed: Name '{}' already exists on another color for product {}", colorName, product.getId());
+        if (productColorRepository.existsByProductIdAndColorNameIgnoreCaseAndIdNot(product.getId(), colorName.trim(),
+                id)) {
+            log.warn("Color update failed: Name '{}' already exists on another color for product {}", colorName,
+                    product.getId());
             throw new BadRequestException("Color name already exists for this product");
         }
 
@@ -144,7 +145,8 @@ public class ProductColorServiceImpl implements ProductColorService {
     }
 
     private ProductColorResponseDto mapToProductColorResponseDto(ProductColor color) {
-        List<ProductVariation> variations = productVariationRepository.findByProductColorIdAndIsActive(color.getId(), true);
+        List<ProductVariation> variations = productVariationRepository.findByProductColorIdAndIsActive(color.getId(),
+                true);
         List<ProductVariationResponseDto> variationResponseDtos = variations.stream()
                 .map(this::mapToProductVariationResponseDto)
                 .toList();

@@ -9,8 +9,12 @@ import java.util.UUID;
 
 public interface AddressService {
     PageResponseDto<AddressResponseDto> getAddresses(UUID userId, Pageable pageable);
+
     AddressResponseDto createAddress(UUID userId, AddressRequestDto request);
+
     AddressResponseDto getAddress(UUID userId, UUID addressId);
+
     AddressResponseDto updateAddress(UUID userId, UUID addressId, AddressRequestDto request);
+
     void deleteAddress(UUID userId, UUID addressId);
 }

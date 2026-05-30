@@ -27,11 +27,7 @@ public class Category {
     private String name;
 
     @ManyToMany(fetch = FetchType.LAZY)
-    @JoinTable(
-        name = "category_promotions",
-        joinColumns = @JoinColumn(name = "category_id"),
-        inverseJoinColumns = @JoinColumn(name = "promotion_id")
-    )
+    @JoinTable(name = "category_promotions", joinColumns = @JoinColumn(name = "category_id"), inverseJoinColumns = @JoinColumn(name = "promotion_id"))
     @Builder.Default
     private Set<Promotion> promotions = new HashSet<>();
 

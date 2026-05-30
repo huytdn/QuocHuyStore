@@ -46,7 +46,8 @@ public class CategoryServiceImpl implements CategoryService {
             String cachedJson = redisTemplate.opsForValue().get(CACHE_KEY);
             if (cachedJson != null) {
                 log.info("Cache Hit for categories key: {}", CACHE_KEY);
-                allCategories = objectMapper.readValue(cachedJson, new TypeReference<List<CategoryResponseDto>>() {});
+                allCategories = objectMapper.readValue(cachedJson, new TypeReference<List<CategoryResponseDto>>() {
+                });
             }
         } catch (Exception e) {
             log.error("Failed to read categories from Redis cache", e);
@@ -63,7 +64,8 @@ public class CategoryServiceImpl implements CategoryService {
             try {
                 String jsonToCache = objectMapper.writeValueAsString(allCategories);
                 redisTemplate.opsForValue().set(CACHE_KEY, jsonToCache, CACHE_TTL_HOURS, TimeUnit.HOURS);
-                log.info("Successfully populated categories cache key: {} with TTL of {} hours", CACHE_KEY, CACHE_TTL_HOURS);
+                log.info("Successfully populated categories cache key: {} with TTL of {} hours", CACHE_KEY,
+                        CACHE_TTL_HOURS);
             } catch (Exception e) {
                 log.error("Failed to write categories to Redis cache", e);
             }
@@ -82,10 +84,10 @@ public class CategoryServiceImpl implements CategoryService {
         int totalElements = filteredCategories.size();
         int pageNo = pageable.getPageNumber();
         int pageSize = pageable.getPageSize();
-        
+
         int fromIndex = Math.min(pageNo * pageSize, totalElements);
         int toIndex = Math.min(fromIndex + pageSize, totalElements);
-        
+
         List<CategoryResponseDto> pageContent = (fromIndex < toIndex)
                 ? filteredCategories.subList(fromIndex, toIndex)
                 : Collections.emptyList();

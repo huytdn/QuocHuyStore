@@ -7,7 +7,10 @@ import org.springframework.data.domain.Pageable;
 
 public interface CategoryService {
     PageResponseDto<CategoryResponseDto> getCategories(String search, Pageable pageable);
+
     CategoryResponseDto createCategory(CategoryRequestDto request);
+
     CategoryResponseDto updateCategory(Long id, CategoryRequestDto request);
+
     void deleteCategory(Long id);
 }

@@ -23,13 +23,11 @@ public class CloudinaryImageServiceImpl implements ImageService {
         try {
             log.info("Uploading image to Cloudinary: {}", file.getOriginalFilename());
             Map<?, ?> uploadResult = cloudinary.uploader().upload(file.getBytes(), ObjectUtils.asMap(
-                    "folder", "qhstore"
-            ));
+                    "folder", "qhstore"));
 
             return Map.of(
                     "url", uploadResult.get("secure_url").toString(),
-                    "public_id", uploadResult.get("public_id").toString()
-            );
+                    "public_id", uploadResult.get("public_id").toString());
         } catch (IOException e) {
             log.error("Failed to upload image to Cloudinary", e);
             throw new RuntimeException("Image upload failed due to cloud service error");

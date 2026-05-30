@@ -9,7 +9,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 
 public class ReactivatingAuthenticationProvider extends DaoAuthenticationProvider {
 
-    public ReactivatingAuthenticationProvider(CustomUserDetailsService userDetailsService, PasswordEncoder passwordEncoder) {
+    public ReactivatingAuthenticationProvider(CustomUserDetailsService userDetailsService,
+            PasswordEncoder passwordEncoder) {
         super(userDetailsService);
         this.setPasswordEncoder(passwordEncoder);
     }

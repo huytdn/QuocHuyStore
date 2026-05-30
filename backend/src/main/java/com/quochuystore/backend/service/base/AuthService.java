@@ -8,6 +8,8 @@ import com.quochuystore.backend.dto.auth.response.UserResponseDto;
 
 public interface AuthService {
     UserResponseDto register(RegisterRequestDto request);
+
     TokenResponseDto login(LoginRequestDto request);
+
     TokenResponseDto refresh(RefreshTokenRequestDto request);
 }

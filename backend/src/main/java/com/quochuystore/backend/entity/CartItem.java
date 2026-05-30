@@ -9,10 +9,8 @@ import java.time.OffsetDateTime;
 import java.util.UUID;
 
 @Entity
-@Table(
-    name = "cart_items",
-    uniqueConstraints = @UniqueConstraint(name = "unique_user_cart_variation", columnNames = {"user_id", "variation_id"})
-)
+@Table(name = "cart_items", uniqueConstraints = @UniqueConstraint(name = "unique_user_cart_variation", columnNames = {
+        "user_id", "variation_id" }))
 @Getter
 @Setter
 @NoArgsConstructor

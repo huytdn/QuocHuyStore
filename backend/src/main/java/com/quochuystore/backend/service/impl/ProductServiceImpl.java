@@ -125,7 +125,8 @@ public class ProductServiceImpl implements ProductService {
         }
 
         Category category = categoryRepository.findById(request.getCategoryId())
-                .orElseThrow(() -> new ResourceNotFoundException("Category not found with id: " + request.getCategoryId()));
+                .orElseThrow(
+                        () -> new ResourceNotFoundException("Category not found with id: " + request.getCategoryId()));
 
         // Upload Thumbnail to Cloudinary
         if (file == null || file.isEmpty()) {
@@ -162,7 +163,8 @@ public class ProductServiceImpl implements ProductService {
         }
 
         Category category = categoryRepository.findById(request.getCategoryId())
-                .orElseThrow(() -> new ResourceNotFoundException("Category not found with id: " + request.getCategoryId()));
+                .orElseThrow(
+                        () -> new ResourceNotFoundException("Category not found with id: " + request.getCategoryId()));
 
         String oldSlug = product.getSlug();
 
@@ -247,8 +249,8 @@ public class ProductServiceImpl implements ProductService {
         // Fetch active colors
         List<ProductColor> colors = productColorRepository.findByProductIdAndIsActive(product.getId(), true);
         List<Long> colorIds = colors.stream().map(ProductColor::getId).toList();
-        List<ProductVariation> allVariations = colorIds.isEmpty() ? List.of() :
-                productVariationRepository.findByProductColorIdInAndIsActive(colorIds, true);
+        List<ProductVariation> allVariations = colorIds.isEmpty() ? List.of()
+                : productVariationRepository.findByProductColorIdInAndIsActive(colorIds, true);
 
         Map<Long, List<ProductVariation>> variationsByColorId = allVariations.stream()
                 .collect(java.util.stream.Collectors.groupingBy(v -> v.getProductColor().getId()));

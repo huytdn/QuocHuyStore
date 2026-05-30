@@ -16,8 +16,7 @@ public interface ProductService {
             String search,
             BigDecimal minPrice,
             BigDecimal maxPrice,
-            Pageable pageable
-    );
+            Pageable pageable);
 
     ProductDetailResponseDto getProductBySlug(String slug);
 

@@ -10,8 +10,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.List;
-
 @RestController
 @RequiredArgsConstructor
 @Slf4j
@@ -19,13 +17,12 @@ public class ProductColorController {
 
     private final ProductColorService productColorService;
 
-
     @PostMapping(value = "/admin/products/{productId}/colors", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ProductColorResponseDto> createColor(
             @PathVariable Long productId,
             @RequestParam("file") MultipartFile file,
             @RequestParam("colorName") String colorName) {
-        
+
         log.info("REST request to create color: '{}' for product: {}", colorName, productId);
         ProductColorResponseDto response = productColorService.createColor(productId, colorName, file);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
@@ -36,7 +33,7 @@ public class ProductColorController {
             @PathVariable Long id,
             @RequestParam(value = "file", required = false) MultipartFile file,
             @RequestParam("colorName") String colorName) {
-        
+
         log.info("REST request to update color id: {} with name: '{}'", id, colorName);
         ProductColorResponseDto response = productColorService.updateColor(id, colorName, file);
         return ResponseEntity.ok(response);

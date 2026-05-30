@@ -4,8 +4,6 @@ import com.quochuystore.backend.dto.product.request.VariationRequestDto;
 import com.quochuystore.backend.dto.product.request.VariationStockUpdateRequestDto;
 import com.quochuystore.backend.dto.product.response.ProductVariationResponseDto;
 
-import java.util.List;
-
 public interface ProductVariationService {
 
     ProductVariationResponseDto createVariation(Long colorId, VariationRequestDto request);

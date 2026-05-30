@@ -16,8 +16,6 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -28,7 +26,6 @@ public class ProductVariationServiceImpl implements ProductVariationService {
     private final StringRedisTemplate redisTemplate;
 
     private static final String CACHE_KEY_PREFIX = "qhs:products:slug:";
-
 
     @Override
     @Transactional
@@ -70,8 +67,10 @@ public class ProductVariationServiceImpl implements ProductVariationService {
 
         ProductColor color = variation.getProductColor();
 
-        if (productVariationRepository.existsByProductColorIdAndSizeIgnoreCaseAndIdNot(color.getId(), request.getSize().trim(), id)) {
-            log.warn("Variation update failed: Size '{}' already exists on another variation for color {}", request.getSize(), color.getId());
+        if (productVariationRepository.existsByProductColorIdAndSizeIgnoreCaseAndIdNot(color.getId(),
+                request.getSize().trim(), id)) {
+            log.warn("Variation update failed: Size '{}' already exists on another variation for color {}",
+                    request.getSize(), color.getId());
             throw new BadRequestException("Size already exists for this color");
         }
 

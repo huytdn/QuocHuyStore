@@ -42,8 +42,9 @@ public class ProductController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "id,desc") String sort) {
-        
-        log.info("REST request to get products. categoryId: {}, search: {}, minPrice: {}, maxPrice: {}, page: {}, size: {}, sort: {}", 
+
+        log.info(
+                "REST request to get products. categoryId: {}, search: {}, minPrice: {}, maxPrice: {}, page: {}, size: {}, sort: {}",
                 categoryId, search, minPrice, maxPrice, page, size, sort);
 
         String[] sortParams = sort.split(",");
@@ -71,7 +72,7 @@ public class ProductController {
     public ResponseEntity<ProductDetailResponseDto> createProduct(
             @RequestPart("file") MultipartFile file,
             @RequestPart("metadata") String metadataJson) {
-        
+
         log.info("REST request to create product with metadata: {}", metadataJson);
         ProductCreateRequestDto request;
         try {
@@ -81,7 +82,8 @@ public class ProductController {
             throw new IllegalArgumentException("Invalid product metadata JSON structure");
         }
 
-        // Validate deserialized object manually since @Valid won't run automatically on manually parsed objects
+        // Validate deserialized object manually since @Valid won't run automatically on
+        // manually parsed objects
         Set<ConstraintViolation<ProductCreateRequestDto>> violations = validator.validate(request);
         if (!violations.isEmpty()) {
             throw new ConstraintViolationException(violations);
@@ -96,7 +98,7 @@ public class ProductController {
             @PathVariable Long id,
             @RequestPart(value = "file", required = false) MultipartFile file,
             @RequestPart("metadata") String metadataJson) {
-        
+
         log.info("REST request to update product id: {} with metadata: {}", id, metadataJson);
         ProductUpdateRequestDto request;
         try {
