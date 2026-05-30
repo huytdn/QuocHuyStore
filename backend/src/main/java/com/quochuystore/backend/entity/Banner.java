@@ -9,7 +9,7 @@ import org.hibernate.annotations.UpdateTimestamp;
 import java.time.OffsetDateTime;
 
 @Entity
-@Table(name = "banner")
+@Table(name = "banners")
 @Getter
 @Setter
 @NoArgsConstructor
