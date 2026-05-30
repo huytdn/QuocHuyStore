@@ -47,7 +47,7 @@ public class SecurityConfig {
             .csrf(AbstractHttpConfigurer::disable)
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/auth/register", "/auth/login", "/auth/refresh").permitAll()
-                .requestMatchers("/products/**", "/categories/**").permitAll()
+                .requestMatchers("/products/**", "/categories/**", "/colors/**", "/variations/**", "/error").permitAll()
                 .requestMatchers("/ws/**").permitAll()
                 .requestMatchers("/admin/**").hasRole("ADMIN")
                 .requestMatchers("/users/**", "/addresses/**").hasRole("USER")
