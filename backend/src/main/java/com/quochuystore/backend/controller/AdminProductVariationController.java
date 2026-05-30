@@ -3,7 +3,7 @@ package com.quochuystore.backend.controller;
 import com.quochuystore.backend.dto.product.request.VariationRequestDto;
 import com.quochuystore.backend.dto.product.request.VariationStockUpdateRequestDto;
 import com.quochuystore.backend.dto.product.response.ProductVariationResponseDto;
-import com.quochuystore.backend.service.base.ProductVariationService;
+import com.quochuystore.backend.service.ProductVariationService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequiredArgsConstructor
 @Slf4j
-public class ProductVariationController {
+public class AdminProductVariationController {
 
     private final ProductVariationService productVariationService;
 
