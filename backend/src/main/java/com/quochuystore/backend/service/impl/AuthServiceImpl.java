@@ -30,6 +30,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.HexFormat;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -171,5 +172,18 @@ public class AuthServiceImpl implements AuthService {
                 .refreshToken(newRefreshTokenStr)
                 .user(UserMapper.toUserResponseDto(user))
                 .build();
+    }
+
+    @Override
+    @Transactional
+    public void logout(UUID userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UnauthorizedException("User not found"));
+                
+        if (!refreshTokenRepository.existsByUser(user)) {
+            throw new BadRequestException("User is already logged out or has no active session");
+        }
+        
+        refreshTokenRepository.deleteByUser(user);
     }
 }

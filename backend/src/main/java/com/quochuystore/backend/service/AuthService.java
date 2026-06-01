@@ -12,4 +12,6 @@ public interface AuthService {
     TokenResponseDto login(LoginRequestDto request);
 
     TokenResponseDto refresh(RefreshTokenRequestDto request);
+
+    void logout(java.util.UUID userId);
 }
