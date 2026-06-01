@@ -42,7 +42,7 @@ public class SecurityConfig {
                         .permitAll()
                         .requestMatchers("/ws/**").permitAll()
                         .requestMatchers("/admin/**").hasRole("ADMIN")
-                        .requestMatchers("/users/**", "/addresses/**").hasRole("USER")
+                        .requestMatchers("/users/**", "/addresses/**", "/cart/**", "/cart").hasRole("USER")
                         .anyRequest().authenticated())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);

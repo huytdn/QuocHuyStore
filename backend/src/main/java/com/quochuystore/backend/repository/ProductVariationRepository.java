@@ -5,6 +5,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface ProductVariationRepository extends JpaRepository<ProductVariation, Long> {
@@ -19,4 +20,11 @@ public interface ProductVariationRepository extends JpaRepository<ProductVariati
     boolean existsByProductColorIdAndSizeIgnoreCase(Long colorId, String size);
 
     boolean existsByProductColorIdAndSizeIgnoreCaseAndIdNot(Long colorId, String size, Long id);
+
+    @org.springframework.data.jpa.repository.Query("SELECT pv FROM ProductVariation pv " +
+            "JOIN FETCH pv.productColor pc " +
+            "JOIN FETCH pc.product p " +
+            "WHERE pv.id = :id")
+    Optional<ProductVariation> findByIdWithDetails(@org.springframework.data.repository.query.Param("id") Long id);
 }
+
