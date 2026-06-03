@@ -2,5 +2,5 @@ package com.quochuystore.backend.entity.enums;
 
 public enum PaymentMethod {
     COD,
-    VNPAY
+    ONLINE_PAYMENT
 }

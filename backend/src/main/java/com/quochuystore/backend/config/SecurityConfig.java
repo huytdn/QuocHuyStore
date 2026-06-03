@@ -14,6 +14,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.http.HttpMethod;
 
 @Configuration
 @EnableWebSecurity
@@ -40,6 +41,9 @@ public class SecurityConfig {
                         .requestMatchers("/auth/register", "/auth/login", "/auth/refresh").permitAll()
                         .requestMatchers("/products/**", "/categories/**", "/colors/**", "/variations/**", "/error")
                         .permitAll()
+                        .requestMatchers(HttpMethod.POST, "/orders").permitAll()
+                        .requestMatchers("/orders/tracking").permitAll()
+                        .requestMatchers("/payment/**").permitAll()
                         .requestMatchers("/ws/**").permitAll()
                         .requestMatchers("/admin/**").hasRole("ADMIN")
                         .requestMatchers("/users/**", "/addresses/**", "/cart/**", "/cart").hasRole("USER")
