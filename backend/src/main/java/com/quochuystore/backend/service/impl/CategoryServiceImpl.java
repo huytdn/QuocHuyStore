@@ -62,8 +62,10 @@ public class CategoryServiceImpl implements CategoryService {
 
             try {
                 String jsonToCache = objectMapper.writeValueAsString(allCategories);
-                redisTemplate.opsForValue().set(CacheKeyConstants.CATEGORY_ALL_KEY, jsonToCache, CacheKeyConstants.CATEGORY_CACHE_TTL_HOURS, TimeUnit.HOURS);
-                log.info("Successfully populated categories cache key: {} with TTL of {} hours", CacheKeyConstants.CATEGORY_ALL_KEY,
+                redisTemplate.opsForValue().set(CacheKeyConstants.CATEGORY_ALL_KEY, jsonToCache,
+                        CacheKeyConstants.CATEGORY_CACHE_TTL_HOURS, TimeUnit.HOURS);
+                log.info("Successfully populated categories cache key: {} with TTL of {} hours",
+                        CacheKeyConstants.CATEGORY_ALL_KEY,
                         CacheKeyConstants.CATEGORY_CACHE_TTL_HOURS);
             } catch (Exception e) {
                 log.error("Failed to write categories to Redis cache", e);

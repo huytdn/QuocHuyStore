@@ -43,19 +43,20 @@ public class CartServiceImpl implements CartService {
     @Override
     @Transactional
     public CartItemResponseDto addCartItem(UUID userId, CartItemRequestDto request) {
-        log.info("Adding variation id: {} with quantity: {} for user: {}", 
+        log.info("Adding variation id: {} with quantity: {} for user: {}",
                 request.getVariationId(), request.getQuantity(), userId);
 
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
 
         ProductVariation variation = productVariationRepository.findByIdWithDetails(request.getVariationId())
-                .orElseThrow(() -> new ResourceNotFoundException("Product variation not found with id: " + request.getVariationId()));
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Product variation not found with id: " + request.getVariationId()));
 
         // Validate variation, color, and product active status
-        if (!variation.getIsActive() || 
-            !variation.getProductColor().getIsActive() || 
-            !variation.getProductColor().getProduct().getIsActive()) {
+        if (!variation.getIsActive() ||
+                !variation.getProductColor().getIsActive() ||
+                !variation.getProductColor().getProduct().getIsActive()) {
             log.warn("Variation id: {} is inactive or its color/product is inactive", request.getVariationId());
             throw new ResourceNotFoundException("Product variation is inactive or unavailable");
         }
@@ -69,9 +70,10 @@ public class CartServiceImpl implements CartService {
 
         // Check stock quantity limits
         if (targetQty > variation.getStockQuantity()) {
-            log.warn("Requested quantity {} (current in cart: {}) exceeds stock {} for variation id: {}", 
+            log.warn("Requested quantity {} (current in cart: {}) exceeds stock {} for variation id: {}",
                     request.getQuantity(), currentCartQty, variation.getStockQuantity(), request.getVariationId());
-            throw new BadRequestException("Requested quantity exceeds available stock (" + variation.getStockQuantity() + ")");
+            throw new BadRequestException(
+                    "Requested quantity exceeds available stock (" + variation.getStockQuantity() + ")");
         }
 
         if (cartItem != null) {
@@ -96,8 +98,10 @@ public class CartServiceImpl implements CartService {
 
     @Override
     @Transactional
-    public CartItemResponseDto updateCartItemQuantity(UUID userId, UUID cartItemId, CartItemQuantityUpdateRequestDto request) {
-        log.info("Updating cart item id: {} to quantity: {} for user id: {}", cartItemId, request.getQuantity(), userId);
+    public CartItemResponseDto updateCartItemQuantity(UUID userId, UUID cartItemId,
+            CartItemQuantityUpdateRequestDto request) {
+        log.info("Updating cart item id: {} to quantity: {} for user id: {}", cartItemId, request.getQuantity(),
+                userId);
 
         CartItem cartItem = cartItemRepository.findByIdWithDetails(cartItemId)
                 .orElseThrow(() -> new ResourceNotFoundException("Cart item not found with id: " + cartItemId));
@@ -111,18 +115,19 @@ public class CartServiceImpl implements CartService {
         ProductVariation variation = cartItem.getProductVariation();
 
         // Validate variation status
-        if (!variation.getIsActive() || 
-            !variation.getProductColor().getIsActive() || 
-            !variation.getProductColor().getProduct().getIsActive()) {
+        if (!variation.getIsActive() ||
+                !variation.getProductColor().getIsActive() ||
+                !variation.getProductColor().getProduct().getIsActive()) {
             log.warn("Attempted to update cart item {} but product variation is inactive", cartItemId);
             throw new ResourceNotFoundException("Product variation is inactive or unavailable");
         }
 
         // Validate stock
         if (request.getQuantity() > variation.getStockQuantity()) {
-            log.warn("Requested quantity {} exceeds stock {} for variation id: {}", 
+            log.warn("Requested quantity {} exceeds stock {} for variation id: {}",
                     request.getQuantity(), variation.getStockQuantity(), variation.getId());
-            throw new BadRequestException("Requested quantity exceeds available stock (" + variation.getStockQuantity() + ")");
+            throw new BadRequestException(
+                    "Requested quantity exceeds available stock (" + variation.getStockQuantity() + ")");
         }
 
         cartItem.setQuantity(request.getQuantity());

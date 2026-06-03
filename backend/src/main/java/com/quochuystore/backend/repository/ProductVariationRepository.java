@@ -2,6 +2,10 @@ package com.quochuystore.backend.repository;
 
 import com.quochuystore.backend.entity.ProductVariation;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.jpa.repository.Lock;
+import org.springframework.data.repository.query.Param;
+import jakarta.persistence.LockModeType;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -21,10 +25,16 @@ public interface ProductVariationRepository extends JpaRepository<ProductVariati
 
     boolean existsByProductColorIdAndSizeIgnoreCaseAndIdNot(Long colorId, String size, Long id);
 
-    @org.springframework.data.jpa.repository.Query("SELECT pv FROM ProductVariation pv " +
+    @Query("SELECT pv FROM ProductVariation pv " +
             "JOIN FETCH pv.productColor pc " +
             "JOIN FETCH pc.product p " +
             "WHERE pv.id = :id")
-    Optional<ProductVariation> findByIdWithDetails(@org.springframework.data.repository.query.Param("id") Long id);
-}
+    Optional<ProductVariation> findByIdWithDetails(@Param("id") Long id);
 
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT pv FROM ProductVariation pv " +
+            "JOIN FETCH pv.productColor pc " +
+            "JOIN FETCH pc.product p " +
+            "WHERE pv.id IN :ids")
+    List<ProductVariation> findAllByIdsWithDetails(@Param("ids") java.util.Collection<Long> ids);
+}

@@ -35,7 +35,7 @@ public class CartController {
     public ResponseEntity<CartItemResponseDto> addCartItem(
             @AuthenticationPrincipal UserPrincipal principal,
             @Valid @RequestBody CartItemRequestDto request) {
-        log.info("REST request to add item to cart. user id: {}, variation id: {}, quantity: {}", 
+        log.info("REST request to add item to cart. user id: {}, variation id: {}, quantity: {}",
                 principal.getId(), request.getVariationId(), request.getQuantity());
         CartItemResponseDto response = cartService.addCartItem(principal.getId(), request);
         return ResponseEntity.ok(response);
@@ -46,7 +46,7 @@ public class CartController {
             @AuthenticationPrincipal UserPrincipal principal,
             @PathVariable UUID cartItemId,
             @Valid @RequestBody CartItemQuantityUpdateRequestDto request) {
-        log.info("REST request to update cart item quantity. user id: {}, cart item id: {}, new quantity: {}", 
+        log.info("REST request to update cart item quantity. user id: {}, cart item id: {}, new quantity: {}",
                 principal.getId(), cartItemId, request.getQuantity());
         CartItemResponseDto response = cartService.updateCartItemQuantity(principal.getId(), cartItemId, request);
         return ResponseEntity.ok(response);
@@ -56,7 +56,7 @@ public class CartController {
     public ResponseEntity<Void> deleteCartItem(
             @AuthenticationPrincipal UserPrincipal principal,
             @PathVariable UUID cartItemId) {
-        log.info("REST request to delete cart item. user id: {}, cart item id: {}", 
+        log.info("REST request to delete cart item. user id: {}, cart item id: {}",
                 principal.getId(), cartItemId);
         cartService.deleteCartItem(principal.getId(), cartItemId);
         return ResponseEntity.noContent().build();

@@ -3,6 +3,7 @@ package com.quochuystore.backend.repository;
 import com.quochuystore.backend.entity.CartItem;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
@@ -33,8 +34,12 @@ public interface CartItemRepository extends JpaRepository<CartItem, UUID> {
             "JOIN FETCH pc.product p " +
             "WHERE ci.user.id = :userId AND pv.id = :variationId")
     Optional<CartItem> findByUserIdAndProductVariationIdWithDetails(
-            @Param("userId") UUID userId, 
+            @Param("userId") UUID userId,
             @Param("variationId") Long variationId);
 
     Optional<CartItem> findByUserIdAndProductVariationId(UUID userId, Long variationId);
+
+    @Modifying
+    @Query("DELETE FROM CartItem ci WHERE ci.user.id = :userId")
+    void deleteByUserId(@Param("userId") UUID userId);
 }

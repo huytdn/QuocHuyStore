@@ -88,7 +88,8 @@ public class AddressServiceImpl implements AddressService {
     public AddressResponseDto getAddress(UUID userId, UUID addressId) {
         log.info("Fetching address with id: {} for user id: {}", addressId, userId);
         Address address = addressRepository.findById(addressId)
-                .orElseThrow(() -> new ResourceNotFoundException("Address not found with id: " + addressId));
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Address not found with id: " + addressId));
 
         if (!address.getUser().getId().equals(userId)) {
             log.warn("Security check failed: User {} attempted to access address {} belonging to a different user",
@@ -104,7 +105,8 @@ public class AddressServiceImpl implements AddressService {
     public AddressResponseDto updateAddress(UUID userId, UUID addressId, AddressRequestDto request) {
         log.info("Updating address with id: {} for user id: {}", addressId, userId);
         Address address = addressRepository.findById(addressId)
-                .orElseThrow(() -> new ResourceNotFoundException("Address not found with id: " + addressId));
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Address not found with id: " + addressId));
 
         if (!address.getUser().getId().equals(userId)) {
             log.warn("Security check failed: User {} attempted to update address {} belonging to a different user",
@@ -131,7 +133,8 @@ public class AddressServiceImpl implements AddressService {
     public void deleteAddress(UUID userId, UUID addressId) {
         log.info("Hard deleting address with id: {} for user id: {}", addressId, userId);
         Address address = addressRepository.findById(addressId)
-                .orElseThrow(() -> new ResourceNotFoundException("Address not found with id: " + addressId));
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Address not found with id: " + addressId));
 
         if (!address.getUser().getId().equals(userId)) {
             log.warn("Security check failed: User {} attempted to delete address {} belonging to a different user",

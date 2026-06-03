@@ -11,10 +11,10 @@ import com.quochuystore.backend.entity.ProductColor;
 import com.quochuystore.backend.entity.ProductVariation;
 
 import java.util.List;
-import java.util.Map;
 
 public final class ProductMapper {
-    private ProductMapper() {}
+    private ProductMapper() {
+    }
 
     public static ProductVariationResponseDto toProductVariationResponseDto(ProductVariation variation) {
         return ProductVariationResponseDto.builder()
@@ -26,7 +26,8 @@ public final class ProductMapper {
                 .build();
     }
 
-    public static ProductColorResponseDto toProductColorResponseDto(ProductColor color, List<ProductVariationResponseDto> variations) {
+    public static ProductColorResponseDto toProductColorResponseDto(ProductColor color,
+            List<ProductVariationResponseDto> variations) {
         return ProductColorResponseDto.builder()
                 .colorId(color.getId())
                 .colorName(color.getColorName())
@@ -50,7 +51,8 @@ public final class ProductMapper {
                 .build();
     }
 
-    public static ProductDetailResponseDto toProductDetailResponseDto(Product product, List<ProductColorResponseDto> colors) {
+    public static ProductDetailResponseDto toProductDetailResponseDto(Product product,
+            List<ProductColorResponseDto> colors) {
         return ProductDetailResponseDto.builder()
                 .id(product.getId())
                 .name(product.getName())

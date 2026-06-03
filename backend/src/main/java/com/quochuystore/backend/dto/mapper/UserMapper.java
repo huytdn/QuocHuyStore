@@ -9,7 +9,8 @@ import com.quochuystore.backend.entity.User;
 import java.util.List;
 
 public final class UserMapper {
-    private UserMapper() {}
+    private UserMapper() {
+    }
 
     public static UserResponseDto toUserResponseDto(User user) {
         return UserResponseDto.builder()

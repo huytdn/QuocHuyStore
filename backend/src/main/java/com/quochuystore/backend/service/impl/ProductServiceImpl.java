@@ -104,8 +104,10 @@ public class ProductServiceImpl implements ProductService {
         // 3. Write Cache
         try {
             String json = objectMapper.writeValueAsString(responseDto);
-            redisTemplate.opsForValue().set(cacheKey, json, CacheKeyConstants.PRODUCT_CACHE_TTL_MINUTES, TimeUnit.MINUTES);
-            log.info("Successfully cached product slug: {} with TTL of {} minutes", slug, CacheKeyConstants.PRODUCT_CACHE_TTL_MINUTES);
+            redisTemplate.opsForValue().set(cacheKey, json, CacheKeyConstants.PRODUCT_CACHE_TTL_MINUTES,
+                    TimeUnit.MINUTES);
+            log.info("Successfully cached product slug: {} with TTL of {} minutes", slug,
+                    CacheKeyConstants.PRODUCT_CACHE_TTL_MINUTES);
         } catch (Exception e) {
             log.error("Failed to write product slug: {} to cache", slug, e);
         }

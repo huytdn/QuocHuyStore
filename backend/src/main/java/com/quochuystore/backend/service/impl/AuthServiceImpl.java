@@ -179,11 +179,11 @@ public class AuthServiceImpl implements AuthService {
     public void logout(UUID userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UnauthorizedException("User not found"));
-                
+
         if (!refreshTokenRepository.existsByUser(user)) {
             throw new BadRequestException("User is already logged out or has no active session");
         }
-        
+
         refreshTokenRepository.deleteByUser(user);
     }
 }

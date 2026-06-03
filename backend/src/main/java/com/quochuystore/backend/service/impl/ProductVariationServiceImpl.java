@@ -2,7 +2,6 @@ package com.quochuystore.backend.service.impl;
 
 import com.quochuystore.backend.dto.product.request.VariationRequestDto;
 import com.quochuystore.backend.dto.product.request.VariationStockUpdateRequestDto;
-import com.quochuystore.backend.dto.product.request.VariationStockUpdateRequestDto;
 import com.quochuystore.backend.dto.product.response.ProductVariationResponseDto;
 import com.quochuystore.backend.dto.mapper.ProductMapper;
 import com.quochuystore.backend.config.CacheKeyConstants;

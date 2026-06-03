@@ -9,7 +9,8 @@ import java.math.BigDecimal;
 
 public final class CartMapper {
 
-    private CartMapper() {}
+    private CartMapper() {
+    }
 
     public static CartItemResponseDto toCartItemResponseDto(CartItem cartItem) {
         if (cartItem == null) {
