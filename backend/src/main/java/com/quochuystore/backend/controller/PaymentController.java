@@ -28,7 +28,7 @@ public class PaymentController {
             WebhookData data = payOS.webhooks().verify(webhook);
 
             // Check success: success is true and code is "00"
-            boolean isSuccess = Boolean.TRUE.equals(webhook.getSuccess()) || "00".equals(webhook.getCode());
+            boolean isSuccess = Boolean.TRUE.equals(webhook.getSuccess()) && "00".equals(webhook.getCode());
 
             // Update order status: success -> AWAITING_PICKUP, fail -> CANCELED
             orderService.updateOrderStatusByPayOSCode(data.getOrderCode(), isSuccess);

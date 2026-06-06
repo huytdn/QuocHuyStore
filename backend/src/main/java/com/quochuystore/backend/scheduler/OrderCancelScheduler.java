@@ -14,12 +14,15 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.OffsetDateTime;
 import java.util.List;
 
+import com.quochuystore.backend.service.OrderService;
+
 @Component
 @RequiredArgsConstructor
 @Slf4j
 public class OrderCancelScheduler {
 
     private final OrderRepository orderRepository;
+    private final OrderService orderService;
 
     @Scheduled(cron = "0 */15 * * * *")
     @Transactional
@@ -37,20 +40,17 @@ public class OrderCancelScheduler {
         log.info("Found {} expired pending payment orders to cancel", expiredOrders.size());
         for (Order order : expiredOrders) {
             try {
-                // Restore stock
-                for (OrderItem item : order.getOrderItems()) {
-                    ProductVariation variation = item.getProductVariation();
-                    if (variation != null) {
-                        variation.setStockQuantity(variation.getStockQuantity() + item.getQuantity());
-                    }
+                int updated = orderRepository.updateStatusConditionally(order.getId(), OrderStatus.CANCELED, OrderStatus.PENDING_PAYMENT);
+                if (updated == 1) {
+                    orderService.restoreStockForOrder(order);
+                    log.info("Order ID {} has been canceled due to payment timeout", order.getId());
+                } else {
+                    log.info("Order ID {} status changed concurrently. Skipping.", order.getId());
                 }
-                order.setStatus(OrderStatus.CANCELED);
-                log.info("Order ID {} has been canceled due to payment timeout", order.getId());
             } catch (Exception e) {
                 log.error("Error canceling order ID {}: {}", order.getId(), e.getMessage(), e);
             }
         }
-        orderRepository.saveAll(expiredOrders);
-        log.info("Successfully processed and saved canceled orders.");
+        log.info("Successfully processed canceled orders.");
     }
 }

@@ -137,7 +137,7 @@ public class AuthServiceImpl implements AuthService {
         // Check if token has been replayed
         if (Boolean.TRUE.equals(storedToken.getIsUsed())) {
             log.warn("Breach detected! Refresh token replay attack on user: {}", user.getUsername());
-            refreshTokenRepository.deleteByUser(user);
+            refreshTokenRepository.deleteByUserId(user.getId());
             throw new UnauthorizedException("Session compromised. All sessions revoked. Please log in again.");
         }
 
@@ -184,6 +184,6 @@ public class AuthServiceImpl implements AuthService {
             throw new BadRequestException("User is already logged out or has no active session");
         }
 
-        refreshTokenRepository.deleteByUser(user);
+        refreshTokenRepository.deleteByUserId(userId);
     }
 }

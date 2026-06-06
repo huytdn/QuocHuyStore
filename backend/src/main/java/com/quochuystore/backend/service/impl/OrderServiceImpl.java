@@ -60,26 +60,7 @@ public class OrderServiceImpl implements OrderService {
                     .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
         }
 
-        // Determine initial status
-        OrderStatus status = request.getPaymentMethod() == PaymentMethod.COD
-                ? OrderStatus.PENDING_APPROVAL
-                : OrderStatus.PENDING_PAYMENT;
-
-        // Create Order object initially to generate identity ID
-        Order order = Order.builder()
-                .user(user)
-                .receiverName(request.getReceiverName())
-                .receiverPhone(request.getReceiverPhone())
-                .shippingAddressDetail(request.getShippingAddressDetail())
-                .discountAmount(BigDecimal.ZERO)
-                .totalPrice(BigDecimal.ZERO)
-                .status(status)
-                .paymentMethod(request.getPaymentMethod())
-                .build();
-
-        order = orderRepository.save(order);
-
-        // Retrieve items to purchase
+        // --- Step 1: Resolve purchase items (from request body or cart) ---
         List<CartItemRequestDto> purchaseItems = new ArrayList<>();
         if (request.getItems() != null && !request.getItems().isEmpty()) {
             purchaseItems = request.getItems();
@@ -97,7 +78,9 @@ public class OrderServiceImpl implements OrderService {
             }
         }
 
-        // Batch load variations to avoid N+1 queries
+        // --- Step 2: Validate all items & calculate totalPrice BEFORE touching the DB ---
+        // Batch-fetch variation details to avoid N+1 (no pessimistic lock needed;
+        // stock deduction is handled atomically by deductStock() below)
         List<Long> variationIds = purchaseItems.stream()
                 .map(CartItemRequestDto::getVariationId)
                 .collect(Collectors.toList());
@@ -107,50 +90,76 @@ public class OrderServiceImpl implements OrderService {
                 .collect(Collectors.toMap(ProductVariation::getId, v -> v));
 
         BigDecimal totalPrice = BigDecimal.ZERO;
-        List<OrderItem> orderItems = new ArrayList<>();
+        List<OrderItem> orderItemBuilders = new ArrayList<>();
 
         for (CartItemRequestDto itemDto : purchaseItems) {
             ProductVariation variation = variationMap.get(itemDto.getVariationId());
             if (variation == null) {
                 throw new ResourceNotFoundException("Product variation not found with id: " + itemDto.getVariationId());
             }
-
+            // Pre-flight stock check (optimistic guard — actual deduction is atomic below)
             if (variation.getStockQuantity() < itemDto.getQuantity()) {
                 throw new BadRequestException("Insufficient stock for product "
                         + variation.getProductColor().getProduct().getName()
                         + " (" + variation.getSize() + "). Available: " + variation.getStockQuantity());
             }
+            BigDecimal itemTotal = variation.getUnitPrice().multiply(BigDecimal.valueOf(itemDto.getQuantity()));
+            totalPrice = totalPrice.add(itemTotal);
 
-            // Deduct stock
-            variation.setStockQuantity(variation.getStockQuantity() - itemDto.getQuantity());
-
-            OrderItem orderItem = OrderItem.builder()
-                    .order(order)
+            // Build order item shell (order reference set after order is persisted)
+            orderItemBuilders.add(OrderItem.builder()
                     .productVariation(variation)
                     .productName(variation.getProductColor().getProduct().getName())
                     .colorName(variation.getProductColor().getColorName())
                     .sizeName(variation.getSize())
                     .quantity(itemDto.getQuantity())
                     .priceAtPurchase(variation.getUnitPrice())
-                    .build();
-
-            orderItems.add(orderItem);
-
-            BigDecimal itemTotalPrice = variation.getUnitPrice().multiply(BigDecimal.valueOf(itemDto.getQuantity()));
-            totalPrice = totalPrice.add(itemTotalPrice);
+                    .build());
         }
 
-        orderItems = orderItemRepository.saveAll(orderItems);
+        // --- Step 3: Persist Order with final totalPrice in a single save ---
+        OrderStatus status = request.getPaymentMethod() == PaymentMethod.COD
+                ? OrderStatus.PENDING_APPROVAL
+                : OrderStatus.PENDING_PAYMENT;
 
-        order.setTotalPrice(totalPrice);
-        order.setOrderItems(orderItems);
+        Order order = Order.builder()
+                .user(user)
+                .receiverName(request.getReceiverName())
+                .receiverPhone(request.getReceiverPhone())
+                .shippingAddressDetail(request.getShippingAddressDetail())
+                .discountAmount(BigDecimal.ZERO)
+                .totalPrice(totalPrice)
+                .status(status)
+                .paymentMethod(request.getPaymentMethod())
+                .build();
+
         order = orderRepository.save(order);
 
-        // Clear cart if registered user
+        // --- Step 4: Atomically deduct stock for each variation ---
+        // Each call is a single DB-level UPDATE: stock = stock - qty WHERE stock >= qty.
+        // If rows_affected = 0 the stock was already exhausted by a concurrent order.
+        final Order savedOrder = order;
+        for (int i = 0; i < purchaseItems.size(); i++) {
+            CartItemRequestDto itemDto = purchaseItems.get(i);
+            int affected = productVariationRepository.deductStock(itemDto.getVariationId(), itemDto.getQuantity());
+            if (affected == 0) {
+                ProductVariation variation = variationMap.get(itemDto.getVariationId());
+                throw new BadRequestException("Stock exhausted for product "
+                        + variation.getProductColor().getProduct().getName()
+                        + " (" + variation.getSize() + ") during checkout. Please try again.");
+            }
+            orderItemBuilders.get(i).setOrder(savedOrder);
+        }
+
+        // --- Step 5: Persist order items & finalize ---
+        List<OrderItem> savedItems = orderItemRepository.saveAll(orderItemBuilders);
+        order.setOrderItems(savedItems);
+
         if (userId != null) {
             cartItemRepository.deleteByUserId(userId);
         }
 
+        log.info("Order {} created successfully. totalPrice: {}", order.getId(), totalPrice);
         return OrderMapper.toOrderResponseDto(order);
     }
 
@@ -180,23 +189,19 @@ public class OrderServiceImpl implements OrderService {
     @Override
     @Transactional
     public OrderResponseDto cancelOrder(Long id, UUID userId) {
-        Order order = orderRepository.findByIdAndUserIdWithItems(id, userId)
-                .orElseThrow(() -> new ResourceNotFoundException("Order not found or access denied"));
+        List<OrderStatus> allowedStatuses = List.of(OrderStatus.PENDING_APPROVAL, OrderStatus.PENDING_PAYMENT);
+        int updated = orderRepository.updateStatusAndUserConditionally(id, userId, OrderStatus.CANCELED, allowedStatuses);
 
-        if (order.getStatus() != OrderStatus.PENDING_APPROVAL && order.getStatus() != OrderStatus.PENDING_PAYMENT) {
+        if (updated == 0) {
+            Order order = orderRepository.findById(id)
+                    .orElseThrow(() -> new ResourceNotFoundException("Order not found or access denied"));
             throw new BadRequestException("Order cannot be canceled in its current state: " + order.getStatus());
         }
 
-        // Restore stock
-        for (OrderItem item : order.getOrderItems()) {
-            ProductVariation variation = item.getProductVariation();
-            if (variation != null) {
-                variation.setStockQuantity(variation.getStockQuantity() + item.getQuantity());
-            }
-        }
+        Order order = orderRepository.findByIdAndUserIdWithItems(id, userId)
+                .orElseThrow(() -> new ResourceNotFoundException("Order not found or access denied"));
 
-        order.setStatus(OrderStatus.CANCELED);
-        order = orderRepository.save(order);
+        restoreStockForOrder(order);
 
         return OrderMapper.toOrderResponseDto(order);
     }
@@ -284,12 +289,7 @@ public class OrderServiceImpl implements OrderService {
                                 + previousStatus);
             }
             // Restore stock
-            for (OrderItem item : order.getOrderItems()) {
-                ProductVariation variation = item.getProductVariation();
-                if (variation != null) {
-                    variation.setStockQuantity(variation.getStockQuantity() + item.getQuantity());
-                }
-            }
+            restoreStockForOrder(order);
         } else {
             // Step-by-step state transition validation
             boolean isValidTransition = false;
@@ -317,31 +317,45 @@ public class OrderServiceImpl implements OrderService {
     @Override
     @Transactional
     public void updateOrderStatusByPayOSCode(Long orderId, boolean success) {
-        Order order = orderRepository.findByIdWithItems(orderId)
-                .orElseThrow(() -> new ResourceNotFoundException("Order not found with code: " + orderId));
-
-        if (order.getStatus() != OrderStatus.PENDING_PAYMENT) {
-            log.warn("Order {} is not in PENDING_PAYMENT status. Skipping webhook processing. Current: {}",
-                    orderId, order.getStatus());
-            return;
-        }
-
         if (success) {
-            order.setStatus(OrderStatus.AWAITING_PICKUP);
-            log.info("Order {} payment successful. Updated status to AWAITING_PICKUP", orderId);
-        } else {
-            order.setStatus(OrderStatus.CANCELED);
-            // Restore stock
-            for (OrderItem item : order.getOrderItems()) {
-                ProductVariation variation = item.getProductVariation();
-                if (variation != null) {
-                    variation.setStockQuantity(variation.getStockQuantity() + item.getQuantity());
-                }
+            int updated = orderRepository.updateStatusConditionally(orderId, OrderStatus.AWAITING_PICKUP, OrderStatus.PENDING_PAYMENT);
+            if (updated == 1) {
+                log.info("Order {} payment successful. Updated status to AWAITING_PICKUP", orderId);
+            } else {
+                Order order = orderRepository.findById(orderId)
+                        .orElseThrow(() -> new ResourceNotFoundException("Order not found with code: " + orderId));
+                log.warn("Order {} is not in PENDING_PAYMENT status. Skipping webhook processing. Current: {}",
+                        orderId, order.getStatus());
             }
-            log.info("Order {} payment failed. Stock restored and updated status to CANCELED", orderId);
+        } else {
+            int updated = orderRepository.updateStatusConditionally(orderId, OrderStatus.CANCELED, OrderStatus.PENDING_PAYMENT);
+            if (updated == 1) {
+                Order order = orderRepository.findByIdWithItems(orderId)
+                        .orElseThrow(() -> new ResourceNotFoundException("Order not found with code: " + orderId));
+                restoreStockForOrder(order);
+                log.info("Order {} payment failed. Stock restored and updated status to CANCELED", orderId);
+            } else {
+                Order order = orderRepository.findById(orderId)
+                        .orElseThrow(() -> new ResourceNotFoundException("Order not found with code: " + orderId));
+                log.warn("Order {} is not in PENDING_PAYMENT status. Skipping webhook processing. Current: {}",
+                        orderId, order.getStatus());
+            }
         }
+    }
 
-        orderRepository.save(order);
+    @Override
+    @Transactional
+    public void restoreStockForOrder(Order order) {
+        // Atomic restoration: stock = stock + qty at DB level — no read required, no race condition.
+        for (OrderItem item : order.getOrderItems()) {
+            if (item.getProductVariation() != null) {
+                productVariationRepository.restoreStock(
+                        item.getProductVariation().getId(),
+                        item.getQuantity());
+                log.debug("Restored {} units to variation id: {}",
+                        item.getQuantity(), item.getProductVariation().getId());
+            }
+        }
     }
 
     private PageResponseDto<OrderResponseDto> fetchItemsAndBuildResponse(Page<Order> orderPage, int page, int size) {

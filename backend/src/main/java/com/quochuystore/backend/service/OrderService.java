@@ -4,6 +4,7 @@ import com.quochuystore.backend.dto.PageResponseDto;
 import com.quochuystore.backend.dto.order.request.OrderCreateRequestDto;
 import com.quochuystore.backend.dto.order.response.OrderResponseDto;
 import com.quochuystore.backend.dto.order.response.OrderTrackingResponseDto;
+import com.quochuystore.backend.entity.Order;
 import com.quochuystore.backend.entity.enums.OrderStatus;
 
 import java.util.UUID;
@@ -25,4 +26,6 @@ public interface OrderService {
     OrderResponseDto updateOrderStatus(Long id, OrderStatus status);
 
     void updateOrderStatusByPayOSCode(Long orderId, boolean success);
+
+    void restoreStockForOrder(Order order);
 }

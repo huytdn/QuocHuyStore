@@ -47,6 +47,9 @@ public class SecurityConfig {
                         .requestMatchers("/ws/**").permitAll()
                         .requestMatchers("/admin/**").hasRole("ADMIN")
                         .requestMatchers("/users/**", "/addresses/**", "/cart/**", "/cart").hasRole("USER")
+                        // User-facing order endpoints: authenticated users only, admin excluded
+                        .requestMatchers(HttpMethod.GET, "/orders", "/orders/**").hasRole("USER")
+                        .requestMatchers(HttpMethod.PATCH, "/orders/*/cancel").hasRole("USER")
                         .anyRequest().authenticated())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);

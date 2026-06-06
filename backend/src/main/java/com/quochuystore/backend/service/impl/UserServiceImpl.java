@@ -64,7 +64,7 @@ public class UserServiceImpl implements UserService {
         userRepository.save(user);
 
         // Revoke all active sessions for this user
-        refreshTokenRepository.deleteByUser(user);
+        refreshTokenRepository.deleteByUserId(userId);
         log.info("User id: {} has been deactivated and refresh tokens revoked.", userId);
     }
 }
