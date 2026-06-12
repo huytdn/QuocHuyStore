@@ -24,6 +24,9 @@ public interface ProductVariationRepository extends JpaRepository<ProductVariati
 
     boolean existsByProductColorIdAndSizeIgnoreCaseAndIdNot(Long colorId, String size, Long id);
 
+    @Query("SELECT v.productColor.product.slug FROM ProductVariation v WHERE v.id = :variationId")
+    String findProductSlugByVariationId(@Param("variationId") Long variationId);
+
     @Query("SELECT pv FROM ProductVariation pv " +
             "JOIN FETCH pv.productColor pc " +
             "JOIN FETCH pc.product p " +

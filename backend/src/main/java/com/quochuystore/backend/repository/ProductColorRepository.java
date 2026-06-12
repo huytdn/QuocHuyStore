@@ -2,6 +2,8 @@ package com.quochuystore.backend.repository;
 
 import com.quochuystore.backend.entity.ProductColor;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -17,4 +19,7 @@ public interface ProductColorRepository extends JpaRepository<ProductColor, Long
     boolean existsByProductIdAndColorNameIgnoreCase(Long productId, String colorName);
 
     boolean existsByProductIdAndColorNameIgnoreCaseAndIdNot(Long productId, String colorName, Long id);
+
+    @Query("SELECT c.product.slug FROM ProductColor c WHERE c.id = :colorId")
+    String findProductSlugByColorId(@Param("colorId") Long colorId);
 }

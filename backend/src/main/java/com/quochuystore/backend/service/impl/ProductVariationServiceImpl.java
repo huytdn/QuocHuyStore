@@ -52,7 +52,8 @@ public class ProductVariationServiceImpl implements ProductVariationService {
         log.info("Successfully created variation with id: {}", savedVariation.getId());
 
         // Evict product cache
-        evictProductCache(color.getProduct().getSlug());
+        String productSlug = productColorRepository.findProductSlugByColorId(colorId);
+        evictProductCache(productSlug);
 
         return ProductMapper.toProductVariationResponseDto(savedVariation);
     }
@@ -82,7 +83,8 @@ public class ProductVariationServiceImpl implements ProductVariationService {
         log.info("Successfully updated variation with id: {}", updatedVariation.getId());
 
         // Evict product cache
-        evictProductCache(color.getProduct().getSlug());
+        String productSlug = productVariationRepository.findProductSlugByVariationId(id);
+        evictProductCache(productSlug);
 
         return ProductMapper.toProductVariationResponseDto(updatedVariation);
     }
@@ -100,7 +102,8 @@ public class ProductVariationServiceImpl implements ProductVariationService {
         log.info("Successfully updated stock quantity for variation with id: {}", updatedVariation.getId());
 
         // Evict product cache
-        evictProductCache(variation.getProductColor().getProduct().getSlug());
+        String productSlug = productVariationRepository.findProductSlugByVariationId(id);
+        evictProductCache(productSlug);
 
         return ProductMapper.toProductVariationResponseDto(updatedVariation);
     }
@@ -123,7 +126,8 @@ public class ProductVariationServiceImpl implements ProductVariationService {
         log.info("Successfully soft deleted variation with id: {}", id);
 
         // Evict product cache
-        evictProductCache(variation.getProductColor().getProduct().getSlug());
+        String productSlug = productVariationRepository.findProductSlugByVariationId(id);
+        evictProductCache(productSlug);
     }
 
     private void evictProductCache(String slug) {
