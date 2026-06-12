@@ -138,7 +138,7 @@ public class AuthServiceImpl implements AuthService {
         if (Boolean.TRUE.equals(storedToken.getIsUsed())) {
             log.warn("Breach detected! Refresh token replay attack on user: {}", user.getUsername());
             refreshTokenRepository.deleteByUserId(user.getId());
-            throw new UnauthorizedException("Session compromised. All sessions revoked. Please log in again.");
+            throw new UnauthorizedException("Session compromised. Please log in again.");
         }
 
         if (storedToken.getExpiryDate().isBefore(OffsetDateTime.now())) {
@@ -177,9 +177,6 @@ public class AuthServiceImpl implements AuthService {
     @Override
     @Transactional
     public void logout(UUID userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new UnauthorizedException("User not found"));
-
         refreshTokenRepository.deleteByUserId(userId);
     }
 }
