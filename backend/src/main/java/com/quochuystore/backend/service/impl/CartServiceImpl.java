@@ -62,7 +62,7 @@ public class CartServiceImpl implements CartService {
         }
 
         // Check if item already exists in user's cart
-        CartItem cartItem = cartItemRepository.findByUserIdAndProductVariationId(userId, request.getVariationId())
+        CartItem cartItem = cartItemRepository.findByUserIdAndProductVariationIdWithDetails(userId, request.getVariationId())
                 .orElse(null);
 
         int currentCartQty = (cartItem != null) ? cartItem.getQuantity() : 0;
@@ -89,11 +89,7 @@ public class CartServiceImpl implements CartService {
         CartItem savedItem = cartItemRepository.save(cartItem);
         log.info("Successfully added/updated cart item id: {} for user id: {}", savedItem.getId(), userId);
 
-        // Fetch saved item with full details for response to avoid any lazy loading
-        CartItem detailedItem = cartItemRepository.findByIdWithDetails(savedItem.getId())
-                .orElse(savedItem);
-
-        return CartMapper.toCartItemResponseDto(detailedItem);
+        return CartMapper.toCartItemResponseDto(savedItem);
     }
 
     @Override

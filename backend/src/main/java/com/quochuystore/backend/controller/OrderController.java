@@ -39,8 +39,18 @@ public class OrderController {
         OrderResponseDto response = orderService.createOrder(userId, request);
 
         if (request.getPaymentMethod() == PaymentMethod.ONLINE_PAYMENT) {
-            String paymentUrl = paymentService.createPaymentLink(response);
-            response.setPaymentUrl(paymentUrl);
+            try {
+                String paymentUrl = paymentService.createPaymentLink(response);
+                response.setPaymentUrl(paymentUrl);
+            } catch (Exception e) {
+                log.error("Failed to create payment link for order id {}. Canceling order and restoring stock.", response.getOrderId(), e);
+                try {
+                    orderService.cancelOrderOnPaymentLinkFailure(response.getOrderId());
+                } catch (Exception ex) {
+                    log.error("Failed to cancel order id {} after payment link failure.", response.getOrderId(), ex);
+                }
+                throw e;
+            }
         }
 
         return ResponseEntity.status(HttpStatus.CREATED).body(response);

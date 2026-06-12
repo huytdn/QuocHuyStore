@@ -7,6 +7,8 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.OffsetDateTime;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 @Entity
 @Table(name = "banners")
@@ -36,7 +38,7 @@ public class Banner {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "position", nullable = false, columnDefinition = "banner_position_enum")
-    @org.hibernate.annotations.JdbcTypeCode(org.hibernate.type.SqlTypes.NAMED_ENUM)
+    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
     private BannerPosition position;
 
     @Column(name = "priority", nullable = false)

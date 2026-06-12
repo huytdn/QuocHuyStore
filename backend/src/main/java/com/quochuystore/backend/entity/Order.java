@@ -11,10 +11,13 @@ import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 @Entity
 @Table(name = "orders", indexes = {
-        @Index(name = "idx_orders_user_status", columnList = "user_id, status"),
+        @Index(name = "idx_orders_user_status_created", columnList = "user_id, status, created_at DESC"),
+        @Index(name = "idx_orders_user_created", columnList = "user_id, created_at DESC"),
         @Index(name = "idx_orders_status", columnList = "status"),
         @Index(name = "idx_orders_receiver_phone_name", columnList = "receiver_phone, receiver_name")
 })
@@ -52,12 +55,12 @@ public class Order {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, columnDefinition = "order_status_enum")
-    @org.hibernate.annotations.JdbcTypeCode(org.hibernate.type.SqlTypes.NAMED_ENUM)
+    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
     private OrderStatus status;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "payment_method", nullable = false, columnDefinition = "payment_method_enum")
-    @org.hibernate.annotations.JdbcTypeCode(org.hibernate.type.SqlTypes.NAMED_ENUM)
+    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
     private PaymentMethod paymentMethod;
 
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)

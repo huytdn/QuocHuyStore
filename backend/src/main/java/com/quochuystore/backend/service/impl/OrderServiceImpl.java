@@ -117,7 +117,21 @@ public class OrderServiceImpl implements OrderService {
                     .build());
         }
 
-        // --- Step 3: Persist Order with final totalPrice in a single save ---
+        // --- Step 3: Atomically deduct stock for each variation ---
+        // Each call is a single DB-level UPDATE: stock = stock - qty WHERE stock >= qty.
+        // If rows_affected = 0 the stock was already exhausted by a concurrent order.
+        for (int i = 0; i < purchaseItems.size(); i++) {
+            CartItemRequestDto itemDto = purchaseItems.get(i);
+            int affected = productVariationRepository.deductStock(itemDto.getVariationId(), itemDto.getQuantity());
+            if (affected == 0) {
+                ProductVariation variation = variationMap.get(itemDto.getVariationId());
+                throw new BadRequestException("Stock exhausted for product "
+                        + variation.getProductColor().getProduct().getName()
+                        + " (" + variation.getSize() + ") during checkout. Please try again.");
+            }
+        }
+
+        // --- Step 4: Persist Order with final totalPrice in a single save ---
         OrderStatus status = request.getPaymentMethod() == PaymentMethod.COD
                 ? OrderStatus.PENDING_APPROVAL
                 : OrderStatus.PENDING_PAYMENT;
@@ -135,23 +149,10 @@ public class OrderServiceImpl implements OrderService {
 
         order = orderRepository.save(order);
 
-        // --- Step 4: Atomically deduct stock for each variation ---
-        // Each call is a single DB-level UPDATE: stock = stock - qty WHERE stock >= qty.
-        // If rows_affected = 0 the stock was already exhausted by a concurrent order.
-        final Order savedOrder = order;
-        for (int i = 0; i < purchaseItems.size(); i++) {
-            CartItemRequestDto itemDto = purchaseItems.get(i);
-            int affected = productVariationRepository.deductStock(itemDto.getVariationId(), itemDto.getQuantity());
-            if (affected == 0) {
-                ProductVariation variation = variationMap.get(itemDto.getVariationId());
-                throw new BadRequestException("Stock exhausted for product "
-                        + variation.getProductColor().getProduct().getName()
-                        + " (" + variation.getSize() + ") during checkout. Please try again.");
-            }
-            orderItemBuilders.get(i).setOrder(savedOrder);
+        // --- Step 5: Set order reference on order items, persist them & finalize ---
+        for (OrderItem item : orderItemBuilders) {
+            item.setOrder(order);
         }
-
-        // --- Step 5: Persist order items & finalize ---
         List<OrderItem> savedItems = orderItemRepository.saveAll(orderItemBuilders);
         order.setOrderItems(savedItems);
 
@@ -306,6 +307,10 @@ public class OrderServiceImpl implements OrderService {
                 throw new BadRequestException("Invalid status transition from " + previousStatus + " to " + status
                         + ". Admin can only transition status step-by-step.");
             }
+
+            if (status == OrderStatus.DELIVERY_FAILED) {
+                restoreStockForOrder(order);
+            }
         }
 
         order.setStatus(status);
@@ -328,11 +333,7 @@ public class OrderServiceImpl implements OrderService {
                         orderId, order.getStatus());
             }
         } else {
-            int updated = orderRepository.updateStatusConditionally(orderId, OrderStatus.CANCELED, OrderStatus.PENDING_PAYMENT);
-            if (updated == 1) {
-                Order order = orderRepository.findByIdWithItems(orderId)
-                        .orElseThrow(() -> new ResourceNotFoundException("Order not found with code: " + orderId));
-                restoreStockForOrder(order);
+            if (cancelAndRestoreStock(orderId)) {
                 log.info("Order {} payment failed. Stock restored and updated status to CANCELED", orderId);
             } else {
                 Order order = orderRepository.findById(orderId)
@@ -342,7 +343,7 @@ public class OrderServiceImpl implements OrderService {
             }
         }
     }
-
+ 
     @Override
     @Transactional
     public void restoreStockForOrder(Order order) {
@@ -356,6 +357,27 @@ public class OrderServiceImpl implements OrderService {
                         item.getQuantity(), item.getProductVariation().getId());
             }
         }
+    }
+ 
+    @Override
+    @Transactional
+    public void cancelOrderOnPaymentLinkFailure(Long orderId) {
+        if (cancelAndRestoreStock(orderId)) {
+            log.info("Order {} payment link creation failed. Stock restored and status updated to CANCELED", orderId);
+        }
+    }
+
+    @Override
+    @Transactional
+    public boolean cancelAndRestoreStock(Long orderId) {
+        int updated = orderRepository.updateStatusConditionally(orderId, OrderStatus.CANCELED, OrderStatus.PENDING_PAYMENT);
+        if (updated == 1) {
+            Order order = orderRepository.findByIdWithItems(orderId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Order not found with id: " + orderId));
+            restoreStockForOrder(order);
+            return true;
+        }
+        return false;
     }
 
     private PageResponseDto<OrderResponseDto> fetchItemsAndBuildResponse(Page<Order> orderPage, int page, int size) {

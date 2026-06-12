@@ -180,10 +180,6 @@ public class AuthServiceImpl implements AuthService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UnauthorizedException("User not found"));
 
-        if (!refreshTokenRepository.existsByUser(user)) {
-            throw new BadRequestException("User is already logged out or has no active session");
-        }
-
         refreshTokenRepository.deleteByUserId(userId);
     }
 }

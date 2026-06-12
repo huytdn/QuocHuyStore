@@ -36,7 +36,11 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
 
     @Query("SELECT DISTINCT o FROM Order o LEFT JOIN FETCH o.orderItems oi LEFT JOIN FETCH oi.productVariation WHERE o.status = :status AND o.createdAt < :timeLimit")
     List<Order> findByStatusAndCreatedAtBeforeWithItems(@Param("status") OrderStatus status,
-            @Param("timeLimit") OffsetDateTime timeLimit);
+            @Param("timeLimit") OffsetDateTime timeLimit, org.springframework.data.domain.Pageable pageable);
+
+    @Modifying
+    @Query("UPDATE Order o SET o.status = :newStatus WHERE o.id IN :ids AND o.status = :expectedStatus")
+    int updateStatusForIdsConditionally(@Param("ids") List<Long> ids, @Param("newStatus") OrderStatus newStatus, @Param("expectedStatus") OrderStatus expectedStatus);
 
     @Modifying
     @Query("UPDATE Order o SET o.status = :newStatus WHERE o.id = :id AND o.status = :expectedStatus")

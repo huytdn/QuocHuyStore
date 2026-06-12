@@ -28,4 +28,8 @@ public interface OrderService {
     void updateOrderStatusByPayOSCode(Long orderId, boolean success);
 
     void restoreStockForOrder(Order order);
+
+    void cancelOrderOnPaymentLinkFailure(Long orderId);
+
+    boolean cancelAndRestoreStock(Long orderId);
 }
