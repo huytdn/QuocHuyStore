@@ -78,7 +78,8 @@ public class OrderServiceImpl implements OrderService {
             }
         }
 
-        // --- Step 2: Validate all items & calculate totalPrice BEFORE touching the DB ---
+        // --- Step 2: Validate all items & calculate totalPrice BEFORE touching the DB
+        // ---
         // Batch-fetch variation details to avoid N+1 (no pessimistic lock needed;
         // stock deduction is handled atomically by deductStock() below)
         List<Long> variationIds = purchaseItems.stream()
@@ -118,7 +119,8 @@ public class OrderServiceImpl implements OrderService {
         }
 
         // --- Step 3: Atomically deduct stock for each variation ---
-        // Each call is a single DB-level UPDATE: stock = stock - qty WHERE stock >= qty.
+        // Each call is a single DB-level UPDATE: stock = stock - qty WHERE stock >=
+        // qty.
         // If rows_affected = 0 the stock was already exhausted by a concurrent order.
         for (int i = 0; i < purchaseItems.size(); i++) {
             CartItemRequestDto itemDto = purchaseItems.get(i);
@@ -191,7 +193,8 @@ public class OrderServiceImpl implements OrderService {
     @Transactional
     public OrderResponseDto cancelOrder(Long id, UUID userId) {
         List<OrderStatus> allowedStatuses = List.of(OrderStatus.PENDING_APPROVAL, OrderStatus.PENDING_PAYMENT);
-        int updated = orderRepository.updateStatusAndUserConditionally(id, userId, OrderStatus.CANCELED, allowedStatuses);
+        int updated = orderRepository.updateStatusAndUserConditionally(id, userId, OrderStatus.CANCELED,
+                allowedStatuses);
 
         if (updated == 0) {
             Order order = orderRepository.findById(id)
@@ -323,7 +326,8 @@ public class OrderServiceImpl implements OrderService {
     @Transactional
     public void updateOrderStatusByPayOSCode(Long orderId, boolean success) {
         if (success) {
-            int updated = orderRepository.updateStatusConditionally(orderId, OrderStatus.AWAITING_PICKUP, OrderStatus.PENDING_PAYMENT);
+            int updated = orderRepository.updateStatusConditionally(orderId, OrderStatus.AWAITING_PICKUP,
+                    OrderStatus.PENDING_PAYMENT);
             if (updated == 1) {
                 log.info("Order {} payment successful. Updated status to AWAITING_PICKUP", orderId);
             } else {
@@ -343,11 +347,12 @@ public class OrderServiceImpl implements OrderService {
             }
         }
     }
- 
+
     @Override
     @Transactional
     public void restoreStockForOrder(Order order) {
-        // Atomic restoration: stock = stock + qty at DB level — no read required, no race condition.
+        // Atomic restoration: stock = stock + qty at DB level — no read required, no
+        // race condition.
         for (OrderItem item : order.getOrderItems()) {
             if (item.getProductVariation() != null) {
                 productVariationRepository.restoreStock(
@@ -358,7 +363,7 @@ public class OrderServiceImpl implements OrderService {
             }
         }
     }
- 
+
     @Override
     @Transactional
     public void cancelOrderOnPaymentLinkFailure(Long orderId) {
@@ -370,7 +375,8 @@ public class OrderServiceImpl implements OrderService {
     @Override
     @Transactional
     public boolean cancelAndRestoreStock(Long orderId) {
-        int updated = orderRepository.updateStatusConditionally(orderId, OrderStatus.CANCELED, OrderStatus.PENDING_PAYMENT);
+        int updated = orderRepository.updateStatusConditionally(orderId, OrderStatus.CANCELED,
+                OrderStatus.PENDING_PAYMENT);
         if (updated == 1) {
             Order order = orderRepository.findByIdWithItems(orderId)
                     .orElseThrow(() -> new ResourceNotFoundException("Order not found with id: " + orderId));
