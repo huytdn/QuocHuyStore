@@ -4,7 +4,8 @@ import com.quochuystore.backend.dto.auth.request.LoginRequestDto;
 import com.quochuystore.backend.dto.auth.request.RefreshTokenRequestDto;
 import com.quochuystore.backend.dto.auth.request.RegisterRequestDto;
 import com.quochuystore.backend.dto.auth.response.TokenResponseDto;
-import com.quochuystore.backend.dto.auth.response.UserResponseDto;
+import com.quochuystore.backend.dto.user.response.UserResponseDto;
+import com.quochuystore.backend.dto.mapper.UserMapper;
 import com.quochuystore.backend.entity.RefreshToken;
 import com.quochuystore.backend.entity.User;
 import com.quochuystore.backend.entity.enums.UserRole;
@@ -14,7 +15,7 @@ import com.quochuystore.backend.repository.RefreshTokenRepository;
 import com.quochuystore.backend.repository.UserRepository;
 import com.quochuystore.backend.security.JwtTokenProvider;
 import com.quochuystore.backend.security.UserPrincipal;
-import com.quochuystore.backend.service.base.AuthService;
+import com.quochuystore.backend.service.AuthService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -29,6 +30,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.HexFormat;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -46,25 +48,14 @@ public class AuthServiceImpl implements AuthService {
     @Value("${app.jwt.refresh-expiration-ms}")
     private long jwtRefreshExpirationInMs;
 
-    private String hashToken(String token) {
+    private String sha256WithPepper(String input) {
         try {
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
-            String input = token + pepperSecret;
-            byte[] hash = digest.digest(input.getBytes(StandardCharsets.UTF_8));
+            String saltedInput = input + pepperSecret;
+            byte[] hash = digest.digest(saltedInput.getBytes(StandardCharsets.UTF_8));
             return HexFormat.of().formatHex(hash);
         } catch (NoSuchAlgorithmException e) {
-            throw new RuntimeException("SHA-256 algorithm not found", e);
-        }
-    }
-
-    private String getProcessedPassword(String password) {
-        try {
-            MessageDigest digest = MessageDigest.getInstance("SHA-256");
-            String input = password + pepperSecret;
-            byte[] hash = digest.digest(input.getBytes(StandardCharsets.UTF_8));
-            return HexFormat.of().formatHex(hash);
-        } catch (NoSuchAlgorithmException e) {
-            throw new RuntimeException("SHA-256 algorithm not found", e);
+            throw new IllegalStateException("SHA-256 algorithm not found", e);
         }
     }
 
@@ -75,7 +66,7 @@ public class AuthServiceImpl implements AuthService {
             throw new BadRequestException("Username is already taken");
         }
 
-        String processedPassword = getProcessedPassword(request.getPassword());
+        String processedPassword = sha256WithPepper(request.getPassword());
         String hashedPassword = passwordEncoder.encode(processedPassword);
 
         User user = User.builder()
@@ -89,7 +80,7 @@ public class AuthServiceImpl implements AuthService {
 
         User savedUser = userRepository.save(user);
 
-        return mapToUserResponseDto(savedUser);
+        return UserMapper.toUserResponseDto(savedUser);
     }
 
     @Override
@@ -102,7 +93,7 @@ public class AuthServiceImpl implements AuthService {
             throw new DisabledException("Account is disabled/inactive");
         }
 
-        String processedPassword = getProcessedPassword(request.getPassword());
+        String processedPassword = sha256WithPepper(request.getPassword());
         if (!passwordEncoder.matches(processedPassword, user.getPassword())) {
             throw new BadCredentialsException("Invalid username or password");
         }
@@ -110,7 +101,7 @@ public class AuthServiceImpl implements AuthService {
         UserPrincipal principal = UserPrincipal.create(user);
         String accessToken = tokenProvider.generateAccessToken(principal);
         String refreshTokenString = tokenProvider.generateRefreshToken(principal);
-        String hashedToken = hashToken(refreshTokenString);
+        String hashedToken = sha256WithPepper(refreshTokenString);
 
         RefreshToken refreshToken = RefreshToken.builder()
                 .token(hashedToken)
@@ -124,7 +115,7 @@ public class AuthServiceImpl implements AuthService {
         return TokenResponseDto.builder()
                 .accessToken(accessToken)
                 .refreshToken(refreshTokenString)
-                .user(mapToUserResponseDto(user))
+                .user(UserMapper.toUserResponseDto(user))
                 .build();
     }
 
@@ -137,7 +128,7 @@ public class AuthServiceImpl implements AuthService {
             throw new UnauthorizedException("Invalid refresh token");
         }
 
-        String hashedToken = hashToken(tokenStr);
+        String hashedToken = sha256WithPepper(tokenStr);
         RefreshToken storedToken = refreshTokenRepository.findByToken(hashedToken)
                 .orElseThrow(() -> new UnauthorizedException("Refresh token not found"));
 
@@ -146,8 +137,8 @@ public class AuthServiceImpl implements AuthService {
         // Check if token has been replayed
         if (Boolean.TRUE.equals(storedToken.getIsUsed())) {
             log.warn("Breach detected! Refresh token replay attack on user: {}", user.getUsername());
-            refreshTokenRepository.deleteByUser(user);
-            throw new UnauthorizedException("Session compromised. All sessions revoked. Please log in again.");
+            refreshTokenRepository.deleteByUserId(user.getId());
+            throw new UnauthorizedException("Session compromised. Please log in again.");
         }
 
         if (storedToken.getExpiryDate().isBefore(OffsetDateTime.now())) {
@@ -165,7 +156,7 @@ public class AuthServiceImpl implements AuthService {
         UserPrincipal principal = UserPrincipal.create(user);
         String newAccessToken = tokenProvider.generateAccessToken(principal);
         String newRefreshTokenStr = tokenProvider.generateRefreshToken(principal);
-        String newHashedToken = hashToken(newRefreshTokenStr);
+        String newHashedToken = sha256WithPepper(newRefreshTokenStr);
 
         RefreshToken newRefreshToken = RefreshToken.builder()
                 .token(newHashedToken)
@@ -179,18 +170,13 @@ public class AuthServiceImpl implements AuthService {
         return TokenResponseDto.builder()
                 .accessToken(newAccessToken)
                 .refreshToken(newRefreshTokenStr)
-                .user(mapToUserResponseDto(user))
+                .user(UserMapper.toUserResponseDto(user))
                 .build();
     }
 
-    private UserResponseDto mapToUserResponseDto(User user) {
-        return UserResponseDto.builder()
-                .id(user.getId())
-                .username(user.getUsername())
-                .displayName(user.getDisplayName())
-                .phone(user.getPhone())
-                .role(user.getRole())
-                .isActive(user.getIsActive())
-                .build();
+    @Override
+    @Transactional
+    public void logout(UUID userId) {
+        refreshTokenRepository.deleteByUserId(userId);
     }
 }

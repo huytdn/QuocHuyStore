@@ -1,10 +1,10 @@
 package com.quochuystore.backend.controller;
 
 import com.quochuystore.backend.dto.PageResponseDto;
-import com.quochuystore.backend.dto.auth.request.AddressRequestDto;
-import com.quochuystore.backend.dto.auth.response.AddressResponseDto;
+import com.quochuystore.backend.dto.address.request.AddressRequestDto;
+import com.quochuystore.backend.dto.address.response.AddressResponseDto;
 import com.quochuystore.backend.security.UserPrincipal;
-import com.quochuystore.backend.service.base.AddressService;
+import com.quochuystore.backend.service.AddressService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;

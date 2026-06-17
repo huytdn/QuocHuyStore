@@ -4,12 +4,14 @@ import com.quochuystore.backend.dto.auth.request.LoginRequestDto;
 import com.quochuystore.backend.dto.auth.request.RefreshTokenRequestDto;
 import com.quochuystore.backend.dto.auth.request.RegisterRequestDto;
 import com.quochuystore.backend.dto.auth.response.TokenResponseDto;
-import com.quochuystore.backend.dto.auth.response.UserResponseDto;
-import com.quochuystore.backend.service.base.AuthService;
+import com.quochuystore.backend.dto.user.response.UserResponseDto;
+import com.quochuystore.backend.security.UserPrincipal;
+import com.quochuystore.backend.service.AuthService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -38,5 +40,11 @@ public class AuthController {
     public ResponseEntity<TokenResponseDto> refresh(@Valid @RequestBody RefreshTokenRequestDto request) {
         TokenResponseDto response = authService.refresh(request);
         return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<Void> logout(@AuthenticationPrincipal UserPrincipal principal) {
+        authService.logout(principal.getId());
+        return ResponseEntity.noContent().build();
     }
 }

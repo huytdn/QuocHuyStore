@@ -1,14 +1,15 @@
 package com.quochuystore.backend.service.impl;
 
 import com.quochuystore.backend.dto.PageResponseDto;
-import com.quochuystore.backend.dto.auth.request.AddressRequestDto;
-import com.quochuystore.backend.dto.auth.response.AddressResponseDto;
+import com.quochuystore.backend.dto.address.request.AddressRequestDto;
+import com.quochuystore.backend.dto.address.response.AddressResponseDto;
+import com.quochuystore.backend.dto.mapper.UserMapper;
 import com.quochuystore.backend.entity.Address;
 import com.quochuystore.backend.entity.User;
 import com.quochuystore.backend.exception.ResourceNotFoundException;
 import com.quochuystore.backend.repository.AddressRepository;
 import com.quochuystore.backend.repository.UserRepository;
-import com.quochuystore.backend.service.base.AddressService;
+import com.quochuystore.backend.service.AddressService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -45,7 +46,7 @@ public class AddressServiceImpl implements AddressService {
         Page<Address> addressPage = addressRepository.findByUser(user, sortedPageable);
 
         List<AddressResponseDto> content = addressPage.getContent().stream()
-                .map(this::mapToAddressResponseDto)
+                .map(UserMapper::toAddressResponseDto)
                 .toList();
 
         return PageResponseDto.<AddressResponseDto>builder()
@@ -66,14 +67,7 @@ public class AddressServiceImpl implements AddressService {
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
 
         if (request.getIsDefault()) {
-            // Find and set all existing default addresses of this user to false
-            List<Address> existingAddresses = addressRepository.findByUser(user);
-            for (Address existing : existingAddresses) {
-                if (existing.getIsDefault()) {
-                    existing.setIsDefault(false);
-                    addressRepository.save(existing);
-                }
-            }
+            addressRepository.resetDefaultByUser(user);
         }
 
         Address address = Address.builder()
@@ -86,7 +80,7 @@ public class AddressServiceImpl implements AddressService {
 
         Address savedAddress = addressRepository.save(address);
         log.info("Successfully created address with id: {} for user: {}", savedAddress.getId(), userId);
-        return mapToAddressResponseDto(savedAddress);
+        return UserMapper.toAddressResponseDto(savedAddress);
     }
 
     @Override
@@ -94,7 +88,8 @@ public class AddressServiceImpl implements AddressService {
     public AddressResponseDto getAddress(UUID userId, UUID addressId) {
         log.info("Fetching address with id: {} for user id: {}", addressId, userId);
         Address address = addressRepository.findById(addressId)
-                .orElseThrow(() -> new ResourceNotFoundException("Address not found with id: " + addressId));
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Address not found with id: " + addressId));
 
         if (!address.getUser().getId().equals(userId)) {
             log.warn("Security check failed: User {} attempted to access address {} belonging to a different user",
@@ -102,7 +97,7 @@ public class AddressServiceImpl implements AddressService {
             throw new ResourceNotFoundException("Address not found with id: " + addressId);
         }
 
-        return mapToAddressResponseDto(address);
+        return UserMapper.toAddressResponseDto(address);
     }
 
     @Override
@@ -110,7 +105,8 @@ public class AddressServiceImpl implements AddressService {
     public AddressResponseDto updateAddress(UUID userId, UUID addressId, AddressRequestDto request) {
         log.info("Updating address with id: {} for user id: {}", addressId, userId);
         Address address = addressRepository.findById(addressId)
-                .orElseThrow(() -> new ResourceNotFoundException("Address not found with id: " + addressId));
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Address not found with id: " + addressId));
 
         if (!address.getUser().getId().equals(userId)) {
             log.warn("Security check failed: User {} attempted to update address {} belonging to a different user",
@@ -119,14 +115,7 @@ public class AddressServiceImpl implements AddressService {
         }
 
         if (request.getIsDefault()) {
-            // Find and set all other default addresses of this user to false
-            List<Address> existingAddresses = addressRepository.findByUser(address.getUser());
-            for (Address existing : existingAddresses) {
-                if (existing.getIsDefault() && !existing.getId().equals(address.getId())) {
-                    existing.setIsDefault(false);
-                    addressRepository.save(existing);
-                }
-            }
+            addressRepository.resetDefaultByUser(address.getUser());
         }
 
         address.setAddressDetail(request.getAddressDetail());
@@ -136,7 +125,7 @@ public class AddressServiceImpl implements AddressService {
 
         Address updatedAddress = addressRepository.save(address);
         log.info("Successfully updated address with id: {} for user: {}", updatedAddress.getId(), userId);
-        return mapToAddressResponseDto(updatedAddress);
+        return UserMapper.toAddressResponseDto(updatedAddress);
     }
 
     @Override
@@ -144,7 +133,8 @@ public class AddressServiceImpl implements AddressService {
     public void deleteAddress(UUID userId, UUID addressId) {
         log.info("Hard deleting address with id: {} for user id: {}", addressId, userId);
         Address address = addressRepository.findById(addressId)
-                .orElseThrow(() -> new ResourceNotFoundException("Address not found with id: " + addressId));
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Address not found with id: " + addressId));
 
         if (!address.getUser().getId().equals(userId)) {
             log.warn("Security check failed: User {} attempted to delete address {} belonging to a different user",
@@ -156,13 +146,4 @@ public class AddressServiceImpl implements AddressService {
         log.info("Successfully deleted address with id: {} from database", addressId);
     }
 
-    private AddressResponseDto mapToAddressResponseDto(Address address) {
-        return AddressResponseDto.builder()
-                .id(address.getId())
-                .addressDetail(address.getAddressDetail())
-                .receiverName(address.getReceiverName())
-                .receiverPhone(address.getReceiverPhone())
-                .isDefault(address.getIsDefault())
-                .build();
-    }
 }

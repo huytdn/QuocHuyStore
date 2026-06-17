@@ -20,15 +20,24 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
 
     boolean existsBySlugIgnoreCaseAndIdNot(String slug, Long id);
 
+    @Override
+    @Query("SELECT p FROM Product p LEFT JOIN FETCH p.category WHERE p.id = :id")
+    Optional<Product> findById(@Param("id") Long id);
+
     @Query("SELECT p FROM Product p LEFT JOIN FETCH p.category WHERE p.slug = :slug AND p.isActive = :isActive")
     Optional<Product> findBySlugAndIsActive(@Param("slug") String slug, @Param("isActive") Boolean isActive);
 
-    Optional<Product> findBySlug(String slug);
+    @Query("SELECT p FROM Product p LEFT JOIN FETCH p.category WHERE p.slug = :slug")
+    Optional<Product> findBySlug(@Param("slug") String slug);
 
-    @Query("SELECT p FROM Product p LEFT JOIN FETCH p.category WHERE " +
+    @Query(value = "SELECT p FROM Product p LEFT JOIN FETCH p.category WHERE " +
             "(:categoryId IS NULL OR p.category.id = :categoryId) AND " +
-            "(CAST(:search AS string) IS NULL OR LOWER(p.name) LIKE CONCAT('%', LOWER(CAST(:search AS string)), '%')) AND "
-            +
+            "(CAST(:search AS string) IS NULL OR LOWER(p.name) LIKE CONCAT('%', LOWER(CAST(:search AS string)), '%')) AND " +
+            "(:minPrice IS NULL OR p.minPrice >= :minPrice) AND " +
+            "(:maxPrice IS NULL OR p.minPrice <= :maxPrice) AND " +
+            "(p.isActive = true)", countQuery = "SELECT COUNT(p) FROM Product p LEFT JOIN p.category WHERE " +
+            "(:categoryId IS NULL OR p.category.id = :categoryId) AND " +
+            "(CAST(:search AS string) IS NULL OR LOWER(p.name) LIKE CONCAT('%', LOWER(CAST(:search AS string)), '%')) AND " +
             "(:minPrice IS NULL OR p.minPrice >= :minPrice) AND " +
             "(:maxPrice IS NULL OR p.minPrice <= :maxPrice) AND " +
             "(p.isActive = true)")

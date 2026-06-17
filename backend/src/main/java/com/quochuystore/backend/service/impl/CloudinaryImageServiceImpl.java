@@ -2,7 +2,8 @@ package com.quochuystore.backend.service.impl;
 
 import com.cloudinary.Cloudinary;
 import com.cloudinary.utils.ObjectUtils;
-import com.quochuystore.backend.service.base.ImageService;
+import com.quochuystore.backend.exception.ImageUploadException;
+import com.quochuystore.backend.service.ImageService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -30,7 +31,7 @@ public class CloudinaryImageServiceImpl implements ImageService {
                     "public_id", uploadResult.get("public_id").toString());
         } catch (IOException e) {
             log.error("Failed to upload image to Cloudinary", e);
-            throw new RuntimeException("Image upload failed due to cloud service error");
+            throw new ImageUploadException("Image upload failed due to cloud service error", e);
         }
     }
 

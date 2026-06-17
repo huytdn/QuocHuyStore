@@ -1,13 +1,10 @@
 package com.quochuystore.backend.config;
 
-import com.quochuystore.backend.security.CustomUserDetailsService;
 import com.quochuystore.backend.security.JwtAuthenticationFilter;
-import com.quochuystore.backend.security.ReactivatingAuthenticationProvider;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -17,6 +14,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.http.HttpMethod;
 
 @Configuration
 @EnableWebSecurity
@@ -24,16 +22,10 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
-    private final CustomUserDetailsService userDetailsService;
 
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
-    }
-
-    @Bean
-    public AuthenticationProvider authenticationProvider() {
-        return new ReactivatingAuthenticationProvider(userDetailsService, passwordEncoder());
     }
 
     @Bean
@@ -49,12 +41,17 @@ public class SecurityConfig {
                         .requestMatchers("/auth/register", "/auth/login", "/auth/refresh").permitAll()
                         .requestMatchers("/products/**", "/categories/**", "/colors/**", "/variations/**", "/error")
                         .permitAll()
+                        .requestMatchers(HttpMethod.POST, "/orders").permitAll()
+                        .requestMatchers("/orders/tracking").permitAll()
+                        .requestMatchers("/payment/**").permitAll()
                         .requestMatchers("/ws/**").permitAll()
                         .requestMatchers("/admin/**").hasRole("ADMIN")
-                        .requestMatchers("/users/**", "/addresses/**").hasRole("USER")
+                        .requestMatchers("/users/**", "/addresses/**", "/cart/**", "/cart").hasRole("USER")
+                        // User-facing order endpoints: authenticated users only, admin excluded
+                        .requestMatchers(HttpMethod.GET, "/orders", "/orders/**").hasRole("USER")
+                        .requestMatchers(HttpMethod.PATCH, "/orders/*/cancel").hasRole("USER")
                         .anyRequest().authenticated())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .authenticationProvider(authenticationProvider())
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();

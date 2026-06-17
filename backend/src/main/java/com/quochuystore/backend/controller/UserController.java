@@ -1,10 +1,10 @@
 package com.quochuystore.backend.controller;
 
-import com.quochuystore.backend.dto.auth.request.UserUpdateRequestDto;
-import com.quochuystore.backend.dto.auth.response.UserDetailResponseDto;
-import com.quochuystore.backend.dto.auth.response.UserResponseDto;
+import com.quochuystore.backend.dto.user.request.UserUpdateRequestDto;
+import com.quochuystore.backend.dto.user.response.UserDetailResponseDto;
+import com.quochuystore.backend.dto.user.response.UserResponseDto;
 import com.quochuystore.backend.security.UserPrincipal;
-import com.quochuystore.backend.service.base.UserService;
+import com.quochuystore.backend.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;

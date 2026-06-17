@@ -5,13 +5,15 @@ import com.quochuystore.backend.dto.product.response.ProductVariationResponseDto
 import com.quochuystore.backend.entity.Product;
 import com.quochuystore.backend.entity.ProductColor;
 import com.quochuystore.backend.entity.ProductVariation;
+import com.quochuystore.backend.config.CacheKeyConstants;
+import com.quochuystore.backend.dto.mapper.ProductMapper;
 import com.quochuystore.backend.exception.BadRequestException;
 import com.quochuystore.backend.exception.ResourceNotFoundException;
 import com.quochuystore.backend.repository.ProductColorRepository;
 import com.quochuystore.backend.repository.ProductRepository;
 import com.quochuystore.backend.repository.ProductVariationRepository;
-import com.quochuystore.backend.service.base.ImageService;
-import com.quochuystore.backend.service.base.ProductColorService;
+import com.quochuystore.backend.service.ImageService;
+import com.quochuystore.backend.service.ProductColorService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -32,8 +34,6 @@ public class ProductColorServiceImpl implements ProductColorService {
     private final ProductVariationRepository productVariationRepository;
     private final ImageService imageService;
     private final StringRedisTemplate redisTemplate;
-
-    private static final String CACHE_KEY_PREFIX = "qhs:products:slug:";
 
     @Override
     @Transactional
@@ -68,7 +68,7 @@ public class ProductColorServiceImpl implements ProductColorService {
         // Evict product cache
         evictProductCache(product.getSlug());
 
-        return mapToProductColorResponseDto(savedColor);
+        return getProductColorResponseDto(savedColor);
     }
 
     @Override
@@ -106,7 +106,7 @@ public class ProductColorServiceImpl implements ProductColorService {
         // Evict product cache
         evictProductCache(product.getSlug());
 
-        return mapToProductColorResponseDto(updatedColor);
+        return getProductColorResponseDto(updatedColor);
     }
 
     @Override
@@ -133,7 +133,7 @@ public class ProductColorServiceImpl implements ProductColorService {
     }
 
     private void evictProductCache(String slug) {
-        String cacheKey = CACHE_KEY_PREFIX + slug;
+        String cacheKey = CacheKeyConstants.PRODUCT_SLUG_PREFIX + slug;
         try {
             Boolean deleted = redisTemplate.delete(cacheKey);
             if (Boolean.TRUE.equals(deleted)) {
@@ -144,29 +144,13 @@ public class ProductColorServiceImpl implements ProductColorService {
         }
     }
 
-    private ProductColorResponseDto mapToProductColorResponseDto(ProductColor color) {
+    private ProductColorResponseDto getProductColorResponseDto(ProductColor color) {
         List<ProductVariation> variations = productVariationRepository.findByProductColorIdAndIsActive(color.getId(),
                 true);
         List<ProductVariationResponseDto> variationResponseDtos = variations.stream()
-                .map(this::mapToProductVariationResponseDto)
+                .map(ProductMapper::toProductVariationResponseDto)
                 .toList();
 
-        return ProductColorResponseDto.builder()
-                .colorId(color.getId())
-                .colorName(color.getColorName())
-                .imageUrl(color.getImageUrl())
-                .imagePublicId(color.getImagePublicId())
-                .variations(variationResponseDtos)
-                .build();
-    }
-
-    private ProductVariationResponseDto mapToProductVariationResponseDto(ProductVariation variation) {
-        return ProductVariationResponseDto.builder()
-                .variationId(variation.getId())
-                .size(variation.getSize())
-                .unitPrice(variation.getUnitPrice())
-                .stockQuantity(variation.getStockQuantity())
-                .isActive(variation.getIsActive())
-                .build();
+        return ProductMapper.toProductColorResponseDto(color, variationResponseDtos);
     }
 }
