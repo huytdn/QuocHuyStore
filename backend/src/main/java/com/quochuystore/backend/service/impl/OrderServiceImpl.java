@@ -78,8 +78,6 @@ public class OrderServiceImpl implements OrderService {
             }
         }
 
-        // --- Step 2: Validate all items & calculate totalPrice BEFORE touching the DB
-        // ---
         // Batch-fetch variation details to avoid N+1 (no pessimistic lock needed;
         // stock deduction is handled atomically by deductStock() below)
         List<Long> variationIds = purchaseItems.stream()
@@ -118,9 +116,6 @@ public class OrderServiceImpl implements OrderService {
                     .build());
         }
 
-        // --- Step 3: Atomically deduct stock for each variation ---
-        // Each call is a single DB-level UPDATE: stock = stock - qty WHERE stock >=
-        // qty.
         // If rows_affected = 0 the stock was already exhausted by a concurrent order.
         for (int i = 0; i < purchaseItems.size(); i++) {
             CartItemRequestDto itemDto = purchaseItems.get(i);

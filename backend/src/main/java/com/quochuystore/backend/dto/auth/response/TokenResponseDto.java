@@ -10,6 +10,5 @@ import lombok.*;
 @Builder
 public class TokenResponseDto {
     private String accessToken;
-    private String refreshToken;
     private UserResponseDto user;
 }
