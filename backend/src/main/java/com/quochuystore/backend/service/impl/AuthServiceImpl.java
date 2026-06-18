@@ -3,6 +3,7 @@ package com.quochuystore.backend.service.impl;
 import com.quochuystore.backend.dto.auth.request.LoginRequestDto;
 import com.quochuystore.backend.dto.auth.request.RefreshTokenRequestDto;
 import com.quochuystore.backend.dto.auth.request.RegisterRequestDto;
+import com.quochuystore.backend.dto.auth.response.LoginResult;
 import com.quochuystore.backend.dto.auth.response.TokenResponseDto;
 import com.quochuystore.backend.dto.user.response.UserResponseDto;
 import com.quochuystore.backend.dto.mapper.UserMapper;
@@ -85,7 +86,7 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     @Transactional
-    public TokenResponseDto login(LoginRequestDto request) {
+    public LoginResult login(LoginRequestDto request) {
         User user = userRepository.findByUsername(request.getUsername())
                 .orElseThrow(() -> new BadCredentialsException("Invalid username or password"));
 
@@ -112,7 +113,7 @@ public class AuthServiceImpl implements AuthService {
 
         refreshTokenRepository.save(refreshToken);
 
-        return TokenResponseDto.builder()
+        return LoginResult.builder()
                 .accessToken(accessToken)
                 .refreshToken(refreshTokenString)
                 .user(UserMapper.toUserResponseDto(user))
@@ -121,7 +122,7 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     @Transactional
-    public TokenResponseDto refresh(RefreshTokenRequestDto request) {
+    public LoginResult refresh(RefreshTokenRequestDto request) {
         String tokenStr = request.getRefreshToken();
 
         if (!tokenProvider.validateToken(tokenStr)) {
@@ -167,7 +168,7 @@ public class AuthServiceImpl implements AuthService {
 
         refreshTokenRepository.save(newRefreshToken);
 
-        return TokenResponseDto.builder()
+        return LoginResult.builder()
                 .accessToken(newAccessToken)
                 .refreshToken(newRefreshTokenStr)
                 .user(UserMapper.toUserResponseDto(user))
