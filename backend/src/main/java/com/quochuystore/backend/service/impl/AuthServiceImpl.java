@@ -101,7 +101,7 @@ public class AuthServiceImpl implements AuthService {
 
         UserPrincipal principal = UserPrincipal.create(user);
         String accessToken = tokenProvider.generateAccessToken(principal);
-        String refreshTokenString = tokenProvider.generateRefreshToken(principal);
+        String refreshTokenString = UUID.randomUUID().toString();
         String hashedToken = sha256WithPepper(refreshTokenString);
 
         RefreshToken refreshToken = RefreshToken.builder()
@@ -124,10 +124,6 @@ public class AuthServiceImpl implements AuthService {
     @Transactional
     public LoginResult refresh(RefreshTokenRequestDto request) {
         String tokenStr = request.getRefreshToken();
-
-        if (!tokenProvider.validateToken(tokenStr)) {
-            throw new UnauthorizedException("Invalid refresh token");
-        }
 
         String hashedToken = sha256WithPepper(tokenStr);
         RefreshToken storedToken = refreshTokenRepository.findByToken(hashedToken)
@@ -156,7 +152,7 @@ public class AuthServiceImpl implements AuthService {
 
         UserPrincipal principal = UserPrincipal.create(user);
         String newAccessToken = tokenProvider.generateAccessToken(principal);
-        String newRefreshTokenStr = tokenProvider.generateRefreshToken(principal);
+        String newRefreshTokenStr = UUID.randomUUID().toString();
         String newHashedToken = sha256WithPepper(newRefreshTokenStr);
 
         RefreshToken newRefreshToken = RefreshToken.builder()
