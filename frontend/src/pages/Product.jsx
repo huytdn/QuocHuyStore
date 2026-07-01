@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { FiSearch, FiChevronDown } from "react-icons/fi";
 import ProductCard from "../components/ProductCard";
 import Footer from "../components/Footer";
@@ -13,7 +14,8 @@ const IMG_SWEATER = "https://images.unsplash.com/photo-1583743814966-8936f5b7be1
 const IMG_BOOTS = "https://images.unsplash.com/photo-1638247025967-b4e38f787b76?q=80&w=600&auto=format&fit=crop";
 const IMG_NAVY_COAT = "https://images.unsplash.com/photo-1544441893-675973e31985?q=80&w=600&auto=format&fit=crop";
 
-const Collection = () => {
+const Product = () => {
+  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
   const [activePage, setActivePage] = useState(1);
   const [wishlist, setWishlist] = useState({});
@@ -267,6 +269,7 @@ const Collection = () => {
                   showWishlist={true}
                   isWishlisted={!!wishlist[product.id]}
                   onWishlistToggle={(isWish) => handleWishlistToggle(product.id, isWish)}
+                  onClick={() => navigate(`/product/${product.id}`)}
                 />
               ))}
             </div>
@@ -309,4 +312,4 @@ const Collection = () => {
   );
 };
 
-export default Collection;
+export default Product;

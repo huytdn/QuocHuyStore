@@ -68,21 +68,21 @@ const Header = () => {
             {/* Left Nav */}
             <nav className="hidden lg:flex items-center gap-8">
               <Link
-                to="/collection"
+                to="/product"
                 className={`label-sm ${navLinkColor} transition-colors relative group py-1`}
               >
                 SẢN PHẨM
                 <span className="absolute bottom-0 left-0 w-0 h-[1px] bg-current transition-all duration-350 group-hover:w-full"></span>
               </Link>
               <Link
-                to="/collection"
+                to="/smart-search"
                 className={`label-sm ${navLinkColor} transition-colors relative group py-1`}
               >
                 TÌM KIẾM THÔNG MINH
                 <span className="absolute bottom-0 left-0 w-0 h-[1px] bg-current transition-all duration-350 group-hover:w-full"></span>
               </Link>
               <Link
-                to="/collection"
+                to="/about"
                 className={`label-sm ${navLinkColor} transition-colors relative group py-1`}
               >
                 VỀ CHÚNG TÔI
@@ -114,12 +114,12 @@ const Header = () => {
             {/* Right Icons */}
             <div className="flex items-center justify-end gap-5 md:gap-7">
               <Link
-                to="/collection"
+                to="/cart"
                 className={`relative cursor-pointer ${iconColor} hover:scale-105 transition-transform`}
               >
                 <FiShoppingBag size={20} />
                 <span className="absolute -top-1.5 -right-1.5 bg-black text-white text-[9px] w-4 h-4 rounded-full flex items-center justify-center border border-white font-sans font-bold">
-                  0
+                  2
                 </span>
               </Link>
               <div className="relative group">
@@ -137,10 +137,16 @@ const Header = () => {
                 {user && (
                   <div className="absolute right-0 mt-3 w-48 bg-white text-black border border-neutral-200 rounded-none shadow-lg py-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
                     <Link
-                      to="/dashboard"
+                      to="/profile"
                       className="block px-4 py-2 text-xs font-semibold tracking-wider hover:bg-neutral-100 uppercase"
                     >
                       Bảng điều khiển
+                    </Link>
+                    <Link
+                      to="/orders"
+                      className="block px-4 py-2 text-xs font-semibold tracking-wider hover:bg-neutral-100 uppercase border-t border-neutral-100"
+                    >
+                      Đơn hàng của tôi
                     </Link>
                     <button
                       onClick={handleLogout}
@@ -176,14 +182,14 @@ const Header = () => {
                 <span className="absolute bottom-0 left-0 w-0 h-[1px] bg-black transition-all duration-350 group-hover:w-full"></span>
               </Link>
               <Link
-                to="/collection"
+                to="/smart-search"
                 className="label-sm text-neutral-600 hover:text-black transition-colors relative group py-1"
               >
                 Tìm Kiếm Thông Minh
                 <span className="absolute bottom-0 left-0 w-0 h-[1px] bg-black transition-all duration-350 group-hover:w-full"></span>
               </Link>
               <Link
-                to="/collection"
+                to="/about"
                 className="label-sm text-neutral-600 hover:text-black transition-colors relative group py-1"
               >
                 Về Chúng Tôi
@@ -194,7 +200,7 @@ const Header = () => {
             {/* Right Icons */}
             <div className="flex items-center gap-6">
               <Link
-                to="/collection"
+                to="/cart"
                 className="relative cursor-pointer text-black hover:scale-105 transition-transform"
               >
                 <FiShoppingBag size={20} />
@@ -208,10 +214,16 @@ const Header = () => {
                   </button>
                   <div className="absolute right-0 mt-3 w-44 bg-white border border-neutral-200 shadow-lg py-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-250">
                     <Link
-                      to="/dashboard"
+                      to="/profile"
                       className="block px-4 py-2 text-[10px] font-bold tracking-wider uppercase hover:bg-neutral-50"
                     >
                       Dashboard
+                    </Link>
+                    <Link
+                      to="/orders"
+                      className="block px-4 py-2 text-[10px] font-bold tracking-wider uppercase hover:bg-neutral-50 border-t"
+                    >
+                      Đơn hàng của tôi
                     </Link>
                     <button
                       onClick={handleLogout}
@@ -263,21 +275,21 @@ const Header = () => {
 
         <nav className="flex flex-col gap-8 my-auto text-center">
           <Link
-            to="/collection"
+            to="/product"
             onClick={toggleMenu}
             className="font-serif text-3xl font-semibold tracking-wider hover:text-secondary transition-colors"
           >
             SẢN PHẨM / COLLECTIONS
           </Link>
           <Link
-            to="/collection"
+            to="/product"
             onClick={toggleMenu}
             className="font-serif text-3xl font-semibold tracking-wider hover:text-secondary transition-colors"
           >
             BỘ SƯU TẬP / LOOKBOOK
           </Link>
           <Link
-            to="/collection"
+            to="/about"
             onClick={toggleMenu}
             className="font-serif text-3xl font-semibold tracking-wider hover:text-secondary transition-colors"
           >

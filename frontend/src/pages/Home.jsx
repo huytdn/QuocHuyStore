@@ -90,7 +90,7 @@ const Home = () => {
             </p>
             <Button
               variant="white"
-              onClick={() => navigate("/collection")}
+              onClick={() => navigate("/product")}
               className="px-10 py-4.5"
             >
               MUA NGAY
@@ -117,7 +117,7 @@ const Home = () => {
             </p>
             <Button
               variant="white"
-              onClick={() => navigate("/collection")}
+              onClick={() => navigate("/product")}
               className="whitespace-nowrap px-8 py-3.5 self-start"
             >
               SHOP NOW
@@ -163,7 +163,7 @@ const Home = () => {
               Sản phẩm tiêu biểu
             </h2>
             <Link
-              to="/collection"
+              to="/product"
               className="label-sm text-black font-bold tracking-widest text-[11px] border-b border-black pb-0.5 hover:text-neutral-600 hover:border-neutral-600 transition-all"
             >
               XEM TẤT CẢ
@@ -179,7 +179,7 @@ const Home = () => {
                 name={product.name}
                 price={product.price}
                 color={product.color}
-                onClick={() => navigate(`/collection?id=${product.id}`)}
+                onClick={() => navigate(`/product/${product.id}`)}
               />
             ))}
           </div>
@@ -214,7 +214,7 @@ const Home = () => {
             </p>
             <Button
               variant="white"
-              onClick={() => navigate("/collection")}
+              onClick={() => navigate("/product")}
               className="px-9 py-4 font-semibold text-[11px] tracking-widest"
             >
               KHÁM PHÁ NGAY

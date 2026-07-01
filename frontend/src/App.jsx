@@ -7,7 +7,14 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import { useAuthStore } from "./store/useAuthStore";
 import axiosClient from "./api/axiosClient";
 import Header from "./components/Header";
-import Collection from "./pages/Collection";
+import Product from "./pages/Product";
+import ProductDetail from "./pages/ProductDetail";
+import Cart from "./pages/Cart";
+import SmartSearch from "./pages/SmartSearch";
+import Orders from "./pages/Orders";
+import OrderDetail from "./pages/OrderDetail";
+import Profile from "./pages/Profile";
+import About from "./pages/About";
 
 // Global promise to coalesce concurrent silent refresh calls on startup (e.g. React StrictMode)
 let silentRefreshPromise = null;
@@ -78,20 +85,36 @@ const App = () => {
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
-        <Route path="/collection" element={<Collection />} />
-        {/* <Route path="/collection/:category" element={<CategoriesCollection />} /> */}
-
-        {/* protected routes */}
+        <Route path="/product" element={<Product />} />
+        <Route path="/product/:id" element={<ProductDetail />} />
+        <Route path="/cart" element={<Cart />} />
+        <Route path="/smart-search" element={<SmartSearch />} />
         <Route
-          path="/dashboard"
+          path="/orders"
           element={
             <ProtectedRoute>
-              <div className="min-h-screen flex items-center justify-center bg-gray-100 text-gray-800 font-bold">
-                Dashboard (Protected Area)
-              </div>
+              <Orders />
             </ProtectedRoute>
           }
         />
+        <Route
+          path="/orders/:id"
+          element={
+            <ProtectedRoute>
+              <OrderDetail />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/profile"
+          element={
+            <ProtectedRoute>
+              <Profile />
+            </ProtectedRoute>
+          }
+        />
+        <Route path="/about" element={<About />} />
+        {/* <Route path="/collection/:category" element={<CategoriesCollection />} /> */}
       </Routes>
     </>
   );
