@@ -159,22 +159,22 @@ const Footer = ({ variant = "detailed" }) => {
             <h3 className="label-sm text-black tracking-widest font-bold">MUA SẮM</h3>
             <ul className="flex flex-col gap-2.5">
               <li>
-                <Link to="/collection" className="body-md text-neutral-600 hover:text-black text-sm transition-colors">
+                <Link to="/product" className="body-md text-neutral-600 hover:text-black text-sm transition-colors">
                   Tất cả sản phẩm
                 </Link>
               </li>
               <li>
-                <Link to="/collection" className="body-md text-neutral-600 hover:text-black text-sm transition-colors">
+                <Link to="/product" className="body-md text-neutral-600 hover:text-black text-sm transition-colors">
                   Áo Blazer
                 </Link>
               </li>
               <li>
-                <Link to="/collection" className="body-md text-neutral-600 hover:text-black text-sm transition-colors">
+                <Link to="/product" className="body-md text-neutral-600 hover:text-black text-sm transition-colors">
                   Quần Tây
                 </Link>
               </li>
               <li>
-                <Link to="/collection" className="body-md text-neutral-600 hover:text-black text-sm transition-colors">
+                <Link to="/product" className="body-md text-neutral-600 hover:text-black text-sm transition-colors">
                   Phụ kiện
                 </Link>
               </li>
