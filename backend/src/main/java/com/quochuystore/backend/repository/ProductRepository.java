@@ -41,6 +41,7 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
             "(:minPrice IS NULL OR p.minPrice >= :minPrice) AND " +
             "(:maxPrice IS NULL OR p.minPrice <= :maxPrice) AND " +
             "(p.isActive = true)")
+
     Page<Product> findActiveProductsWithFilters(
             @Param("categoryId") Long categoryId,
             @Param("search") String search,
