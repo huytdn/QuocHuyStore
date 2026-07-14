@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
   FiMail,
@@ -10,6 +10,8 @@ import {
   FiTrash2,
   FiX,
 } from "react-icons/fi";
+import { useAuthStore } from "../store/useAuthStore";
+import { useUpdateProfile } from "../hooks/api/useAuth";
 import Footer from "../components/Footer";
 
 const INITIAL_LIKED_PRODUCTS = [
@@ -49,15 +51,29 @@ const INITIAL_ADDRESSES = [
 
 const Profile = () => {
   const navigate = useNavigate();
+  const user = useAuthStore((state) => state.user);
+  const updateProfileMutation = useUpdateProfile();
+  const isUpdating = updateProfileMutation.isPending;
 
   // Profile States
   const [userInfo, setUserInfo] = useState({
-    name: "Nguyễn Văn A",
-    email: "vana.nguyen@lumiere.archive",
-    phone: "+84 90 123 4567",
+    name: user?.displayName || "Nguyễn Văn A",
+    email: user?.username || "vana.nguyen@lumiere.archive",
+    phone: user?.phone || "+84 90 123 4567",
     avatar:
       "https://lh3.googleusercontent.com/aida-public/AB6AXuCG4IywXw0BENTX3mmyKVAUoudTnMTN0fNp5B32fQMNfQJOxECeJ-RyiqYDk_bhLUqZ9xfaBLvNv7ygWeKAtzntWP0ecYldtXVWv1dVr9gZEJ4kx59UcUwqFRPs1VwYbjc9vuNvnkgy6OOgCVKHdl0RVXRNyug5v1Au-IhCIobt3QQB6Cg8cXf5kOUrNae0QLKTgO1yjYmKydOsdMSE22Xvw-IahY6pEohmwAsfDTHKWVjmNagIAhAGTMPNTYVvhiYMQeTofGUHS0Y",
   });
+
+  useEffect(() => {
+    if (user) {
+      setUserInfo((prev) => ({
+        ...prev,
+        name: user.displayName || prev.name,
+        email: user.username || prev.email,
+        phone: user.phone || prev.phone,
+      }));
+    }
+  }, [user]);
 
   const [activeTab, setActiveTab] = useState("favorites"); // favorites | addresses
   const [likedProducts, setLikedProducts] = useState(INITIAL_LIKED_PRODUCTS);
@@ -70,6 +86,16 @@ const Profile = () => {
     phone: userInfo.phone,
   });
 
+  // Sync editForm state when modal opens
+  useEffect(() => {
+    if (isEditModalOpen) {
+      setEditForm({
+        name: userInfo.name,
+        phone: userInfo.phone,
+      });
+    }
+  }, [isEditModalOpen, userInfo]);
+
   // Add Address Modal States
   const [isAddAddressOpen, setIsAddAddressOpen] = useState(false);
   const [newAddress, setNewAddress] = useState("");
@@ -80,12 +106,22 @@ const Profile = () => {
       alert("Vui lòng điền đầy đủ họ tên và số điện thoại.");
       return;
     }
-    setUserInfo((prev) => ({
-      ...prev,
-      name: editForm.name,
-      phone: editForm.phone,
-    }));
-    setIsEditModalOpen(false);
+
+    updateProfileMutation.mutate(
+      {
+        displayName: editForm.name.trim(),
+        phone: editForm.phone.trim(),
+      },
+      {
+        onSuccess: () => {
+          setIsEditModalOpen(false);
+        },
+        onError: (err) => {
+          const errMsg = err.response?.data?.message || "Cập nhật hồ sơ thất bại, vui lòng thử lại!";
+          alert(errMsg);
+        },
+      }
+    );
   };
 
   const handleRemoveFavorite = (productId, e) => {
@@ -488,10 +524,11 @@ const Profile = () => {
                 <input
                   type="text"
                   value={editForm.name}
+                  disabled={isUpdating}
                   onChange={(e) =>
                     setEditForm((prev) => ({ ...prev, name: e.target.value }))
                   }
-                  className="w-full border-neutral-300 focus:border-black focus:ring-0 text-black px-3 py-2 text-sm"
+                  className="w-full border-neutral-300 focus:border-black focus:ring-0 text-black px-3 py-2 text-sm disabled:bg-neutral-100 disabled:text-neutral-400"
                 />
               </div>
 
@@ -502,24 +539,27 @@ const Profile = () => {
                 <input
                   type="text"
                   value={editForm.phone}
+                  disabled={isUpdating}
                   onChange={(e) =>
                     setEditForm((prev) => ({ ...prev, phone: e.target.value }))
                   }
-                  className="w-full border-neutral-300 focus:border-black focus:ring-0 text-black px-3 py-2 text-sm"
+                  className="w-full border-neutral-300 focus:border-black focus:ring-0 text-black px-3 py-2 text-sm disabled:bg-neutral-100 disabled:text-neutral-400"
                 />
               </div>
 
               <div className="pt-4 flex gap-4 select-none">
                 <button
                   type="submit"
-                  className="flex-1 bg-black text-white py-3 label-sm font-semibold tracking-wider hover:bg-neutral-800 transition-colors uppercase text-center cursor-pointer"
+                  disabled={isUpdating}
+                  className="flex-1 bg-black text-white py-3 label-sm font-semibold tracking-wider hover:bg-neutral-800 transition-colors uppercase text-center cursor-pointer disabled:bg-neutral-400"
                 >
-                  Lưu thay đổi
+                  {isUpdating ? "Đang lưu..." : "Lưu thay đổi"}
                 </button>
                 <button
                   type="button"
+                  disabled={isUpdating}
                   onClick={() => setIsEditModalOpen(false)}
-                  className="flex-1 border border-neutral-300 py-3 label-sm font-semibold tracking-wider hover:bg-neutral-100 transition-colors uppercase text-center cursor-pointer"
+                  className="flex-1 border border-neutral-300 py-3 label-sm font-semibold tracking-wider hover:bg-neutral-100 transition-colors uppercase text-center cursor-pointer disabled:opacity-50"
                 >
                   Hủy bỏ
                 </button>
