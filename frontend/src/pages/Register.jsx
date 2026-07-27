@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { FcGoogle } from "react-icons/fc";
 import { FaApple } from "react-icons/fa";
-import { FiCheckCircle, FiAlertTriangle } from "react-icons/fi";
+import { FiCheckCircle, FiAlertTriangle, FiEye, FiEyeOff } from "react-icons/fi";
 import { useRegister } from "../hooks/api/useAuth";
 import Input from "../components/Input";
 import Button from "../components/Button";
@@ -25,6 +25,9 @@ const Register = () => {
     password: "",
     confirmPassword: "",
   });
+
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const [alert, setAlert] = useState({ type: "", message: "" });
 
@@ -160,22 +163,40 @@ const Register = () => {
               <Input
                 label="MẬT KHẨU"
                 name="password"
-                type="password"
+                type={showPassword ? "text" : "password"}
                 value={formData.password}
                 onChange={handleInputChange}
                 placeholder="••••••••"
                 required
+                suffix={
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="text-neutral-400 hover:text-black transition-colors focus:outline-none cursor-pointer flex items-center justify-center"
+                  >
+                    {showPassword ? <FiEyeOff size={18} /> : <FiEye size={18} />}
+                  </button>
+                }
               />
 
               {/* Row 4: Confirm Password */}
               <Input
                 label="XÁC NHẬN MẬT KHẨU"
                 name="confirmPassword"
-                type="password"
+                type={showConfirmPassword ? "text" : "password"}
                 value={formData.confirmPassword}
                 onChange={handleInputChange}
                 placeholder="••••••••"
                 required
+                suffix={
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="text-neutral-400 hover:text-black transition-colors focus:outline-none cursor-pointer flex items-center justify-center"
+                  >
+                    {showConfirmPassword ? <FiEyeOff size={18} /> : <FiEye size={18} />}
+                  </button>
+                }
               />
 
               {/* Submit button */}

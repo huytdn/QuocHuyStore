@@ -35,7 +35,7 @@ const Header = () => {
 
   const handleLogout = () => {
     logoutMutation.mutate(null, {
-      onSuccess: () => {
+      onSettled: () => {
         navigate("/login");
       },
     });
@@ -124,7 +124,7 @@ const Header = () => {
               </Link>
               <div className="relative group">
                 <button
-                  onClick={() => !user && navigate("/login")}
+                  onClick={() => !user && navigate("/login", { state: { from: location } })}
                   className={`cursor-pointer flex items-center gap-1 ${iconColor} hover:scale-105 transition-transform`}
                 >
                   <FiUser size={20} />
@@ -140,7 +140,7 @@ const Header = () => {
                       to="/profile"
                       className="block px-4 py-2 text-xs font-semibold tracking-wider hover:bg-neutral-100 uppercase"
                     >
-                      Bảng điều khiển
+                      Hồ sơ
                     </Link>
                     <Link
                       to="/orders"
@@ -209,36 +209,40 @@ const Header = () => {
               {/* User Integration in Auth header */}
               {user ? (
                 <div className="relative group">
-                  <button className="flex items-center gap-1 text-black font-semibold label-sm">
+                  <button className="flex items-center gap-1.5 text-black font-semibold label-sm hover:scale-105 transition-transform">
                     <FiUser size={20} />
+                    <span className="hidden md:inline label-sm text-[10px] tracking-wider text-inherit font-medium">
+                      {user.displayName?.split(" ")[0]}
+                    </span>
                   </button>
-                  <div className="absolute right-0 mt-3 w-44 bg-white border border-neutral-200 shadow-lg py-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-250">
+                  <div className="absolute right-0 mt-3 w-48 bg-white text-black border border-neutral-200 rounded-none shadow-lg py-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
                     <Link
                       to="/profile"
-                      className="block px-4 py-2 text-[10px] font-bold tracking-wider uppercase hover:bg-neutral-50"
+                      className="block px-4 py-2 text-xs font-semibold tracking-wider hover:bg-neutral-100 uppercase"
                     >
-                      Dashboard
+                      Hồ sơ
                     </Link>
                     <Link
                       to="/orders"
-                      className="block px-4 py-2 text-[10px] font-bold tracking-wider uppercase hover:bg-neutral-50 border-t"
+                      className="block px-4 py-2 text-xs font-semibold tracking-wider hover:bg-neutral-100 uppercase border-t border-neutral-100"
                     >
                       Đơn hàng của tôi
                     </Link>
                     <button
                       onClick={handleLogout}
-                      className="w-full text-left block px-4 py-2 text-[10px] font-bold tracking-wider uppercase hover:bg-neutral-50 text-red-600 border-t mt-1"
+                      className="w-full text-left block px-4 py-2 text-xs font-semibold tracking-wider hover:bg-neutral-100 uppercase text-red-600 border-t border-neutral-100 mt-1"
                     >
-                      Sign Out
+                      Đăng xuất
                     </button>
                   </div>
                 </div>
               ) : (
                 <Link
                   to="/login"
+                  state={{ from: location }}
                   className="label-sm text-neutral-600 hover:text-black transition-colors hidden md:block"
                 >
-                  Sign In
+                  Đăng nhập
                 </Link>
               )}
 
@@ -317,6 +321,7 @@ const Header = () => {
           ) : (
             <Link
               to="/login"
+              state={{ from: location }}
               onClick={toggleMenu}
               className="font-serif text-3xl font-semibold tracking-wider hover:text-secondary transition-colors"
             >

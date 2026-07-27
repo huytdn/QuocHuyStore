@@ -42,3 +42,17 @@ export const useLogout = () => {
     },
   });
 };
+
+export const useUpdateProfile = () => {
+  const updateUserStore = useAuthStore((state) => state.updateUser);
+
+  return useMutation({
+    mutationFn: async (profileData) => {
+      const response = await axiosClient.put("/users/me", profileData);
+      return response.data; // UserResponseDto
+    },
+    onSuccess: (data) => {
+      updateUserStore(data);
+    },
+  });
+};

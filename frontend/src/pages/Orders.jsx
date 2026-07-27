@@ -100,7 +100,7 @@ const Orders = () => {
 
   const handleLogout = () => {
     logoutMutation.mutate(null, {
-      onSuccess: () => {
+      onSettled: () => {
         navigate("/login");
       },
     });

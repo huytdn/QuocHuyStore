@@ -1,9 +1,10 @@
-import React, { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { useNavigate, Link, useLocation } from "react-router-dom";
 import { FcGoogle } from "react-icons/fc";
 import { FaApple } from "react-icons/fa";
 import { FiCheckCircle, FiAlertTriangle, FiEye, FiEyeOff } from "react-icons/fi";
 import { useLogin } from "../hooks/api/useAuth";
+import { useAuthStore } from "../store/useAuthStore";
 import Input from "../components/Input";
 import Button from "../components/Button";
 import Footer from "../components/Footer";
@@ -14,6 +15,23 @@ const RIGHT_GRAPHIC = "https://images.unsplash.com/photo-1618005182384-a83a8bd57
 
 const Login = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // Get current auth state
+  const accessToken = useAuthStore((state) => state.accessToken);
+
+  // Redirection target after successful login
+  let from = location.state?.from?.pathname || "/";
+  if (from === "/login" || from === "/register") {
+    from = "/";
+  }
+
+  // Redirect if already logged in
+  useEffect(() => {
+    if (accessToken) {
+      navigate(from, { replace: true });
+    }
+  }, [accessToken, navigate, from]);
 
   // Password Visibility
   const [showPassword, setShowPassword] = useState(false);
@@ -59,7 +77,7 @@ const Login = () => {
         onSuccess: () => {
           showAlert("success", "Đăng nhập thành công! Đang chuyển hướng...");
           setTimeout(() => {
-            navigate("/dashboard");
+            navigate(from, { replace: true });
           }, 1500);
         },
         onError: (error) => {
@@ -153,6 +171,15 @@ const Login = () => {
                 >
                   Quên mật khẩu?
                 </Link>
+              }
+              suffix={
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="text-neutral-400 hover:text-black transition-colors focus:outline-none cursor-pointer flex items-center justify-center"
+                >
+                  {showPassword ? <FiEyeOff size={18} /> : <FiEye size={18} />}
+                </button>
               }
             />
 
