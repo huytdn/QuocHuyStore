@@ -1,6 +1,16 @@
-import { useMutation } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import axiosClient from "../../api/axiosClient";
 import { useAuthStore } from "../../store/useAuthStore";
+
+export const useProfile = () => {
+  return useQuery({
+    queryKey: ["profile"],
+    queryFn: async () => {
+      const response = await axiosClient.get("/users/me");
+      return response.data; // UserDetailResponseDto
+    },
+  });
+};
 
 export const useLogin = () => {
   const loginStore = useAuthStore((state) => state.login);
@@ -45,6 +55,7 @@ export const useLogout = () => {
 
 export const useUpdateProfile = () => {
   const updateUserStore = useAuthStore((state) => state.updateUser);
+  const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (profileData) => {
@@ -53,6 +64,7 @@ export const useUpdateProfile = () => {
     },
     onSuccess: (data) => {
       updateUserStore(data);
+      queryClient.invalidateQueries({ queryKey: ["profile"] });
     },
   });
 };

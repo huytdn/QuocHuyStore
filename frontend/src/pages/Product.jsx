@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { FiSearch, FiChevronDown } from "react-icons/fi";
 import ProductCard from "../components/ProductCard";
 import Footer from "../components/Footer";
+import { useProducts } from "../hooks/api/useProducts";
 
 // Curated Unsplash editorial images matching each item description
 const IMG_COAT = "https://images.unsplash.com/photo-1591047139829-d91aecb6caea?q=80&w=600&auto=format&fit=crop";
@@ -175,16 +176,29 @@ const Product = () => {
     }));
   };
 
-  const filteredProducts = initialProducts.filter((p) =>
-    p.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const { data: pageData, isLoading: isProductsLoading } = useProducts({
+    page: activePage - 1,
+    size: 12,
+    search: searchQuery || undefined,
+  });
 
-  const ITEMS_PER_PAGE = 12;
-  const totalPages = Math.ceil(filteredProducts.length / ITEMS_PER_PAGE);
-  const paginatedProducts = filteredProducts.slice(
-    (activePage - 1) * ITEMS_PER_PAGE,
-    activePage * ITEMS_PER_PAGE
-  );
+  const backendProducts = pageData?.content || [];
+  const totalPages = pageData ? pageData.totalPages : Math.ceil(initialProducts.length / 12);
+
+  const displayProducts = backendProducts.length > 0
+    ? backendProducts.map(p => ({
+        id: p.id,
+        name: p.name,
+        slug: p.slug,
+        price: p.minPrice ? (p.minPrice.toLocaleString("vi-VN") + "đ") : "Liên hệ",
+        image: p.thumbnailUrl
+      }))
+    : initialProducts.filter((p) =>
+        p.name.toLowerCase().includes(searchQuery.toLowerCase())
+      ).slice((activePage - 1) * 12, activePage * 12).map(p => ({
+        ...p,
+        slug: p.id
+      }));
 
   return (
     <div className="bg-[#fbf9f9] min-h-screen w-full flex flex-col font-dmsans text-black pt-28">
@@ -256,9 +270,17 @@ const Product = () => {
 
         {/* 3. PRODUCT GRID */}
         <section className="mb-16">
-          {paginatedProducts.length > 0 ? (
+          {isProductsLoading && backendProducts.length === 0 ? (
+            <div className="text-center py-20">
+              <svg className="animate-spin h-8 w-8 text-black mx-auto mb-4" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              <p className="text-neutral-500 font-light text-sm">Đang tải danh sách sản phẩm...</p>
+            </div>
+          ) : displayProducts.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-6 gap-y-12">
-              {paginatedProducts.map((product) => (
+              {displayProducts.map((product) => (
                 <ProductCard
                   key={product.id}
                   id={product.id}
@@ -269,7 +291,7 @@ const Product = () => {
                   showWishlist={true}
                   isWishlisted={!!wishlist[product.id]}
                   onWishlistToggle={(isWish) => handleWishlistToggle(product.id, isWish)}
-                  onClick={() => navigate(`/product/${product.id}`)}
+                  onClick={() => navigate(`/product/${product.slug}`)}
                 />
               ))}
             </div>

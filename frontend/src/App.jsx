@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Route, Routes } from "react-router-dom";
+import { Route, Routes, useLocation } from "react-router-dom";
 import Home from "./pages/Home";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
@@ -15,12 +15,18 @@ import Orders from "./pages/Orders";
 import OrderDetail from "./pages/OrderDetail";
 import Profile from "./pages/Profile";
 import About from "./pages/About";
+import AdminProducts from "./pages/admin/AdminProducts";
+import AdminCategories from "./pages/admin/AdminCategories";
+import AdminRoute from "./components/admin/AdminRoute";
+import AdminLogin from "./pages/admin/AdminLogin";
 
 // Global promise to coalesce concurrent silent refresh calls on startup (e.g. React StrictMode)
 let silentRefreshPromise = null;
 
 const App = () => {
   const [isInitializing, setIsInitializing] = useState(true);
+  const location = useLocation();
+  const isAdminRoute = location.pathname.startsWith("/admin");
 
   useEffect(() => {
     const runRefresh = async () => {
@@ -79,7 +85,7 @@ const App = () => {
 
   return (
     <>
-      <Header />
+      {!isAdminRoute && <Header />}
       <Routes>
         {/* public routes */}
         <Route path="/" element={<Home />} />
@@ -111,6 +117,23 @@ const App = () => {
             <ProtectedRoute>
               <Profile />
             </ProtectedRoute>
+          }
+        />
+        <Route path="/admin/login" element={<AdminLogin />} />
+        <Route
+          path="/admin/products"
+          element={
+            <AdminRoute>
+              <AdminProducts />
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="/admin/categories"
+          element={
+            <AdminRoute>
+              <AdminCategories />
+            </AdminRoute>
           }
         />
         <Route path="/about" element={<About />} />
