@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
   FiMail,
@@ -11,7 +11,13 @@ import {
   FiX,
 } from "react-icons/fi";
 import { useAuthStore } from "../store/useAuthStore";
-import { useUpdateProfile } from "../hooks/api/useAuth";
+import { useUpdateProfile, useProfile } from "../hooks/api/useAuth";
+import {
+  useAddresses,
+  useCreateAddress,
+  useUpdateAddress,
+  useDeleteAddress,
+} from "../hooks/api/useAddress";
 import Footer from "../components/Footer";
 
 const INITIAL_LIKED_PRODUCTS = [
@@ -31,27 +37,11 @@ const INITIAL_LIKED_PRODUCTS = [
   },
 ];
 
-const INITIAL_ADDRESSES = [
-  {
-    id: 1,
-    name: "Nguyễn Văn A",
-    phone: "090 123 4567",
-    address:
-      "Tầng 12, Bitexco Financial Tower, 2 Hải Triều, Bến Nghé, Quận 1, TP. Hồ Chí Minh",
-    isDefault: true,
-  },
-  {
-    id: 2,
-    name: "Nguyễn Văn A",
-    phone: "090 123 4567",
-    address: "123 Đường Lê Lợi, Phường Bến Thành, Quận 1, TP. Hồ Chí Minh",
-    isDefault: false,
-  },
-];
 
 const Profile = () => {
   const navigate = useNavigate();
   const user = useAuthStore((state) => state.user);
+  const { data: profile, isLoading: isProfileLoading } = useProfile();
   const updateProfileMutation = useUpdateProfile();
   const isUpdating = updateProfileMutation.isPending;
 
@@ -65,19 +55,27 @@ const Profile = () => {
   });
 
   useEffect(() => {
-    if (user) {
+    const activeUser = profile || user;
+    if (activeUser) {
       setUserInfo((prev) => ({
         ...prev,
-        name: user.displayName || prev.name,
-        email: user.username || prev.email,
-        phone: user.phone || prev.phone,
+        name: activeUser.displayName || prev.name,
+        email: activeUser.username || prev.email,
+        phone: activeUser.phone || prev.phone,
       }));
     }
-  }, [user]);
+  }, [profile, user]);
 
   const [activeTab, setActiveTab] = useState("favorites"); // favorites | addresses
   const [likedProducts, setLikedProducts] = useState(INITIAL_LIKED_PRODUCTS);
-  const [addresses, setAddresses] = useState(INITIAL_ADDRESSES);
+
+  // Address React Query integration
+  const { data: addressPage, isLoading: isAddressesLoading } = useAddresses({ page: 0, size: 50 });
+  const addresses = addressPage?.content || [];
+
+  const createAddressMutation = useCreateAddress();
+  const updateAddressMutation = useUpdateAddress();
+  const deleteAddressMutation = useDeleteAddress();
 
   // Edit Profile Modal States
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -96,9 +94,46 @@ const Profile = () => {
     }
   }, [isEditModalOpen, userInfo]);
 
-  // Add Address Modal States
+  // Add Address States
   const [isAddAddressOpen, setIsAddAddressOpen] = useState(false);
-  const [newAddress, setNewAddress] = useState("");
+  const [addressForm, setAddressForm] = useState({
+    receiverName: "",
+    receiverPhone: "",
+    addressDetail: "",
+    isDefault: false,
+  });
+
+  // Edit Address States
+  const [isEditAddressOpen, setIsEditAddressOpen] = useState(false);
+  const [editAddressForm, setEditAddressForm] = useState({
+    id: null,
+    receiverName: "",
+    receiverPhone: "",
+    addressDetail: "",
+    isDefault: false,
+  });
+
+  const handleOpenAddAddress = () => {
+    const activeUser = profile || user;
+    setAddressForm({
+      receiverName: activeUser?.displayName || "",
+      receiverPhone: activeUser?.phone || "",
+      addressDetail: "",
+      isDefault: false,
+    });
+    setIsAddAddressOpen(true);
+  };
+
+  const handleOpenEditAddress = (addr) => {
+    setEditAddressForm({
+      id: addr.id,
+      receiverName: addr.receiverName,
+      receiverPhone: addr.receiverPhone,
+      addressDetail: addr.addressDetail,
+      isDefault: addr.isDefault,
+    });
+    setIsEditAddressOpen(true);
+  };
 
   const handleEditProfileSubmit = (e) => {
     e.preventDefault();
@@ -131,30 +166,90 @@ const Profile = () => {
 
   const handleAddAddressSubmit = (e) => {
     e.preventDefault();
-    if (!newAddress.trim()) return;
-    const item = {
-      id: Date.now(),
-      name: userInfo.name,
-      phone: userInfo.phone,
-      address: newAddress,
-      isDefault: addresses.length === 0,
-    };
-    setAddresses((prev) => [...prev, item]);
-    setNewAddress("");
-    setIsAddAddressOpen(false);
+    if (
+      !addressForm.receiverName.trim() ||
+      !addressForm.receiverPhone.trim() ||
+      !addressForm.addressDetail.trim()
+    ) {
+      alert("Vui lòng nhập đầy đủ thông tin.");
+      return;
+    }
+    createAddressMutation.mutate(
+      {
+        receiverName: addressForm.receiverName.trim(),
+        receiverPhone: addressForm.receiverPhone.trim(),
+        addressDetail: addressForm.addressDetail.trim(),
+        isDefault: addressForm.isDefault,
+      },
+      {
+        onSuccess: () => {
+          setIsAddAddressOpen(false);
+        },
+        onError: (err) => {
+          alert(err.response?.data?.message || "Thêm địa chỉ thất bại!");
+        },
+      }
+    );
   };
 
-  const handleSetDefaultAddress = (addressId) => {
-    setAddresses((prev) =>
-      prev.map((addr) => ({
-        ...addr,
-        isDefault: addr.id === addressId,
-      })),
+  const handleEditAddressSubmit = (e) => {
+    e.preventDefault();
+    if (
+      !editAddressForm.receiverName.trim() ||
+      !editAddressForm.receiverPhone.trim() ||
+      !editAddressForm.addressDetail.trim()
+    ) {
+      alert("Vui lòng nhập đầy đủ thông tin.");
+      return;
+    }
+    updateAddressMutation.mutate(
+      {
+        addressId: editAddressForm.id,
+        payload: {
+          receiverName: editAddressForm.receiverName.trim(),
+          receiverPhone: editAddressForm.receiverPhone.trim(),
+          addressDetail: editAddressForm.addressDetail.trim(),
+          isDefault: editAddressForm.isDefault,
+        },
+      },
+      {
+        onSuccess: () => {
+          setIsEditAddressOpen(false);
+        },
+        onError: (err) => {
+          alert(err.response?.data?.message || "Cập nhật địa chỉ thất bại!");
+        },
+      }
+    );
+  };
+
+  const handleSetDefaultAddress = (addr) => {
+    updateAddressMutation.mutate(
+      {
+        addressId: addr.id,
+        payload: {
+          receiverName: addr.receiverName,
+          receiverPhone: addr.receiverPhone,
+          addressDetail: addr.addressDetail,
+          isDefault: true,
+        },
+      },
+      {
+        onError: (err) => {
+          alert(err.response?.data?.message || "Đặt địa chỉ mặc định thất bại!");
+        },
+      }
     );
   };
 
   const handleRemoveAddress = (addressId) => {
-    setAddresses((prev) => prev.filter((addr) => addr.id !== addressId));
+    if (window.confirm("Bạn có chắc chắn muốn xóa địa chỉ này?")) {
+      deleteAddressMutation.mutate(addressId, {
+        onError: (err) => {
+          alert(err.response?.data?.message || "Xóa địa chỉ thất bại!");
+        },
+      });
+    }
   };
 
   return (
@@ -314,7 +409,7 @@ const Profile = () => {
                     Sổ địa chỉ giao hàng
                   </h2>
                   <button
-                    onClick={() => setIsAddAddressOpen(true)}
+                    onClick={handleOpenAddAddress}
                     className="flex items-center gap-2 label-sm text-[10px] tracking-widest uppercase font-semibold border-b border-black hover:opacity-75 transition-opacity cursor-pointer"
                   >
                     <FiPlus size={12} />
@@ -322,7 +417,15 @@ const Profile = () => {
                   </button>
                 </div>
 
-                {addresses.length === 0 ? (
+                {isAddressesLoading ? (
+                  <div className="text-center py-16 select-none">
+                    <svg className="animate-spin h-8 w-8 text-black mx-auto mb-4" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <p className="text-neutral-500 font-light text-sm">Đang tải sổ địa chỉ...</p>
+                  </div>
+                ) : addresses.length === 0 ? (
                   <div className="border border-neutral-200 border-dashed p-16 text-center select-none">
                     <FiMapPin
                       size={36}
@@ -346,7 +449,7 @@ const Profile = () => {
                         <div className="space-y-2.5 text-left">
                           <div className="flex items-center gap-3">
                             <span className="font-semibold text-base text-black">
-                              {addr.name}
+                              {addr.receiverName}
                             </span>
                             {addr.isDefault && (
                               <span className="bg-black text-white text-[9px] px-2 py-0.5 tracking-wider font-semibold uppercase">
@@ -356,15 +459,15 @@ const Profile = () => {
                           </div>
 
                           <p className="text-neutral-500 text-sm">
-                            {addr.phone}
+                            {addr.receiverPhone}
                           </p>
                           <p className="text-neutral-800 text-sm leading-relaxed font-light">
-                            {addr.address}
+                            {addr.addressDetail}
                           </p>
 
                           {!addr.isDefault && (
                             <button
-                              onClick={() => handleSetDefaultAddress(addr.id)}
+                              onClick={() => handleSetDefaultAddress(addr)}
                               className="mt-4 text-[10px] font-bold uppercase text-neutral-500 hover:text-black tracking-wider transition-colors cursor-pointer select-none"
                             >
                               Đặt làm mặc định
@@ -372,13 +475,22 @@ const Profile = () => {
                           )}
                         </div>
 
-                        <button
-                          onClick={() => handleRemoveAddress(addr.id)}
-                          className="text-neutral-400 hover:text-red-600 p-1.5 transition-colors cursor-pointer select-none"
-                          aria-label="Remove Address"
-                        >
-                          <FiTrash2 size={16} />
-                        </button>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => handleOpenEditAddress(addr)}
+                            className="text-neutral-400 hover:text-black p-1.5 transition-colors cursor-pointer select-none"
+                            aria-label="Edit Address"
+                          >
+                            <FiEdit2 size={16} />
+                          </button>
+                          <button
+                            onClick={() => handleRemoveAddress(addr.id)}
+                            className="text-neutral-400 hover:text-red-600 p-1.5 transition-colors cursor-pointer select-none"
+                            aria-label="Remove Address"
+                          >
+                            <FiTrash2 size={16} />
+                          </button>
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -588,32 +700,176 @@ const Profile = () => {
 
             <form
               onSubmit={handleAddAddressSubmit}
-              className="space-y-5 text-sm"
+              className="space-y-4 text-sm"
             >
+              <div className="flex flex-col gap-1.5">
+                <label className="label-sm text-[10px] text-neutral-400 font-bold uppercase tracking-wider">
+                  Tên người nhận
+                </label>
+                <input
+                  type="text"
+                  maxLength={50}
+                  value={addressForm.receiverName}
+                  onChange={(e) => setAddressForm({ ...addressForm, receiverName: e.target.value })}
+                  placeholder="Nhập tên người nhận..."
+                  className="w-full border border-neutral-300 focus:border-black focus:ring-0 text-black px-3 py-2 text-sm"
+                  required
+                />
+              </div>
+
+              <div className="flex flex-col gap-1.5">
+                <label className="label-sm text-[10px] text-neutral-400 font-bold uppercase tracking-wider">
+                  Số điện thoại nhận hàng
+                </label>
+                <input
+                  type="tel"
+                  maxLength={11}
+                  value={addressForm.receiverPhone}
+                  onChange={(e) => setAddressForm({ ...addressForm, receiverPhone: e.target.value })}
+                  placeholder="Nhập số điện thoại nhận hàng..."
+                  className="w-full border border-neutral-300 focus:border-black focus:ring-0 text-black px-3 py-2 text-sm"
+                  required
+                />
+              </div>
+
               <div className="flex flex-col gap-1.5">
                 <label className="label-sm text-[10px] text-neutral-400 font-bold uppercase tracking-wider">
                   Địa chỉ chi tiết
                 </label>
                 <textarea
                   rows={3}
-                  value={newAddress}
-                  onChange={(e) => setNewAddress(e.target.value)}
+                  value={addressForm.addressDetail}
+                  onChange={(e) => setAddressForm({ ...addressForm, addressDetail: e.target.value })}
                   placeholder="Nhập số nhà, tên đường, phường/xã, quận/huyện, tỉnh/thành phố..."
-                  className="w-full border-neutral-300 focus:border-black focus:ring-0 text-black px-3 py-2 text-sm"
+                  className="w-full border border-neutral-300 focus:border-black focus:ring-0 text-black px-3 py-2 text-sm"
                   required
                 />
+              </div>
+
+              <div className="flex items-center gap-2 pt-2">
+                <input
+                  type="checkbox"
+                  id="isDefaultAdd"
+                  checked={addressForm.isDefault}
+                  onChange={(e) => setAddressForm({ ...addressForm, isDefault: e.target.checked })}
+                  className="border-neutral-300 text-black focus:ring-black h-4 w-4"
+                />
+                <label htmlFor="isDefaultAdd" className="text-xs text-neutral-600 font-medium select-none cursor-pointer">
+                  Đặt làm địa chỉ mặc định
+                </label>
               </div>
 
               <div className="pt-4 flex gap-4 select-none">
                 <button
                   type="submit"
-                  className="flex-1 bg-black text-white py-3 label-sm font-semibold tracking-wider hover:bg-neutral-800 transition-colors uppercase text-center cursor-pointer"
+                  disabled={createAddressMutation.isPending}
+                  className="flex-1 bg-black text-white py-3 label-sm font-semibold tracking-wider hover:bg-neutral-800 transition-colors uppercase text-center cursor-pointer disabled:opacity-50"
                 >
-                  Thêm địa chỉ
+                  {createAddressMutation.isPending ? "ĐANG THÊM..." : "Thêm địa chỉ"}
                 </button>
                 <button
                   type="button"
                   onClick={() => setIsAddAddressOpen(false)}
+                  className="flex-1 border border-neutral-300 py-3 label-sm font-semibold tracking-wider hover:bg-neutral-100 transition-colors uppercase text-center cursor-pointer"
+                >
+                  Hủy bỏ
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Address Modal Dialog */}
+      {isEditAddressOpen && (
+        <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4 backdrop-blur-[2px]">
+          <div className="bg-white text-black w-full max-w-[450px] shadow-2xl relative flex flex-col p-6 text-left">
+            <div className="flex justify-between items-center mb-6 pb-2 border-b border-neutral-200">
+              <h3 className="font-serif text-xl font-semibold text-black uppercase tracking-wide">
+                Chỉnh sửa địa chỉ
+              </h3>
+              <button
+                onClick={() => setIsEditAddressOpen(false)}
+                className="text-neutral-400 hover:text-black transition-colors cursor-pointer"
+                aria-label="Close modal"
+              >
+                <FiX size={20} />
+              </button>
+            </div>
+
+            <form
+              onSubmit={handleEditAddressSubmit}
+              className="space-y-4 text-sm"
+            >
+              <div className="flex flex-col gap-1.5">
+                <label className="label-sm text-[10px] text-neutral-400 font-bold uppercase tracking-wider">
+                  Tên người nhận
+                </label>
+                <input
+                  type="text"
+                  maxLength={50}
+                  value={editAddressForm.receiverName}
+                  onChange={(e) => setEditAddressForm({ ...editAddressForm, receiverName: e.target.value })}
+                  placeholder="Nhập tên người nhận..."
+                  className="w-full border border-neutral-300 focus:border-black focus:ring-0 text-black px-3 py-2 text-sm"
+                  required
+                />
+              </div>
+
+              <div className="flex flex-col gap-1.5">
+                <label className="label-sm text-[10px] text-neutral-400 font-bold uppercase tracking-wider">
+                  Số điện thoại nhận hàng
+                </label>
+                <input
+                  type="tel"
+                  maxLength={11}
+                  value={editAddressForm.receiverPhone}
+                  onChange={(e) => setEditAddressForm({ ...editAddressForm, receiverPhone: e.target.value })}
+                  placeholder="Nhập số điện thoại nhận hàng..."
+                  className="w-full border border-neutral-300 focus:border-black focus:ring-0 text-black px-3 py-2 text-sm"
+                  required
+                />
+              </div>
+
+              <div className="flex flex-col gap-1.5">
+                <label className="label-sm text-[10px] text-neutral-400 font-bold uppercase tracking-wider">
+                  Địa chỉ chi tiết
+                </label>
+                <textarea
+                  rows={3}
+                  value={editAddressForm.addressDetail}
+                  onChange={(e) => setEditAddressForm({ ...editAddressForm, addressDetail: e.target.value })}
+                  placeholder="Nhập số nhà, tên đường, phường/xã, quận/huyện, tỉnh/thành phố..."
+                  className="w-full border border-neutral-300 focus:border-black focus:ring-0 text-black px-3 py-2 text-sm"
+                  required
+                />
+              </div>
+
+              <div className="flex items-center gap-2 pt-2">
+                <input
+                  type="checkbox"
+                  id="isDefaultEdit"
+                  checked={editAddressForm.isDefault}
+                  onChange={(e) => setEditAddressForm({ ...editAddressForm, isDefault: e.target.checked })}
+                  disabled={editAddressForm.isDefault}
+                  className="border-neutral-300 text-black focus:ring-black h-4 w-4 disabled:opacity-50"
+                />
+                <label htmlFor="isDefaultEdit" className="text-xs text-neutral-600 font-medium select-none cursor-pointer disabled:opacity-50">
+                  Đặt làm địa chỉ mặc định
+                </label>
+              </div>
+
+              <div className="pt-4 flex gap-4 select-none">
+                <button
+                  type="submit"
+                  disabled={updateAddressMutation.isPending}
+                  className="flex-1 bg-black text-white py-3 label-sm font-semibold tracking-wider hover:bg-neutral-800 transition-colors uppercase text-center cursor-pointer disabled:opacity-50"
+                >
+                  {updateAddressMutation.isPending ? "ĐANG LƯU..." : "Lưu thay đổi"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIsEditAddressOpen(false)}
                   className="flex-1 border border-neutral-300 py-3 label-sm font-semibold tracking-wider hover:bg-neutral-100 transition-colors uppercase text-center cursor-pointer"
                 >
                   Hủy bỏ

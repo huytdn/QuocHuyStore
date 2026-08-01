@@ -1,42 +1,56 @@
-import React, { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { FiArrowLeft, FiPlus, FiMinus, FiTrash2, FiChevronDown, FiCreditCard, FiShield, FiCheckCircle } from "react-icons/fi";
 import Footer from "../components/Footer";
-
-const INITIAL_ITEMS = [
-  {
-    id: "blazer",
-    name: "Silk Blazer",
-    color: "Midnight Black",
-    size: "M",
-    price: 4500000,
-    quantity: 1,
-    image: "https://lh3.googleusercontent.com/aida-public/AB6AXuBmJ7xDwIsdolQJiw7PwYvAaIH7FizONpRtYW-_9GXCKrUuhSJpqlrZZKsC_CyPNL9drXnqeOgbkKdI7HZLIpAaUcGV4IvPc01yxQfad6XK4HL3dmR50uHqjGJ18GesoBhBMtmrFnKaqLzPsvjw2sVeXXcQXyBADNkl3_rc4OTjrgDkd7_ab4jEoMz7Tr6jWs1NhW6h-pcs1ZhZcO-d9UxzCINUcTgLvcuDh3V71PTkcmgS9Lnt0lDh88I_Wk2tzK2Yqt4u4dXwguI"
-  },
-  {
-    id: "trousers",
-    name: "Pleated Trousers",
-    color: "Ivory White",
-    size: "S",
-    price: 2800000,
-    quantity: 1,
-    image: "https://lh3.googleusercontent.com/aida-public/AB6AXuB30N42U3l73e0UhKJLAPRNovGkm2IRm6cbZcdBy2caQMvj9QkPI8bTCrX83ojR8tGrBhspztyRkfD5twPiF4nic0vkNNUH2vso_phxjLsCayJr1mbCeRCp-0sqOf0GXJk40QhzbM53ywKA1rSr4HsjkxXfEsduYrXEdP98F_X43fGzdt4gJiGw3ZNL7D_yID6XcmbVTIl192BGsnnMMS1dokxhsnahEdTRT1hzRVRsJyLLZy8HVqFziR40AQXo-AVvgposBk9f-dA"
-  }
-];
+import { useAuthStore } from "../store/useAuthStore";
+import { useAddresses, useCreateAddress } from "../hooks/api/useAddress";
+import { useCart, useUpdateCartItem, useRemoveFromCart } from "../hooks/api/useCart";
 
 const Cart = () => {
   const navigate = useNavigate();
-  const [items, setItems] = useState(INITIAL_ITEMS);
+  const user = useAuthStore((state) => state.user);
+  const isUserLoggedIn = useAuthStore((state) => !!state.accessToken);
+
+  const { data: cartItems, isLoading: isCartLoading } = useCart();
+  const updateCartItemMutation = useUpdateCartItem();
+  const removeFromCartMutation = useRemoveFromCart();
+
+  const items = cartItems || [];
+
   const [discountCode, setDiscountCode] = useState("");
   const [discountApplied, setDiscountApplied] = useState(false);
   const [discountError, setDiscountError] = useState("");
   const [discountValue, setDiscountValue] = useState(0); // 0.1 for 10%
+
+  const { data: addressPage } = useAddresses({ page: 0, size: 50 });
+  const backendAddresses = addressPage?.content || [];
+  const createAddressMutation = useCreateAddress();
+
   const [selectedAddress, setSelectedAddress] = useState("1");
   const [newAddressOpen, setNewAddressOpen] = useState(false);
   const [newAddressText, setNewAddressText] = useState("");
   const [addresses, setAddresses] = useState([
     { id: "1", label: "Địa chỉ mặc định: 123 Đường Lê Lợi, Quận 1, TP. HCM" }
   ]);
+
+  // Synchronize selectedAddress when backendAddresses load
+  useEffect(() => {
+    if (isUserLoggedIn && backendAddresses.length > 0) {
+      const defaultAddr = backendAddresses.find((addr) => addr.isDefault);
+      if (defaultAddr) {
+        setSelectedAddress(defaultAddr.id);
+      } else {
+        setSelectedAddress(backendAddresses[0].id);
+      }
+    }
+  }, [backendAddresses, isUserLoggedIn]);
+
+  const displayAddresses = isUserLoggedIn && backendAddresses.length > 0
+    ? backendAddresses.map((addr) => ({
+        id: addr.id,
+        label: `${addr.receiverName} (${addr.receiverPhone}) - ${addr.addressDetail}`,
+      }))
+    : addresses;
   const [paymentMethod, setPaymentMethod] = useState("cod");
   const [checkoutComplete, setCheckoutComplete] = useState(false);
 
@@ -46,25 +60,29 @@ const Cart = () => {
   };
 
   // Quantity updates
-  const handleQuantityChange = (id, delta) => {
-    setItems((prev) =>
-      prev.map((item) => {
-        if (item.id === id) {
-          const newQty = item.quantity + delta;
-          return { ...item, quantity: Math.max(1, newQty) };
-        }
-        return item;
-      })
-    );
+  const handleQuantityChange = (cartItemId, currentQty, delta) => {
+    const newQty = currentQty + delta;
+    if (newQty < 1) return;
+    updateCartItemMutation.mutate({ cartItemId, quantity: newQty }, {
+      onError: (err) => {
+        alert(err.response?.data?.message || "Cập nhật số lượng thất bại!");
+      }
+    });
   };
 
   // Remove item
-  const handleRemoveItem = (id) => {
-    setItems((prev) => prev.filter((item) => item.id !== id));
+  const handleRemoveItem = (cartItemId) => {
+    if (window.confirm("Bạn có chắc chắn muốn xóa sản phẩm này khỏi giỏ hàng?")) {
+      removeFromCartMutation.mutate(cartItemId, {
+        onError: (err) => {
+          alert(err.response?.data?.message || "Xóa sản phẩm thất bại!");
+        }
+      });
+    }
   };
 
   // Calculations
-  const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const subtotal = items.reduce((sum, item) => sum + item.unitPrice * item.quantity, 0);
   const shippingFee = 0; // Free shipping
   const discountAmount = subtotal * discountValue;
   const total = Math.max(0, subtotal + shippingFee - discountAmount);
@@ -88,7 +106,28 @@ const Cart = () => {
   // Add new address
   const handleAddAddressSubmit = (e) => {
     e.preventDefault();
-    if (newAddressText.trim()) {
+    if (!newAddressText.trim()) return;
+
+    if (isUserLoggedIn) {
+      createAddressMutation.mutate(
+        {
+          receiverName: user?.displayName || "Người nhận",
+          receiverPhone: user?.phone || "0900000000",
+          addressDetail: newAddressText.trim(),
+          isDefault: backendAddresses.length === 0,
+        },
+        {
+          onSuccess: (newAddr) => {
+            setSelectedAddress(newAddr.id);
+            setNewAddressText("");
+            setNewAddressOpen(false);
+          },
+          onError: (err) => {
+            alert(err.response?.data?.message || "Thêm địa chỉ thất bại!");
+          },
+        }
+      );
+    } else {
       const nextId = String(addresses.length + 1);
       setAddresses((prev) => [
         ...prev,
@@ -135,6 +174,41 @@ const Cart = () => {
     );
   }
 
+  if (!isUserLoggedIn) {
+    return (
+      <div className="bg-surface-bg text-black min-h-screen flex flex-col font-dmsans">
+        <main className="flex-grow max-w-[1440px] mx-auto w-full px-6 md:px-16 py-32 flex flex-col items-center justify-center text-center">
+          <h1 className="font-serif text-[36px] md:text-[48px] font-bold mb-4 uppercase">YÊU CẦU ĐĂNG NHẬP</h1>
+          <p className="body-md text-neutral-600 max-w-lg mb-8 leading-relaxed">
+            Vui lòng đăng nhập tài khoản của bạn để xem và quản lý giỏ hàng.
+          </p>
+          <button
+            onClick={() => navigate("/login")}
+            className="bg-black text-white px-8 py-4.5 label-sm tracking-widest font-semibold hover:bg-neutral-800 transition-colors cursor-pointer"
+          >
+            ĐĂNG NHẬP NGAY
+          </button>
+        </main>
+        <Footer variant="detailed" />
+      </div>
+    );
+  }
+
+  if (isCartLoading) {
+    return (
+      <div className="bg-surface-bg text-black min-h-screen flex flex-col font-dmsans">
+        <main className="flex-grow max-w-[1440px] mx-auto w-full px-6 md:px-16 py-32 flex flex-col items-center justify-center text-center">
+          <svg className="animate-spin h-10 w-10 text-black mb-4 mx-auto" fill="none" viewBox="0 0 24 24">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+          <span className="text-sm font-semibold tracking-wider text-neutral-500">ĐANG TẢI GIỎ HÀNG...</span>
+        </main>
+        <Footer variant="detailed" />
+      </div>
+    );
+  }
+
   return (
     <div className="bg-surface-bg text-black min-h-screen flex flex-col font-dmsans">
       {/* Main Section */}
@@ -170,22 +244,22 @@ const Cart = () => {
               <div className="flex flex-col">
                 {items.map((item) => (
                   <div
-                    key={item.id}
+                    key={item.cartItemId}
                     className="grid grid-cols-1 md:grid-cols-12 py-8 border-b border-neutral-200/80 items-center gap-6"
                   >
                     {/* Image & Details */}
                     <div className="md:col-span-6 flex items-center gap-6">
                       <div className="w-24 h-32 bg-neutral-100 overflow-hidden flex-shrink-0 select-none">
-                        <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+                        <img src={item.imageUrl} alt={item.productName} className="w-full h-full object-cover" />
                       </div>
                       
                       <div className="flex flex-col items-start text-left">
-                        <h3 className="font-serif text-lg md:text-xl font-medium text-black mb-1.5">{item.name}</h3>
-                        <p className="text-neutral-500 text-xs md:text-sm font-light mb-1">Màu: {item.color}</p>
+                        <h3 className="font-serif text-lg md:text-xl font-medium text-black mb-1.5">{item.productName}</h3>
+                        <p className="text-neutral-500 text-xs md:text-sm font-light mb-1">Màu: {item.colorName}</p>
                         <p className="text-neutral-500 text-xs md:text-sm font-light">Size: {item.size}</p>
                         
                         <button
-                          onClick={() => handleRemoveItem(item.id)}
+                          onClick={() => handleRemoveItem(item.cartItemId)}
                           className="mt-4 text-[10px] text-neutral-400 hover:text-red-600 underline uppercase tracking-widest font-semibold transition-colors cursor-pointer"
                         >
                           Xóa
@@ -196,7 +270,7 @@ const Cart = () => {
                     {/* Price */}
                     <div className="md:col-span-2 md:text-center flex md:block justify-between items-center">
                       <span className="md:hidden text-neutral-400 label-sm text-[10px]">Đơn giá:</span>
-                      <p className="body-md text-black">{formatPrice(item.price)}</p>
+                      <p className="body-md text-black">{formatPrice(item.unitPrice)}</p>
                     </div>
 
                     {/* Quantity Toggles */}
@@ -204,14 +278,14 @@ const Cart = () => {
                       <span className="md:hidden text-neutral-400 label-sm text-[10px]">Số lượng:</span>
                       <div className="flex items-center border border-neutral-300 h-10">
                         <button
-                          onClick={() => handleQuantityChange(item.id, -1)}
+                          onClick={() => handleQuantityChange(item.cartItemId, item.quantity, -1)}
                           className="px-3 text-neutral-500 hover:bg-neutral-100 h-full flex items-center justify-center transition-colors cursor-pointer"
                         >
                           <FiMinus size={12} />
                         </button>
                         <span className="px-4 text-sm font-semibold text-black w-8 text-center">{item.quantity}</span>
                         <button
-                          onClick={() => handleQuantityChange(item.id, 1)}
+                          onClick={() => handleQuantityChange(item.cartItemId, item.quantity, 1)}
                           className="px-3 text-neutral-500 hover:bg-neutral-100 h-full flex items-center justify-center transition-colors cursor-pointer"
                         >
                           <FiPlus size={12} />
@@ -222,7 +296,7 @@ const Cart = () => {
                     {/* Total */}
                     <div className="md:col-span-2 md:text-right flex md:block justify-between items-center">
                       <span className="md:hidden text-neutral-400 label-sm text-[10px]">Thành tiền:</span>
-                      <p className="body-md font-semibold text-black">{formatPrice(item.price * item.quantity)}</p>
+                      <p className="body-md font-semibold text-black">{formatPrice(item.totalItemPrice)}</p>
                     </div>
 
                   </div>
@@ -276,7 +350,7 @@ const Cart = () => {
                       onChange={(e) => setSelectedAddress(e.target.value)}
                       className="w-full bg-surface-bg border border-neutral-300 focus:ring-black focus:border-black text-sm px-4 py-3.5 pr-10 rounded-none appearance-none cursor-pointer text-black"
                     >
-                      {addresses.map((addr) => (
+                      {displayAddresses.map((addr) => (
                         <option key={addr.id} value={addr.id}>
                           {addr.label.length > 35 ? addr.label.slice(0, 35) + "..." : addr.label}
                         </option>
