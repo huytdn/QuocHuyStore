@@ -60,7 +60,7 @@ const Header = () => {
   return (
     <>
       <header
-        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 py-6 px-6 md:px-16 ${headerBg}`}
+        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 py-3.5 px-6 md:px-12 ${headerBg}`}
       >
         {variant === "home" ? (
           // HOME VARIANT: Center Logo, Left Links, Right Icons
@@ -97,7 +97,7 @@ const Header = () => {
                 aria-label="Toggle menu"
                 className={iconColor}
               >
-                <FiMenu size={24} />
+                <FiMenu size={20} />
               </button>
             </div>
 
@@ -105,7 +105,7 @@ const Header = () => {
             <div className="flex justify-center">
               <Link
                 to="/"
-                className={`font-serif tracking-[0.2em] text-[26px] md:text-[32px] font-bold ${logoColor} uppercase transition-all`}
+                className={`font-serif tracking-[0.2em] text-[20px] md:text-[24px] font-bold ${logoColor} uppercase transition-all`}
               >
                 LUMIÈRE
               </Link>
@@ -117,7 +117,7 @@ const Header = () => {
                 to="/cart"
                 className={`relative cursor-pointer ${iconColor} hover:scale-105 transition-transform`}
               >
-                <FiShoppingBag size={20} />
+                <FiShoppingBag size={18} />
                 <span className="absolute -top-1.5 -right-1.5 bg-black text-white text-[9px] w-4 h-4 rounded-full flex items-center justify-center border border-white font-sans font-bold">
                   2
                 </span>
@@ -127,7 +127,7 @@ const Header = () => {
                   onClick={() => !user && navigate("/login", { state: { from: location } })}
                   className={`cursor-pointer flex items-center gap-1 ${iconColor} hover:scale-105 transition-transform`}
                 >
-                  <FiUser size={20} />
+                  <FiUser size={18} />
                   {user && (
                     <span className="hidden md:inline label-sm text-[10px] tracking-wider text-inherit font-medium">
                       {user.displayName?.split(" ")[0]}
@@ -166,7 +166,7 @@ const Header = () => {
             <div>
               <Link
                 to="/"
-                className="font-serif tracking-[0.2em] text-[24px] md:text-[28px] font-bold text-black uppercase"
+                className="font-serif tracking-[0.2em] text-[20px] md:text-[24px] font-bold text-black uppercase"
               >
                 LUMIÈRE
               </Link>

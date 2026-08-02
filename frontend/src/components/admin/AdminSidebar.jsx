@@ -21,31 +21,31 @@ const AdminSidebar = ({ activeTab = "products" }) => {
   ];
 
   return (
-    <aside className="w-64 fixed left-0 top-0 h-screen bg-[#fbf9f9] border-r border-[#cfc4c5] flex flex-col py-8 z-50">
-      <div className="px-6 mb-10">
-        <h1 className="font-serif text-2xl font-semibold tracking-widest uppercase text-black">
+    <aside className="w-56 fixed left-0 top-0 h-screen bg-[#fbf9f9] border-r border-[#cfc4c5] flex flex-col py-6 z-50">
+      <div className="px-5 mb-6">
+        <h1 className="font-serif text-xl font-semibold tracking-widest uppercase text-black">
           LUMIÈRE
         </h1>
-        <p className="text-xs text-neutral-400 uppercase tracking-wider mt-1">
+        <p className="text-[10px] text-neutral-400 uppercase tracking-wider mt-0.5">
           Admin Console
         </p>
       </div>
 
-      <nav className="flex-1 space-y-1">
+      <nav className="flex-1 space-y-0.5">
         {navItems.map((item) => {
           const isActive = activeTab === item.key;
           return (
             <Link
               key={item.key}
               to={item.href}
-              className={`flex items-center px-6 py-4 transition-colors duration-200 ${
+              className={`flex items-center px-5 py-2.5 transition-colors duration-200 ${
                 isActive
                   ? "text-black font-bold border-r-2 border-black bg-[#efeded]"
                   : "text-neutral-500 hover:text-black hover:bg-[#efeded]"
               }`}
             >
-              <span className="material-symbols-outlined mr-3">{item.icon}</span>
-              <span className="text-xs font-bold tracking-widest uppercase">
+              <span className="material-symbols-outlined text-lg mr-2.5">{item.icon}</span>
+              <span className="text-[11px] font-bold tracking-wider uppercase">
                 {item.label}
               </span>
             </Link>
@@ -53,16 +53,16 @@ const AdminSidebar = ({ activeTab = "products" }) => {
         })}
       </nav>
 
-      <div className="px-6 py-6 border-t border-[#cfc4c5]">
+      <div className="px-5 py-4 border-t border-[#cfc4c5]">
         <div className="flex items-center justify-between">
           <div className="flex items-center">
-            <div className="w-8 h-8 bg-black rounded-full flex items-center justify-center text-white text-xs font-bold mr-3 select-none">
+            <div className="w-7 h-7 bg-black rounded-full flex items-center justify-center text-white text-[10px] font-bold mr-2.5 select-none">
               {adminUser?.displayName
                 ? adminUser.displayName.charAt(0).toUpperCase()
                 : "A"}
             </div>
             <div className="overflow-hidden">
-              <p className="text-xs font-semibold truncate max-w-[120px]">
+              <p className="text-xs font-semibold truncate max-w-[100px]">
                 {adminUser?.displayName || "Julian S."}
               </p>
               <p className="text-[9px] text-neutral-500 uppercase tracking-tighter">
@@ -72,7 +72,7 @@ const AdminSidebar = ({ activeTab = "products" }) => {
           </div>
           <button
             onClick={handleLogout}
-            className="material-symbols-outlined text-neutral-400 hover:text-red-600 transition-colors cursor-pointer"
+            className="material-symbols-outlined text-neutral-400 hover:text-red-600 transition-colors cursor-pointer text-lg"
             title="Đăng xuất"
           >
             logout

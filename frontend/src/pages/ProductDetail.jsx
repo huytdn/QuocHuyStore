@@ -182,9 +182,9 @@ const ProductDetail = () => {
   return (
     <div className="bg-surface-bg text-black min-h-screen flex flex-col font-dmsans">
       {/* Main Container */}
-      <main className="pt-32 pb-24 max-w-[1440px] mx-auto w-full px-6 md:px-16 flex-grow">
+      <main className="pt-24 pb-16 max-w-[1280px] mx-auto w-full px-6 md:px-10 flex-grow">
         {/* Breadcrumbs */}
-        <nav className="flex items-center gap-2 mb-12 label-sm text-[10px] text-neutral-500 tracking-widest select-none">
+        <nav className="flex items-center gap-2 mb-8 label-sm text-[10px] text-neutral-500 tracking-widest select-none">
           <Link to="/" className="hover:text-black transition-colors">
             Trang chủ
           </Link>
@@ -197,24 +197,24 @@ const ProductDetail = () => {
         </nav>
 
         {/* Product Grid Section */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14 items-start">
           {/* Left Gallery Column */}
-          <div className="lg:col-span-7 flex flex-col">
+          <div className="lg:col-span-6 flex flex-col">
             {/* Main Product Image */}
-            <div className="w-full aspect-[2/3] overflow-hidden bg-[#efeded] relative group select-none">
+            <div className="w-full max-w-[460px] aspect-[3/4] overflow-hidden bg-[#efeded] relative group select-none mx-auto lg:mx-0">
               <img
                 src={activeImage || product.thumbnailUrl}
                 alt={product.name}
                 className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
               />
               {(activeImage || product.thumbnailUrl) && (
-                <div className="absolute bottom-6 right-6 flex flex-col gap-2">
+                <div className="absolute bottom-5 right-5 flex flex-col gap-2">
                   <button
                     onClick={() => setIsZoomed(true)}
-                    className="bg-white/70 hover:bg-white text-black p-3.5 rounded-full backdrop-blur-md transition-all duration-300 hover:scale-105 active:scale-95 shadow-sm cursor-pointer"
+                    className="bg-white/70 hover:bg-white text-black p-3 rounded-full backdrop-blur-md transition-all duration-300 hover:scale-105 active:scale-95 shadow-sm cursor-pointer"
                     aria-label="Zoom Image"
                   >
-                    <FiZoomIn size={18} />
+                    <FiZoomIn size={16} />
                   </button>
                 </div>
               )}
@@ -222,13 +222,13 @@ const ProductDetail = () => {
           </div>
 
           {/* Right Product Details Column */}
-          <div className="lg:col-span-5 flex flex-col gap-8 lg:pl-6 text-left">
+          <div className="lg:col-span-6 flex flex-col gap-6 text-left">
             {/* Title & Price */}
-            <div className="flex flex-col gap-3">
-              <h1 className="font-serif text-[36px] md:text-[44px] leading-tight font-medium tracking-normal text-black">
+            <div className="flex flex-col gap-2">
+              <h1 className="font-serif text-[26px] md:text-[32px] leading-tight font-medium tracking-normal text-black">
                 {product.name}
               </h1>
-              <p className="font-serif text-xl md:text-2xl text-black font-medium tracking-wide">
+              <p className="font-serif text-lg md:text-xl text-black font-medium tracking-wide">
                 {formattedPrice}
               </p>
             </div>
