@@ -675,45 +675,45 @@ const ProductTableRow = ({
 
   return (
     <tr className="hover:bg-[#f5f3f3] transition-colors group">
-      <td className="px-6 py-6 text-center select-none">
+      <td className="px-4 py-3 text-center select-none">
         <input
           type="checkbox"
           checked={isSelected}
           onChange={() => onSelect(product.id)}
-          className="w-4 h-4 border-[#cfc4c5] text-black focus:ring-black rounded-none cursor-pointer"
+          className="w-3.5 h-3.5 border-[#cfc4c5] text-black focus:ring-black rounded-none cursor-pointer"
         />
       </td>
-      <td className="px-6 py-6">
+      <td className="px-4 py-3">
         <div className="flex items-center">
-          <div className="w-16 h-20 bg-[#efeded] flex-shrink-0 overflow-hidden select-none">
+          <div className="w-11 h-14 bg-[#efeded] flex-shrink-0 overflow-hidden select-none">
             <img
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
               src={detail?.thumbnailUrl || product.imageUrl}
               alt={product.name}
             />
           </div>
-          <div className="ml-4 text-left">
-            <p className="font-semibold text-black">{product.name}</p>
-            <p className="text-[10px] text-neutral-400 uppercase mt-1 font-bold">
+          <div className="ml-3 text-left">
+            <p className="font-semibold text-xs text-black">{product.name}</p>
+            <p className="text-[9px] text-neutral-400 uppercase mt-0.5 font-bold">
               SKU: {product.sku}
             </p>
           </div>
         </div>
       </td>
-      <td className="px-6 py-6">
-        <span className="text-[10px] font-bold uppercase tracking-wider">
+      <td className="px-4 py-3">
+        <span className="text-[9px] font-bold uppercase tracking-wider">
           {product.categoryName}
         </span>
       </td>
-      <td className="px-6 py-6 font-semibold">{formatPrice(displayPrice)}</td>
-      <td className="px-6 py-6 text-center">
+      <td className="px-4 py-3 font-semibold text-xs">{formatPrice(displayPrice)}</td>
+      <td className="px-4 py-3 text-center text-xs">
         <span className={displayStock === 0 ? "text-red-500 font-bold" : ""}>
           {displayStock}
         </span>
       </td>
-      <td className="px-6 py-6">
+      <td className="px-4 py-3">
         <span
-          className={`px-3 py-1 text-[9px] font-bold uppercase tracking-widest ${
+          className={`px-2.5 py-0.5 text-[8px] font-bold uppercase tracking-widest ${
             status === "Active"
               ? "bg-[#ece1ce] text-[#696253]"
               : status === "Low Stock"
@@ -724,24 +724,24 @@ const ProductTableRow = ({
           {status}
         </span>
       </td>
-      <td className="px-6 py-6 text-right select-none">
+      <td className="px-4 py-3 text-right select-none">
         <button
           onClick={() => onOpenColors(product)}
-          className="material-symbols-outlined text-neutral-400 hover:text-black mr-2 transition-colors cursor-pointer"
+          className="material-symbols-outlined text-neutral-400 hover:text-black mr-2 transition-colors cursor-pointer text-base"
           title="Quản lý Màu sắc & Ảnh"
         >
           palette
         </button>
         <button
           onClick={() => onOpenEdit(product)}
-          className="material-symbols-outlined text-neutral-400 hover:text-black mr-2 transition-colors cursor-pointer"
+          className="material-symbols-outlined text-neutral-400 hover:text-black mr-2 transition-colors cursor-pointer text-base"
           title="Sửa thông tin sản phẩm (PUT /admin/products/{id})"
         >
           edit
         </button>
         <button
           onClick={() => onDelete(product.id, product.name)}
-          className="material-symbols-outlined text-neutral-400 hover:text-red-600 transition-colors cursor-pointer"
+          className="material-symbols-outlined text-neutral-400 hover:text-red-600 transition-colors cursor-pointer text-base"
           title="Xóa sản phẩm"
         >
           delete
@@ -990,27 +990,27 @@ const AdminProducts = () => {
       <AdminSidebar activeTab="products" />
 
       {/* Main Content Area */}
-      <main className="ml-64 flex-1 min-h-screen flex flex-col">
+      <main className="ml-56 flex-1 min-h-screen flex flex-col">
         {/* Top Navigation Component */}
         <AdminHeader />
 
         {/* Page Content */}
-        <div className="p-16 flex-grow">
+        <div className="p-8 md:p-10 flex-grow">
           {/* Page Header Actions */}
-          <div className="flex justify-between items-end mb-12">
+          <div className="flex justify-between items-end mb-6">
             <div>
-              <nav className="flex mb-4 space-x-2 text-[10px] text-neutral-400 font-bold uppercase tracking-widest">
+              <nav className="flex mb-2 space-x-2 text-[9px] text-neutral-400 font-bold uppercase tracking-widest">
                 <span>Catalogue</span>
                 <span>/</span>
                 <span className="text-black">All Products</span>
               </nav>
-              <h2 className="font-serif text-[48px] leading-tight text-black font-semibold uppercase">
+              <h2 className="font-serif text-[30px] md:text-[34px] leading-tight text-black font-semibold uppercase">
                 Inventory
               </h2>
             </div>
             <button
               onClick={handleOpenAddProduct}
-              className="bg-black text-white text-[11px] font-bold px-8 py-4.5 uppercase tracking-widest hover:bg-neutral-800 transition-colors active:scale-95 cursor-pointer"
+              className="bg-black text-white text-[10px] font-bold px-5 py-2.5 uppercase tracking-widest hover:bg-neutral-800 transition-colors active:scale-95 cursor-pointer"
             >
               Add New Product
             </button>

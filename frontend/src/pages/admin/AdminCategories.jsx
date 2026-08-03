@@ -122,34 +122,34 @@ const AdminCategories = () => {
       <AdminSidebar activeTab="categories" />
 
       {/* Main Content Area */}
-      <main className="ml-64 flex-1 min-h-screen flex flex-col">
+      <main className="ml-56 flex-1 min-h-screen flex flex-col">
         {/* Top Navigation Component */}
         <AdminHeader />
 
         {/* Page Content */}
-        <div className="p-16 flex-grow">
+        <div className="p-8 md:p-10 flex-grow">
           {/* Page Header Actions */}
-          <div className="flex justify-between items-end mb-12">
+          <div className="flex justify-between items-end mb-6">
             <div>
-              <nav className="flex mb-4 space-x-2 text-[10px] text-neutral-400 font-bold uppercase tracking-widest">
+              <nav className="flex mb-2 space-x-2 text-[9px] text-neutral-400 font-bold uppercase tracking-widest">
                 <span>Catalogue</span>
                 <span>/</span>
                 <span className="text-black">Categories</span>
               </nav>
-              <h2 className="font-serif text-[48px] leading-tight text-black font-semibold uppercase">
+              <h2 className="font-serif text-[30px] md:text-[34px] leading-tight text-black font-semibold uppercase">
                 Categories
               </h2>
             </div>
             <button
               onClick={handleOpenAddModal}
-              className="bg-black text-white text-[11px] font-bold px-8 py-4.5 uppercase tracking-widest hover:bg-neutral-800 transition-colors active:scale-95 cursor-pointer"
+              className="bg-black text-white text-[10px] font-bold px-5 py-2.5 uppercase tracking-widest hover:bg-neutral-800 transition-colors active:scale-95 cursor-pointer"
             >
               Add New Category
             </button>
           </div>
 
           {/* Filter / Meta Bar */}
-          <div className="flex items-center justify-between mb-8 border-b border-[#cfc4c5] pb-6">
+          <div className="flex items-center justify-between mb-5 border-b border-[#cfc4c5] pb-4">
             <div className="text-[10px] font-bold text-neutral-400 uppercase tracking-wider">
               Total Categories: {totalElements}
             </div>
@@ -160,16 +160,16 @@ const AdminCategories = () => {
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="border-b border-[#cfc4c5] bg-[#f5f3f3]">
-                  <th className="px-6 py-4 font-semibold text-[10px] text-neutral-400 uppercase tracking-widest w-16 text-center select-none">
+                  <th className="px-4 py-2.5 font-semibold text-[9px] text-neutral-400 uppercase tracking-widest w-16 text-center select-none">
                     #ID
                   </th>
-                  <th className="px-6 py-4 font-semibold text-[10px] text-neutral-400 uppercase tracking-widest">
+                  <th className="px-4 py-2.5 font-semibold text-[9px] text-neutral-400 uppercase tracking-widest">
                     Category Name
                   </th>
-                  <th className="px-6 py-4 font-semibold text-[10px] text-neutral-400 uppercase tracking-widest">
+                  <th className="px-4 py-2.5 font-semibold text-[9px] text-neutral-400 uppercase tracking-widest">
                     Created At
                   </th>
-                  <th className="px-6 py-4 font-semibold text-[10px] text-neutral-400 uppercase tracking-widest text-right">
+                  <th className="px-4 py-2.5 font-semibold text-[9px] text-neutral-400 uppercase tracking-widest text-right">
                     Actions
                   </th>
                 </tr>
@@ -177,7 +177,7 @@ const AdminCategories = () => {
               <tbody className="divide-y divide-[#cfc4c5]/30">
                 {isLoading ? (
                   <tr>
-                    <td colSpan="4" className="text-center py-20">
+                    <td colSpan="4" className="text-center py-16">
                       <svg
                         className="animate-spin h-8 w-8 text-black mx-auto mb-4"
                         fill="none"
@@ -206,7 +206,7 @@ const AdminCategories = () => {
                   <tr>
                     <td
                       colSpan="4"
-                      className="text-center py-20 text-neutral-500 font-light"
+                      className="text-center py-16 text-neutral-500 font-light"
                     >
                       Chưa có danh mục nào trong hệ thống.
                     </td>
@@ -217,28 +217,28 @@ const AdminCategories = () => {
                       key={cat.id}
                       className="hover:bg-[#f5f3f3] transition-colors group"
                     >
-                      <td className="px-6 py-6 text-center select-none font-bold text-xs text-neutral-400">
+                      <td className="px-4 py-3 text-center select-none font-bold text-xs text-neutral-400">
                         #{cat.id}
                       </td>
-                      <td className="px-6 py-6">
-                        <p className="font-semibold text-black text-sm">
+                      <td className="px-4 py-3">
+                        <span className="font-semibold text-xs text-black">
                           {cat.name}
-                        </p>
+                        </span>
                       </td>
-                      <td className="px-6 py-6 text-xs text-neutral-500 font-medium">
+                      <td className="px-4 py-3 text-xs text-neutral-500">
                         {formatDate(cat.createdAt)}
                       </td>
-                      <td className="px-6 py-6 text-right select-none">
+                      <td className="px-4 py-3 text-right select-none">
                         <button
                           onClick={() => handleOpenEditModal(cat)}
-                          className="material-symbols-outlined text-neutral-400 hover:text-black mr-3 transition-colors cursor-pointer"
+                          className="material-symbols-outlined text-neutral-400 hover:text-black mr-2 transition-colors cursor-pointer text-base"
                           title="Sửa danh mục"
                         >
                           edit
                         </button>
                         <button
                           onClick={() => handleDelete(cat.id, cat.name)}
-                          className="material-symbols-outlined text-neutral-400 hover:text-red-600 transition-colors cursor-pointer"
+                          className="material-symbols-outlined text-neutral-400 hover:text-red-600 transition-colors cursor-pointer text-base"
                           title="Xóa danh mục"
                         >
                           delete

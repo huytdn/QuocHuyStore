@@ -201,28 +201,28 @@ const Product = () => {
       }));
 
   return (
-    <div className="bg-[#fbf9f9] min-h-screen w-full flex flex-col font-dmsans text-black pt-28">
-      <div className="max-w-[1440px] mx-auto w-full px-6 md:px-16 py-12 flex-grow">
+    <div className="bg-[#fbf9f9] min-h-screen w-full flex flex-col font-dmsans text-black pt-20">
+      <div className="max-w-[1280px] mx-auto w-full px-6 md:px-10 py-8 flex-grow">
         
         {/* 1. HERO TITLE SECTION */}
-        <section className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-12 mb-16 items-start">
+        <section className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-10 mb-10 items-start">
           <div className="lg:col-span-7">
-            <span className="label-sm text-neutral-500 tracking-[0.25em] text-[10px] md:text-xs font-semibold mb-3 block">
+            <span className="label-sm text-neutral-500 tracking-[0.25em] text-[10px] md:text-xs font-semibold mb-2 block">
               SẢN PHẨM
             </span>
-            <h1 className="font-serif text-[42px] md:text-[54px] font-bold leading-[1.1] uppercase tracking-normal">
+            <h1 className="font-serif text-[30px] md:text-[38px] font-bold leading-[1.1] uppercase tracking-normal">
               Tất cả sản phẩm
             </h1>
           </div>
-          <div className="lg:col-span-5 lg:pt-8">
-            <p className="body-md text-neutral-600 font-light leading-relaxed text-sm md:text-base">
+          <div className="lg:col-span-5 lg:pt-4">
+            <p className="body-md text-neutral-600 font-light leading-relaxed text-xs md:text-sm">
               Khám phá toàn bộ danh mục sản phẩm thời trang cao cấp của LUMIÈRE. Những thiết kế tối giản, chất liệu tuyển chọn tinh tế tôn vinh vẻ đẹp trường tồn.
             </p>
           </div>
         </section>
 
         {/* 2. FILTERS & SEARCH ROW */}
-        <section className="border-t border-b border-[#e0e0e0] py-4 flex flex-col md:flex-row justify-between items-center gap-6 mb-12 select-none">
+        <section className="border-t border-b border-[#e0e0e0] py-3 flex flex-col md:flex-row justify-between items-center gap-4 mb-8 select-none">
           {/* Left dropdown filters */}
           <div className="flex flex-wrap items-center gap-6 lg:gap-10 w-full md:w-auto">
             <button className="flex items-center gap-2 label-sm text-[11px] font-semibold text-black tracking-widest hover:text-secondary transition-colors cursor-pointer">
