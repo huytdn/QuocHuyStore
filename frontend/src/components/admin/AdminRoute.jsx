@@ -5,9 +5,12 @@ const AdminRoute = ({ children }) => {
   const user = useAuthStore((state) => state.user);
   const location = useLocation();
 
-  if (!user || user.role !== "ADMIN") {
-    // If the user is not authenticated or not an admin, redirect to login
-    return <Navigate to="/login" state={{ from: location }} replace />;
+  if (!user) {
+    return <Navigate to="/admin/login" state={{ from: location }} replace />;
+  }
+
+  if (user.role !== "ADMIN") {
+    return <Navigate to="/" replace />;
   }
 
   return children;

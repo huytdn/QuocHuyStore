@@ -2,16 +2,23 @@ import React, { useState, useEffect } from "react";
 import { useNavigate, Link, useLocation } from "react-router-dom";
 import { FcGoogle } from "react-icons/fc";
 import { FaApple } from "react-icons/fa";
-import { FiCheckCircle, FiAlertTriangle, FiEye, FiEyeOff } from "react-icons/fi";
+import {
+  FiCheckCircle,
+  FiAlertTriangle,
+  FiEye,
+  FiEyeOff,
+} from "react-icons/fi";
 import { useLogin } from "../hooks/api/useAuth";
 import { useAuthStore } from "../store/useAuthStore";
 import Input from "../components/Input";
 import Button from "../components/Button";
 import Footer from "../components/Footer";
 
-// Fashion graphic assets for background layout
-const LEFT_GRAPHIC = "https://images.unsplash.com/photo-1509631179647-0177331693ae?q=80&w=600&auto=format&fit=crop";
-const RIGHT_GRAPHIC = "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=600&auto=format&fit=crop";
+import leftGraphic from "../assets/photo-1509631179647-0177331693ae.avif";
+import rightGraphic from "../assets/photo-1618005182384-a83a8bd57fbe.avif";
+
+const LEFT_GRAPHIC = leftGraphic;
+const RIGHT_GRAPHIC = rightGraphic;
 
 const Login = () => {
   const navigate = useNavigate();
@@ -19,6 +26,7 @@ const Login = () => {
 
   // Get current auth state
   const accessToken = useAuthStore((state) => state.accessToken);
+  const logoutStore = useAuthStore((state) => state.logout);
 
   // Redirection target after successful login
   let from = location.state?.from?.pathname || "/";
@@ -74,7 +82,17 @@ const Login = () => {
         password: formData.password,
       },
       {
-        onSuccess: () => {
+        onSuccess: (data) => {
+          const loggedInUser = data?.user;
+          if (loggedInUser?.role === "ADMIN") {
+            logoutStore();
+            showAlert(
+              "error",
+              "Tài khoản Quản trị viên không thể đăng nhập tại cổng Khách hàng. Vui lòng đăng nhập tại trang quản trị!",
+            );
+            return;
+          }
+
           showAlert("success", "Đăng nhập thành công! Đang chuyển hướng...");
           setTimeout(() => {
             navigate(from, { replace: true });
@@ -82,10 +100,11 @@ const Login = () => {
         },
         onError: (error) => {
           const errorMsg =
-            error.response?.data?.message || "Tên tài khoản hoặc mật khẩu không đúng!";
+            error.response?.data?.message ||
+            "Tên tài khoản hoặc mật khẩu không đúng!";
           showAlert("error", errorMsg);
         },
-      }
+      },
     );
   };
 
@@ -110,7 +129,6 @@ const Login = () => {
       {/* Main Form Center Box */}
       <div className="flex-grow flex items-center justify-center px-6 py-12 relative z-10">
         <div className="w-full max-w-[500px] bg-white border border-[#e0e0e0] p-8 md:p-12 rounded-none transition-all duration-300">
-          
           {/* Header Texts */}
           <div className="text-center mb-8">
             <h1 className="font-serif text-[32px] font-medium text-black tracking-wide mb-2">
@@ -137,13 +155,14 @@ const Login = () => {
                   <FiAlertTriangle size={18} className="text-red-600" />
                 )}
               </span>
-              <span className="text-xs font-semibold tracking-wide">{alert.message}</span>
+              <span className="text-xs font-semibold tracking-wide">
+                {alert.message}
+              </span>
             </div>
           )}
 
           {/* Login/Register Form */}
           <form onSubmit={handleSubmit} className="space-y-6">
-            
             {/* EMAIL / USERNAME */}
             <Input
               label="EMAIL / TÊN ĐĂNG NHẬP"
@@ -192,9 +211,24 @@ const Login = () => {
             >
               {isLoading ? (
                 <span className="flex items-center justify-center gap-2">
-                  <svg className="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  <svg
+                    className="animate-spin h-4 w-4 text-white"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    ></circle>
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    ></path>
                   </svg>
                   ĐANG XỬ LÝ...
                 </span>
@@ -216,7 +250,12 @@ const Login = () => {
             <div className="grid grid-cols-2 gap-4">
               <button
                 type="button"
-                onClick={() => showAlert("info", "Tính năng đăng nhập Google đang được tích hợp.")}
+                onClick={() =>
+                  showAlert(
+                    "info",
+                    "Tính năng đăng nhập Google đang được tích hợp.",
+                  )
+                }
                 className="flex items-center justify-center gap-2.5 bg-white border border-[#e0e0e0] py-3 text-xs font-semibold label-sm text-black cursor-pointer hover:bg-neutral-50 active:scale-[0.98] transition-all"
               >
                 <FcGoogle size={18} />
@@ -224,7 +263,12 @@ const Login = () => {
               </button>
               <button
                 type="button"
-                onClick={() => showAlert("info", "Tính năng đăng nhập Apple đang được tích hợp.")}
+                onClick={() =>
+                  showAlert(
+                    "info",
+                    "Tính năng đăng nhập Apple đang được tích hợp.",
+                  )
+                }
                 className="flex items-center justify-center gap-2.5 bg-white border border-[#e0e0e0] py-3 text-xs font-semibold label-sm text-black cursor-pointer hover:bg-neutral-50 active:scale-[0.98] transition-all"
               >
                 <FaApple size={18} className="text-black" />
@@ -244,7 +288,6 @@ const Login = () => {
                 Đăng ký ngay
               </Link>
             </div>
-
           </form>
         </div>
       </div>
