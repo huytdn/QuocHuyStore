@@ -5,13 +5,19 @@ import Input from "../components/Input";
 import ProductCard from "../components/ProductCard";
 import Footer from "../components/Footer";
 
-// High-fidelity editorial fashion image URLs from Unsplash
-const HERO_BG = "https://images.unsplash.com/photo-1539109136881-3be0616acf4b?q=80&w=1200&auto=format&fit=crop";
-const ARCHIVE_BG = "https://images.unsplash.com/photo-1509319117193-57bab727e09d?q=80&w=1200&auto=format&fit=crop";
-const PROD_BLAZER = "https://images.unsplash.com/photo-1591047139829-d91aecb6caea?q=80&w=600&auto=format&fit=crop";
-const PROD_TROUSERS = "https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?q=80&w=600&auto=format&fit=crop";
-const PROD_SWEATER = "https://images.unsplash.com/photo-1608248597279-f99d160bfcbc?q=80&w=600&auto=format&fit=crop";
-const PROD_SHIRT = "https://images.unsplash.com/photo-1603252109303-2751441dd157?q=80&w=600&auto=format&fit=crop";
+import heroBg from "../assets/photo-1539109136881-3be0616acf4b.avif";
+import archiveBg from "../assets/photo-1509319117193-57bab727e09d.avif";
+import prodBlazer from "../assets/about-story.jpg";
+import prodTrousers from "../assets/craft-material.jpg";
+import prodSweater from "../assets/craft-workshop.jpg";
+import prodShirt from "../assets/craft-detail1.jpg";
+
+const HERO_BG = heroBg;
+const ARCHIVE_BG = archiveBg;
+const PROD_BLAZER = prodBlazer;
+const PROD_TROUSERS = prodTrousers;
+const PROD_SWEATER = prodSweater;
+const PROD_SHIRT = prodShirt;
 
 const Home = () => {
   const navigate = useNavigate();

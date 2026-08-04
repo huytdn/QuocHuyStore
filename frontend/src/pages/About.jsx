@@ -3,6 +3,13 @@ import { Link, useNavigate } from "react-router-dom";
 import { FiSliders, FiAward, FiEye } from "react-icons/fi";
 import Footer from "../components/Footer";
 
+import aboutHero from "../assets/about-hero.jpg";
+import aboutStory from "../assets/about-story.jpg";
+import craftMaterial from "../assets/craft-material.jpg";
+import craftWorkshop from "../assets/craft-workshop.jpg";
+import craftDetail1 from "../assets/craft-detail1.jpg";
+import craftDetail2 from "../assets/craft-detail2.jpg";
+
 const About = () => {
   const navigate = useNavigate();
   const [scrollY, setScrollY] = useState(0);
@@ -27,7 +34,7 @@ const About = () => {
           <div
             className="absolute inset-0 z-0 scale-105 transition-transform duration-100 ease-out bg-cover bg-center"
             style={{
-              backgroundImage: "url('https://lh3.googleusercontent.com/aida-public/AB6AXuAqO_Odjdz11QxOfKSz8z9oDYTY7PMRWInxg1me5_6P3FPVi61d_2dLlRIi8jv2jVwfxVYCv9DVmjVilKafprtgIwYcFSu_0vwQsiydJzzOBFj8atFM0216Oc6rQbh7gEPEPOsYqnRDEOKLF7x_pF-svcERJvhzNSTVtg0C-0KaFU8pxyg6Yq3PnLh_lO73DohB2Gs3G7pP-Tcr9RtAnrFzIF05Y4EExtSbKOtok6L37Sry1wXqWPIUN1lIieI0UImqWLOPYc4B9dI')",
+              backgroundImage: `url("${aboutHero}")`,
               transform: `translateY(${scrollY * 0.15}px) scale(1.05)`,
             }}
           />
@@ -82,7 +89,7 @@ const About = () => {
             <div
               className="w-full h-full bg-cover bg-center border border-neutral-200"
               style={{
-                backgroundImage: "url('https://lh3.googleusercontent.com/aida-public/AB6AXuCzw2M-Rfq4bRYeq2EcNV2i0NLViPTKbHpvP4f5hGyqGnafFWB0W_hYw0tEl4Mc5XgGT9HxWmc2w6XEphTcpXvou43meAzMLwPfXPWkZBNypGAFq76tfAG6YHfLhEeiJxYTj_1ng4MSi1XjMtPhlmm8G4nX5BKRzxnICKre-SL0vPIp0MXRTSEMqwHOXGFk0Tz3MQ98_Zty7dGwaL40EkneJIxjQJm1lOhGgapqEgjNZaIkrZecLRS1ZP0NpeOs5XIwOyW0nV0Whb8')",
+                backgroundImage: `url("${aboutStory}")`,
               }}
             />
             {/* Year overlapping card */}
@@ -169,7 +176,7 @@ const About = () => {
               <div
                 className="absolute inset-0 bg-cover bg-center transition-transform duration-700 ease-out group-hover:scale-105"
                 style={{
-                  backgroundImage: "url('https://lh3.googleusercontent.com/aida-public/AB6AXuAEV5iKh3KvuYGbHn75Yqlorb0ZMxdWKZouSfExOppFp3StJyiG_3jgVweIPpk8Ji2znR9aXYjpoxFAXFASpMeMRScsaRBoUCGLhgF69JYn7r3cqG-UdwaRC53FZxQbjQPUfivzQQrV5-hAOIS9sBpwRbVUwGJAUKxkVy32U4T76K7NHYCPIHgYud7fUiBvwQVbFVlNP0Gh0yh577dddk_4hgFDz2T-ZmZrsv0LRebM7XVT_gf7F_apQRO5pV-x2sOtBtK4QLnOt68')",
+                  backgroundImage: `url("${craftMaterial}")`,
                 }}
               />
               <div className="absolute inset-0 bg-black/25 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-8">
@@ -182,7 +189,7 @@ const About = () => {
               <div
                 className="absolute inset-0 bg-cover bg-center transition-transform duration-700 ease-out group-hover:scale-105"
                 style={{
-                  backgroundImage: "url('https://lh3.googleusercontent.com/aida-public/AB6AXuCkVVgr2tP6QIlhd_59ExIPrDuHpkxiA0jAxo25D0Jvp2XxkAhEQFdCdQsiPwySS-cuJIIYlBt89gs69_F8iWh4X063uW56STLPBE2vvAdBP121zYhhnPOmZ0sAAJ68-k6qj2OJ8koIzttIGy3IlvgB9OajRrqbWjIEb15p5eZql4zZPF6yI2A0gMehNsL2DhmRyz4vNjepx2ci0SZfwNyXf7vMQtRZD-_87fJlw50nU-vqDTj34OVIb57q4ZHv5apWMfSxDqCZFSQ')",
+                  backgroundImage: `url("${craftWorkshop}")`,
                 }}
               />
               <div className="absolute inset-0 bg-black/25 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-8">
@@ -195,7 +202,7 @@ const About = () => {
               <div
                 className="absolute inset-0 bg-cover bg-center transition-transform duration-700 ease-out group-hover:scale-105"
                 style={{
-                  backgroundImage: "url('https://lh3.googleusercontent.com/aida-public/AB6AXuCyjmwT_jQ1JcVuwQ_7bxgxoIj0uSkvqXzL04LYl0YxW0hknNbc-MfGdVRQfx7Zk2_zMdBzpLOyoxwrU6v_tGSZvOZIxVFmPonHYy08g5xYFTR2YMQaUMRiUJi3w-OaejGtXezZYEhRqN6jyiHbabni5QvS_CtKuVv15AyTvwkMyNm5Yb96xpwfWv02YJTcman85rUQFcDd4JSxkpf2CPfrsYGYJDW-arSi33ztJaXu6lKc50f94LyH48CNNMStBg7KrUkSrKy7tBU')",
+                  backgroundImage: `url("${craftDetail1}")`,
                 }}
               />
             </div>
@@ -205,7 +212,7 @@ const About = () => {
               <div
                 className="absolute inset-0 bg-cover bg-center transition-transform duration-700 ease-out group-hover:scale-105"
                 style={{
-                  backgroundImage: "url('https://lh3.googleusercontent.com/aida-public/AB6AXuCwdAyPlUjWd9Kgoj1TROMWr87EFZur3jy90IK9idJTABYBNbJhEXDmEYRdSulR6VMqVhO9Zau3nsCmytF51lxf4_iISRl6gD77-smTDHqJDKE11TVQj3FQYrpGSnBsYYQVd5WG5gVSbzXC6d-koUaZmdleEkEZRpHLPwcJ7itt--htfb_Hs__cfLBFYAMs7Jg96AXhs02FSgqIKL8udTB4bm-KEjDfTroD6OLJRiREG0TGrhCSF5UQwl0kBhA0P8Tx0iEUVslu3BY')",
+                  backgroundImage: `url("${craftDetail2}")`,
                 }}
               />
             </div>

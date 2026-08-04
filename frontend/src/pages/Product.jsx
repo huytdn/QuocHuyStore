@@ -5,169 +5,11 @@ import ProductCard from "../components/ProductCard";
 import Footer from "../components/Footer";
 import { useProducts } from "../hooks/api/useProducts";
 
-// Curated Unsplash editorial images matching each item description
-const IMG_COAT = "https://images.unsplash.com/photo-1591047139829-d91aecb6caea?q=80&w=600&auto=format&fit=crop";
-const IMG_DRESS = "https://images.unsplash.com/photo-1595777457583-95e059d581b8?q=80&w=600&auto=format&fit=crop";
-const IMG_CHARCOAL_PANTS = "https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?q=80&w=600&auto=format&fit=crop";
-const IMG_BAG = "https://images.unsplash.com/photo-1584917865442-de89df76afd3?q=80&w=600&auto=format&fit=crop";
-const IMG_SHIRT = "https://images.unsplash.com/photo-1596755094514-f87e34085b2c?q=80&w=600&auto=format&fit=crop";
-const IMG_SWEATER = "https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?q=80&w=600&auto=format&fit=crop";
-const IMG_BOOTS = "https://images.unsplash.com/photo-1638247025967-b4e38f787b76?q=80&w=600&auto=format&fit=crop";
-const IMG_NAVY_COAT = "https://images.unsplash.com/photo-1544441893-675973e31985?q=80&w=600&auto=format&fit=crop";
-
 const Product = () => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
   const [activePage, setActivePage] = useState(1);
   const [wishlist, setWishlist] = useState({});
-
-  // 24 product items matching design exactly
-  const initialProducts = [
-    {
-      id: "1",
-      name: "Áo Khoác Cashmere Oversized",
-      price: "12.500.000 VND",
-      image: IMG_COAT,
-    },
-    {
-      id: "2",
-      name: "Đầm Lụa Slip Dress Đen",
-      price: "8.000.000 VND",
-      image: IMG_DRESS,
-    },
-    {
-      id: "3",
-      name: "Quần Tây Ống Rộng Charcoal",
-      price: "4.200.000 VND",
-      image: IMG_CHARCOAL_PANTS,
-    },
-    {
-      id: "4",
-      name: "Túi Cầm Tay Da Thuần",
-      price: "15.800.000 VND",
-      image: IMG_BAG,
-    },
-    {
-      id: "5",
-      name: "Áo Sơ Mi Poplin Cấu Trúc",
-      price: "3.800.000 VND",
-      image: IMG_SHIRT,
-    },
-    {
-      id: "6",
-      name: "Áo Len Dệt Ribbed Oatmeal",
-      price: "5.600.000 VND",
-      image: IMG_SWEATER,
-    },
-    {
-      id: "7",
-      name: "Giày Chelsea Leather Đen",
-      price: "7.200.000 VND",
-      image: IMG_BOOTS,
-    },
-    {
-      id: "8",
-      name: "Áo Khoác Wool Tailored Navy",
-      price: "14.000.000 VND",
-      image: IMG_NAVY_COAT,
-    },
-    {
-      id: "9",
-      name: "Áo Khoác Cashmere Dáng Lửng",
-      price: "11.500.000 VND",
-      image: IMG_COAT,
-    },
-    {
-      id: "10",
-      name: "Đầm Lụa Slip Dress Trắng",
-      price: "8.500.000 VND",
-      image: IMG_DRESS,
-    },
-    {
-      id: "11",
-      name: "Quần Tây Xếp Ly Charcoal",
-      price: "4.500.000 VND",
-      image: IMG_CHARCOAL_PANTS,
-    },
-    {
-      id: "12",
-      name: "Túi Xách Da Khâu Tay",
-      price: "16.500.000 VND",
-      image: IMG_BAG,
-    },
-    {
-      id: "13",
-      name: "Áo Sơ Mi Poplin Classic",
-      price: "3.200.000 VND",
-      image: IMG_SHIRT,
-    },
-    {
-      id: "14",
-      name: "Áo Len Dệt Oatmeal Cổ Lọ",
-      price: "5.900.000 VND",
-      image: IMG_SWEATER,
-    },
-    {
-      id: "15",
-      name: "Giày Chelsea Leather Nâu Da Bò",
-      price: "7.800.000 VND",
-      image: IMG_BOOTS,
-    },
-    {
-      id: "16",
-      name: "Áo Khoác Wool Dáng Dài Navy",
-      price: "15.000.000 VND",
-      image: IMG_NAVY_COAT,
-    },
-    {
-      id: "17",
-      name: "Áo Khoác Cashmere Cổ Điển",
-      price: "13.200.000 VND",
-      image: IMG_COAT,
-    },
-    {
-      id: "18",
-      name: "Đầm Lụa Dáng Dài Cổ V",
-      price: "9.000.000 VND",
-      image: IMG_DRESS,
-    },
-    {
-      id: "19",
-      name: "Quần Tây Ống Đứng Charcoal",
-      price: "3.900.000 VND",
-      image: IMG_CHARCOAL_PANTS,
-    },
-    {
-      id: "20",
-      name: "Túi Đeo Vai Da Cao Cấp",
-      price: "14.500.000 VND",
-      image: IMG_BAG,
-    },
-    {
-      id: "21",
-      name: "Áo Sơ Mi Lụa Mịn Màng",
-      price: "4.200.000 VND",
-      image: IMG_SHIRT,
-    },
-    {
-      id: "22",
-      name: "Áo Len Cổ V Màu Oatmeal",
-      price: "5.200.000 VND",
-      image: IMG_SWEATER,
-    },
-    {
-      id: "23",
-      name: "Bốt Chelsea Da Bóng",
-      price: "8.200.000 VND",
-      image: IMG_BOOTS,
-    },
-    {
-      id: "24",
-      name: "Áo Măng Tô Wool Cao Cấp",
-      price: "16.000.000 VND",
-      image: IMG_NAVY_COAT,
-    },
-  ];
 
   const handleWishlistToggle = (id, isWishlisted) => {
     setWishlist((prev) => ({
@@ -176,29 +18,22 @@ const Product = () => {
     }));
   };
 
-  const { data: pageData, isLoading: isProductsLoading } = useProducts({
+  const { data: pageData, isLoading: isProductsLoading, isError } = useProducts({
     page: activePage - 1,
     size: 12,
     search: searchQuery || undefined,
   });
 
   const backendProducts = pageData?.content || [];
-  const totalPages = pageData ? pageData.totalPages : Math.ceil(initialProducts.length / 12);
+  const totalPages = pageData?.totalPages || 0;
 
-  const displayProducts = backendProducts.length > 0
-    ? backendProducts.map(p => ({
-        id: p.id,
-        name: p.name,
-        slug: p.slug,
-        price: p.minPrice ? (p.minPrice.toLocaleString("vi-VN") + "đ") : "Liên hệ",
-        image: p.thumbnailUrl
-      }))
-    : initialProducts.filter((p) =>
-        p.name.toLowerCase().includes(searchQuery.toLowerCase())
-      ).slice((activePage - 1) * 12, activePage * 12).map(p => ({
-        ...p,
-        slug: p.id
-      }));
+  const displayProducts = backendProducts.map((p) => ({
+    id: p.id,
+    name: p.name,
+    slug: p.slug || p.id,
+    price: p.minPrice ? Number(p.minPrice).toLocaleString("vi-VN") + "đ" : "Liên hệ",
+    image: p.thumbnailUrl,
+  }));
 
   return (
     <div className="bg-[#fbf9f9] min-h-screen w-full flex flex-col font-dmsans text-black pt-20">
@@ -270,7 +105,7 @@ const Product = () => {
 
         {/* 3. PRODUCT GRID */}
         <section className="mb-16">
-          {isProductsLoading && backendProducts.length === 0 ? (
+          {isProductsLoading ? (
             <div className="text-center py-20">
               <svg className="animate-spin h-8 w-8 text-black mx-auto mb-4" fill="none" viewBox="0 0 24 24">
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
@@ -278,7 +113,11 @@ const Product = () => {
               </svg>
               <p className="text-neutral-500 font-light text-sm">Đang tải danh sách sản phẩm...</p>
             </div>
-          ) : displayProducts.length > 0 ? (
+          ) : isError || displayProducts.length === 0 ? (
+            <div className="text-center py-20 text-neutral-500 font-light text-sm">
+              Hiện không có sản phẩm vui lòng thử lại
+            </div>
+          ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-6 gap-y-12">
               {displayProducts.map((product) => (
                 <ProductCard
@@ -295,36 +134,34 @@ const Product = () => {
                 />
               ))}
             </div>
-          ) : (
-            <div className="text-center py-20 text-neutral-500 font-light">
-              Không tìm thấy sản phẩm phù hợp. Vui lòng tìm kiếm lại.
-            </div>
           )}
         </section>
 
         {/* 4. PAGINATION */}
-        <section className="flex flex-col items-center gap-8 py-4 select-none">
-          <div className="flex items-center gap-4 mt-2">
-            {Array.from({ length: totalPages }, (_, index) => {
-              const pageNum = index + 1;
-              const pageStr = String(pageNum).padStart(2, "0");
-              const isActive = activePage === pageNum;
-              return (
-                <button
-                  key={pageNum}
-                  onClick={() => setActivePage(pageNum)}
-                  className={`label-sm text-xs tracking-wider cursor-pointer ${
-                    isActive
-                      ? "text-black border-b border-black pb-0.5 font-bold"
-                      : "text-neutral-500 hover:text-black pb-0.5"
-                  }`}
-                >
-                  {pageStr}
-                </button>
-              );
-            })}
-          </div>
-        </section>
+        {totalPages > 1 && (
+          <section className="flex flex-col items-center gap-8 py-4 select-none">
+            <div className="flex items-center gap-4 mt-2">
+              {Array.from({ length: totalPages }, (_, index) => {
+                const pageNum = index + 1;
+                const pageStr = String(pageNum).padStart(2, "0");
+                const isActive = activePage === pageNum;
+                return (
+                  <button
+                    key={pageNum}
+                    onClick={() => setActivePage(pageNum)}
+                    className={`label-sm text-xs tracking-wider cursor-pointer ${
+                      isActive
+                        ? "text-black border-b border-black pb-0.5 font-bold"
+                        : "text-neutral-500 hover:text-black pb-0.5"
+                    }`}
+                  >
+                    {pageStr}
+                  </button>
+                );
+              })}
+            </div>
+          </section>
+        )}
 
       </div>
 

@@ -30,6 +30,7 @@ const ProductDetail = () => {
   const [selectedColor, setSelectedColor] = useState("");
   const [selectedSize, setSelectedSize] = useState("");
   const [isZoomed, setIsZoomed] = useState(false);
+  const [isSizeGuideOpen, setIsSizeGuideOpen] = useState(false);
   const [detailsOpen, setDetailsOpen] = useState(true);
   const [careOpen, setCareOpen] = useState(false);
   const [addedToCart, setAddedToCart] = useState(false);
@@ -278,7 +279,10 @@ const ProductDetail = () => {
                   <span className="label-sm text-xs font-bold text-black tracking-widest uppercase">
                     Kích thước
                   </span>
-                  <button className="label-sm text-[10px] text-neutral-500 underline underline-offset-4 hover:text-black transition-colors">
+                  <button
+                    onClick={() => setIsSizeGuideOpen(true)}
+                    className="label-sm text-[10px] text-neutral-500 underline underline-offset-4 hover:text-black transition-colors cursor-pointer"
+                  >
                     Bảng size
                   </button>
                 </div>
@@ -455,6 +459,172 @@ const ProductDetail = () => {
             alt={product.name}
             className="max-w-full max-h-[92vh] object-contain select-none shadow-2xl transition-transform duration-300"
           />
+        </div>
+      )}
+
+      {/* Size Guide Modal */}
+      {isSizeGuideOpen && (
+        <div
+          className="fixed inset-0 z-50 bg-black/75 backdrop-blur-md flex items-center justify-center p-4 md:p-6 animate-fade-in"
+          onClick={() => setIsSizeGuideOpen(false)}
+        >
+          <div
+            className="bg-[#fcfbf9] max-w-3xl w-full p-6 md:p-8 relative shadow-2xl overflow-y-auto max-h-[92vh] flex flex-col rounded-md border border-[#e5ded4]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Close Button */}
+            <button
+              onClick={() => setIsSizeGuideOpen(false)}
+              className="absolute top-4 right-4 text-neutral-500 hover:text-black p-2 transition-colors cursor-pointer rounded-full hover:bg-neutral-200/60 active:scale-95 z-10"
+              aria-label="Đóng hướng dẫn"
+            >
+              <FiX size={24} />
+            </button>
+
+            {/* Rendered LUMIÈRE Size Guide Card */}
+            <div className="w-full bg-[#FAF8F5] p-6 md:p-8 rounded-md border border-[#E3DAC8] shadow-sm flex flex-col items-center">
+              {/* Logo Brand Header */}
+              <h2 className="font-serif text-3xl md:text-4xl font-normal tracking-[0.25em] text-[#B88E28] uppercase text-center mb-8">
+                LUMIÈRE
+              </h2>
+
+              {/* Grid 2 Tables: TOPS and BOTTOMS */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full max-w-2xl">
+                {/* Left Table: TOPS */}
+                <div className="flex flex-col items-center">
+                  {/* Suit Jacket Icon */}
+                  <div className="mb-3 text-[#B88E28]">
+                    <svg className="w-9 h-9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.25">
+                      <path d="M6 3h12l1 6-4 3 2 9H7l2-9-4-3 1-6z" />
+                      <path d="M12 3v9" />
+                      <path d="M9 3l3 4 3-4" />
+                    </svg>
+                  </div>
+                  
+                  {/* Table Box */}
+                  <div className="w-full border border-[#D5CBB5] bg-white text-center shadow-xs">
+                    <div className="bg-[#F3EDE2] font-serif text-base tracking-widest font-semibold text-[#2C2825] py-2 border-b border-[#D5CBB5] uppercase">
+                      TOPS
+                    </div>
+                    <table className="w-full text-xs font-sans">
+                      <thead>
+                        <tr className="bg-[#FAF6EE] text-[#554D43] font-bold border-b border-[#D5CBB5]">
+                          <th className="py-2 px-1 border-r border-[#D5CBB5]">SIZE</th>
+                          <th className="py-2 px-1 border-r border-[#D5CBB5]">CHEST</th>
+                          <th className="py-2 px-1 border-r border-[#D5CBB5]">WAIST</th>
+                          <th className="py-2 px-1">SLEEVE</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-[#EADFCB] text-[#332E29]">
+                        <tr className="hover:bg-[#FAF6EE]/50">
+                          <td className="py-2 font-semibold border-r border-[#D5CBB5]">S</td>
+                          <td className="py-2 border-r border-[#D5CBB5]">34-36</td>
+                          <td className="py-2 border-r border-[#D5CBB5]">28-30</td>
+                          <td className="py-2">32</td>
+                        </tr>
+                        <tr className="hover:bg-[#FAF6EE]/50">
+                          <td className="py-2 font-semibold border-r border-[#D5CBB5]">M</td>
+                          <td className="py-2 border-r border-[#D5CBB5]">38-40</td>
+                          <td className="py-2 border-r border-[#D5CBB5]">32-34</td>
+                          <td className="py-2">33</td>
+                        </tr>
+                        <tr className="hover:bg-[#FAF6EE]/50">
+                          <td className="py-2 font-semibold border-r border-[#D5CBB5]">L</td>
+                          <td className="py-2 border-r border-[#D5CBB5]">40-42</td>
+                          <td className="py-2 border-r border-[#D5CBB5]">34-36</td>
+                          <td className="py-2">34</td>
+                        </tr>
+                        <tr className="hover:bg-[#FAF6EE]/50">
+                          <td className="py-2 font-semibold border-r border-[#D5CBB5]">XL</td>
+                          <td className="py-2 border-r border-[#D5CBB5]">42-44</td>
+                          <td className="py-2 border-r border-[#D5CBB5]">36-38</td>
+                          <td className="py-2">35</td>
+                        </tr>
+                        <tr className="hover:bg-[#FAF6EE]/50">
+                          <td className="py-2 font-semibold border-r border-[#D5CBB5]">2XL</td>
+                          <td className="py-2 border-r border-[#D5CBB5]">46-48</td>
+                          <td className="py-2 border-r border-[#D5CBB5]">40-42</td>
+                          <td className="py-2">36</td>
+                        </tr>
+                        <tr className="hover:bg-[#FAF6EE]/50">
+                          <td className="py-2 font-semibold border-r border-[#D5CBB5]">3XL</td>
+                          <td className="py-2 border-r border-[#D5CBB5]">50-52</td>
+                          <td className="py-2 border-r border-[#D5CBB5]">44-46</td>
+                          <td className="py-2">37</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+                {/* Right Table: BOTTOMS */}
+                <div className="flex flex-col items-center">
+                  {/* Trousers Icon */}
+                  <div className="mb-3 text-[#B88E28]">
+                    <svg className="w-9 h-9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.25">
+                      <path d="M7 3h10v3l-1 15h-3l-1-9-1 9H8L7 6V3z" />
+                      <path d="M7 6h10" />
+                    </svg>
+                  </div>
+
+                  {/* Table Box */}
+                  <div className="w-full border border-[#D5CBB5] bg-white text-center shadow-xs">
+                    <div className="bg-[#F3EDE2] font-serif text-base tracking-widest font-semibold text-[#2C2825] py-2 border-b border-[#D5CBB5] uppercase">
+                      BOTTOMS
+                    </div>
+                    <table className="w-full text-xs font-sans">
+                      <thead>
+                        <tr className="bg-[#FAF6EE] text-[#554D43] font-bold border-b border-[#D5CBB5]">
+                          <th className="py-2 px-1 border-r border-[#D5CBB5]">SIZE</th>
+                          <th className="py-2 px-1 border-r border-[#D5CBB5]">WAIST</th>
+                          <th className="py-2 px-1 border-r border-[#D5CBB5]">HIP</th>
+                          <th className="py-2 px-1">INSEAM</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-[#EADFCB] text-[#332E29]">
+                        <tr className="hover:bg-[#FAF6EE]/50">
+                          <td className="py-2 font-semibold border-r border-[#D5CBB5]">S</td>
+                          <td className="py-2 border-r border-[#D5CBB5]">28-30</td>
+                          <td className="py-2 border-r border-[#D5CBB5]">34-36</td>
+                          <td className="py-2">30</td>
+                        </tr>
+                        <tr className="hover:bg-[#FAF6EE]/50">
+                          <td className="py-2 font-semibold border-r border-[#D5CBB5]">M</td>
+                          <td className="py-2 border-r border-[#D5CBB5]">32-34</td>
+                          <td className="py-2 border-r border-[#D5CBB5]">38-40</td>
+                          <td className="py-2">31</td>
+                        </tr>
+                        <tr className="hover:bg-[#FAF6EE]/50">
+                          <td className="py-2 font-semibold border-r border-[#D5CBB5]">L</td>
+                          <td className="py-2 border-r border-[#D5CBB5]">34-36</td>
+                          <td className="py-2 border-r border-[#D5CBB5]">40-42</td>
+                          <td className="py-2">31</td>
+                        </tr>
+                        <tr className="hover:bg-[#FAF6EE]/50">
+                          <td className="py-2 font-semibold border-r border-[#D5CBB5]">XL</td>
+                          <td className="py-2 border-r border-[#D5CBB5]">36-38</td>
+                          <td className="py-2 border-r border-[#D5CBB5]">42-44</td>
+                          <td className="py-2">31</td>
+                        </tr>
+                        <tr className="hover:bg-[#FAF6EE]/50">
+                          <td className="py-2 font-semibold border-r border-[#D5CBB5]">2XL</td>
+                          <td className="py-2 border-r border-[#D5CBB5]">38-40</td>
+                          <td className="py-2 border-r border-[#D5CBB5]">46-48</td>
+                          <td className="py-2">31</td>
+                        </tr>
+                        <tr className="hover:bg-[#FAF6EE]/50">
+                          <td className="py-2 font-semibold border-r border-[#D5CBB5]">3XL</td>
+                          <td className="py-2 border-r border-[#D5CBB5]">42-44</td>
+                          <td className="py-2 border-r border-[#D5CBB5]">50-52</td>
+                          <td className="py-2">31</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       )}
     </div>

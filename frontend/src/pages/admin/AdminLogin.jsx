@@ -2,8 +2,9 @@ import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useLogin } from "../../hooks/api/useAuth";
 import { useAuthStore } from "../../store/useAuthStore";
+import modelImage from "../../assets/admin-model.jpg";
 
-const MODEL_IMAGE = "https://lh3.googleusercontent.com/aida-public/AB6AXuD5izHqI_zg9fAWi14PhrzxBtGzxP15cNJRem5uG2ppDZYZ8Fk8gnEhld5uTcPq8ZboD9Mt5ExK6TyEB7W9GtynsgQx55w6-LYIk8DHO67qlk6dyVTSxDiinvzPAITit68xYWsllDh6BnqMOQ7JKq-z9OXMVGMUNxpsHnzrwXnRqerC1q53bZFVo0pxLD5Appv_hgvuNGItaq6t4WGGHX7rzzPHvP0RKQY9EnUTugvJS78ztWIYXw6r";
+const MODEL_IMAGE = modelImage;
 
 const AdminLogin = () => {
   const navigate = useNavigate();
