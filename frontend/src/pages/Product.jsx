@@ -9,14 +9,6 @@ const Product = () => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
   const [activePage, setActivePage] = useState(1);
-  const [wishlist, setWishlist] = useState({});
-
-  const handleWishlistToggle = (id, isWishlisted) => {
-    setWishlist((prev) => ({
-      ...prev,
-      [id]: isWishlisted,
-    }));
-  };
 
   const { data: pageData, isLoading: isProductsLoading, isError } = useProducts({
     page: activePage - 1,
@@ -126,10 +118,8 @@ const Product = () => {
                   name={product.name}
                   price={product.price}
                   image={product.image}
+                  slug={product.slug}
                   layout="collection"
-                  showWishlist={true}
-                  isWishlisted={!!wishlist[product.id]}
-                  onWishlistToggle={(isWish) => handleWishlistToggle(product.id, isWish)}
                   onClick={() => navigate(`/product/${product.slug}`)}
                 />
               ))}
