@@ -1,23 +1,27 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useAuthStore } from "../../store/useAuthStore";
+import { useLogout } from "../../hooks/api/useAuth";
 
 const AdminSidebar = ({ activeTab = "products" }) => {
   const navigate = useNavigate();
-  const logoutStore = useAuthStore((state) => state.logout);
+  const logoutMutation = useLogout();
   const adminUser = useAuthStore((state) => state.user);
 
   const handleLogout = () => {
-    logoutStore();
-    navigate("/login");
+    logoutMutation.mutate(null, {
+      onSettled: () => {
+        navigate("/admin/login");
+      },
+    });
   };
 
   const navItems = [
-    { key: "dashboard", label: "Dashboard", icon: "dashboard", href: "#" },
+    { key: "dashboard", label: "Dashboard", icon: "dashboard", href: "/admin/dashboard" },
     { key: "products", label: "Products", icon: "inventory_2", href: "/admin/products" },
     { key: "categories", label: "Categories", icon: "category", href: "/admin/categories" },
-    { key: "orders", label: "Orders", icon: "shopping_bag", href: "#" },
-    { key: "customers", label: "Customers", icon: "group", href: "#" },
-    { key: "analytics", label: "Analytics", icon: "analytics", href: "#" },
+    { key: "orders", label: "Orders", icon: "shopping_bag", href: "/admin/orders" },
+    { key: "customers", label: "Customers", icon: "group", href: "/admin/customers" },
+    { key: "analytics", label: "Analytics", icon: "analytics", href: "/admin/analytics" },
   ];
 
   return (

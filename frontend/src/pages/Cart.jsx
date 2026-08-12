@@ -5,6 +5,7 @@ import Footer from "../components/Footer";
 import { useAuthStore } from "../store/useAuthStore";
 import { useAddresses, useCreateAddress } from "../hooks/api/useAddress";
 import { useCart, useUpdateCartItem, useRemoveFromCart } from "../hooks/api/useCart";
+import { useCreateOrder } from "../hooks/api/useOrders";
 
 const Cart = () => {
   const navigate = useNavigate();
@@ -14,6 +15,7 @@ const Cart = () => {
   const { data: cartItems, isLoading: isCartLoading } = useCart();
   const updateCartItemMutation = useUpdateCartItem();
   const removeFromCartMutation = useRemoveFromCart();
+  const createOrderMutation = useCreateOrder();
 
   const items = cartItems || [];
 
@@ -26,33 +28,35 @@ const Cart = () => {
   const backendAddresses = addressPage?.content || [];
   const createAddressMutation = useCreateAddress();
 
-  const [selectedAddress, setSelectedAddress] = useState("1");
+  const [selectedAddress, setSelectedAddress] = useState("");
   const [newAddressOpen, setNewAddressOpen] = useState(false);
   const [newAddressText, setNewAddressText] = useState("");
-  const [addresses, setAddresses] = useState([
-    { id: "1", label: "Địa chỉ mặc định: 123 Đường Lê Lợi, Quận 1, TP. HCM" }
-  ]);
+  const [addresses, setAddresses] = useState([]);
 
   // Synchronize selectedAddress when backendAddresses load
   useEffect(() => {
     if (isUserLoggedIn && backendAddresses.length > 0) {
       const defaultAddr = backendAddresses.find((addr) => addr.isDefault);
       if (defaultAddr) {
-        setSelectedAddress(defaultAddr.id);
+        setSelectedAddress(String(defaultAddr.id));
       } else {
-        setSelectedAddress(backendAddresses[0].id);
+        setSelectedAddress(String(backendAddresses[0].id));
       }
+    } else if (addresses.length > 0) {
+      setSelectedAddress(String(addresses[0].id));
     }
-  }, [backendAddresses, isUserLoggedIn]);
+  }, [backendAddresses, addresses, isUserLoggedIn]);
 
   const displayAddresses = isUserLoggedIn && backendAddresses.length > 0
     ? backendAddresses.map((addr) => ({
-        id: addr.id,
+        id: String(addr.id),
         label: `${addr.receiverName} (${addr.receiverPhone}) - ${addr.addressDetail}`,
       }))
     : addresses;
+
   const [paymentMethod, setPaymentMethod] = useState("cod");
   const [checkoutComplete, setCheckoutComplete] = useState(false);
+  const [createdOrderData, setCreatedOrderData] = useState(null);
 
   // Formatting currency helper
   const formatPrice = (val) => {
@@ -145,8 +149,51 @@ const Cart = () => {
       alert("Giỏ hàng của bạn đang trống!");
       return;
     }
-    setCheckoutComplete(true);
-    // In a real app, this would clear the cart store/cookie
+
+    let receiverName = user?.displayName || "Khách hàng";
+    let receiverPhone = user?.phone || "0900000000";
+    let shippingAddressDetail = "";
+
+    if (isUserLoggedIn && backendAddresses.length > 0) {
+      const chosenAddr = backendAddresses.find((a) => String(a.id) === String(selectedAddress)) || backendAddresses[0];
+      receiverName = chosenAddr.receiverName || receiverName;
+      receiverPhone = chosenAddr.receiverPhone || receiverPhone;
+      shippingAddressDetail = chosenAddr.addressDetail;
+    } else {
+      const chosenLocal = addresses.find((a) => String(a.id) === String(selectedAddress));
+      shippingAddressDetail = chosenLocal ? chosenLocal.label : newAddressText;
+    }
+
+    if (!shippingAddressDetail || shippingAddressDetail.trim() === "") {
+      alert("Vui lòng chọn hoặc nhập địa chỉ giao hàng!");
+      return;
+    }
+
+    const paymentMethodPayload = paymentMethod === "cod" ? "COD" : "ONLINE_PAYMENT";
+
+    createOrderMutation.mutate(
+      {
+        receiverName,
+        receiverPhone,
+        shippingAddressDetail: shippingAddressDetail.trim(),
+        paymentMethod: paymentMethodPayload,
+      },
+      {
+        onSuccess: (orderResponse) => {
+          if (orderResponse.paymentUrl) {
+            // Online PayOS payment link -> redirect
+            window.location.href = orderResponse.paymentUrl;
+          } else {
+            // COD -> Show Success View
+            setCreatedOrderData(orderResponse);
+            setCheckoutComplete(true);
+          }
+        },
+        onError: (err) => {
+          alert(err.response?.data?.message || "Đặt hàng thất bại. Vui lòng thử lại!");
+        },
+      }
+    );
   };
 
   if (checkoutComplete) {
@@ -157,13 +204,40 @@ const Cart = () => {
             <FiCheckCircle size={64} className="stroke-[1.5]" />
           </div>
           <h1 className="font-serif text-[36px] md:text-[48px] font-bold mb-4 uppercase">ĐẶT HÀNG THÀNH CÔNG</h1>
+          
+          {createdOrderData && (
+            <div className="bg-[#f5f4f2] p-6 border border-neutral-300 max-w-md w-full mb-8 text-left text-xs space-y-2">
+              <p className="font-bold text-sm text-black border-b border-neutral-200 pb-2">
+                MÃ ĐƠN HÀNG: #LM-{createdOrderData.orderId}
+              </p>
+              <p className="text-neutral-700">
+                <span className="font-bold text-black">Người nhận:</span> {createdOrderData.receiverName} ({createdOrderData.receiverPhone})
+              </p>
+              <p className="text-neutral-700">
+                <span className="font-bold text-black">Địa chỉ:</span> {createdOrderData.shippingAddressDetail}
+              </p>
+              <p className="text-neutral-700">
+                <span className="font-bold text-black">Thanh toán:</span> {createdOrderData.paymentMethod === "COD" ? "Thanh toán khi nhận hàng (COD)" : "Thanh toán trực tuyến PayOS"}
+              </p>
+              <p className="font-serif text-lg font-bold text-black pt-2 border-t border-neutral-200">
+                Tổng tiền: {formatPrice(createdOrderData.totalPrice || total)}
+              </p>
+            </div>
+          )}
+
           <p className="body-md text-neutral-600 max-w-lg mb-8 leading-relaxed">
-            Cảm ơn bạn đã lựa chọn LUMIÈRE. Đơn hàng của bạn đang được xử lý. Chúng tôi đã gửi email xác nhận chi tiết đơn hàng cùng mã vận đơn đến email của bạn.
+            Cảm ơn bạn đã lựa chọn LUMIÈRE. Đơn hàng của bạn đang được xử lý. Chúng tôi sẽ cập nhật trạng thái đơn hàng sớm nhất.
           </p>
-          <div className="flex gap-4">
+          <div className="flex flex-wrap justify-center gap-4">
+            <button
+              onClick={() => navigate("/orders")}
+              className="bg-white border border-black text-black px-8 py-4 label-sm tracking-widest font-semibold hover:bg-black hover:text-white transition-all cursor-pointer"
+            >
+              XEM ĐƠN HÀNG CỦA TÔI
+            </button>
             <button
               onClick={() => navigate("/product")}
-              className="bg-black text-white px-8 py-4.5 label-sm tracking-widest font-semibold hover:bg-neutral-800 transition-colors"
+              className="bg-black text-white px-8 py-4 label-sm tracking-widest font-semibold hover:bg-neutral-800 transition-colors cursor-pointer"
             >
               TIẾP TỤC MUA SẮM
             </button>
@@ -344,22 +418,28 @@ const Cart = () => {
                     ĐỊA CHỈ GIAO HÀNG
                   </p>
                   
-                  <div className="relative mb-3">
-                    <select
-                      value={selectedAddress}
-                      onChange={(e) => setSelectedAddress(e.target.value)}
-                      className="w-full bg-surface-bg border border-neutral-300 focus:ring-black focus:border-black text-sm px-4 py-3.5 pr-10 rounded-none appearance-none cursor-pointer text-black"
-                    >
-                      {displayAddresses.map((addr) => (
-                        <option key={addr.id} value={addr.id}>
-                          {addr.label.length > 35 ? addr.label.slice(0, 35) + "..." : addr.label}
-                        </option>
-                      ))}
-                    </select>
-                    <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-neutral-500">
-                      <FiChevronDown size={18} />
+                  {displayAddresses.length > 0 ? (
+                    <div className="relative mb-3">
+                      <select
+                        value={selectedAddress}
+                        onChange={(e) => setSelectedAddress(e.target.value)}
+                        className="w-full bg-surface-bg border border-neutral-300 focus:ring-black focus:border-black text-sm px-4 py-3.5 pr-10 rounded-none appearance-none cursor-pointer text-black"
+                      >
+                        {displayAddresses.map((addr) => (
+                          <option key={addr.id} value={addr.id}>
+                            {addr.label.length > 35 ? addr.label.slice(0, 35) + "..." : addr.label}
+                          </option>
+                        ))}
+                      </select>
+                      <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-neutral-500">
+                        <FiChevronDown size={18} />
+                      </div>
                     </div>
-                  </div>
+                  ) : (
+                    <p className="text-xs text-neutral-500 font-medium mb-3 italic">
+                      Chưa có địa chỉ giao hàng được chọn.
+                    </p>
+                  )}
 
                   {!newAddressOpen ? (
                     <button
@@ -460,7 +540,7 @@ const Cart = () => {
                         className="w-4 h-4 text-black border-neutral-300 focus:ring-black accent-black cursor-pointer"
                       />
                       <span className="text-xs md:text-sm text-neutral-600 group-hover:text-black transition-colors">
-                        Thanh toán trực tuyến (Thẻ nội địa, Visa, Mastercard)
+                        Thanh toán trực tuyến (Thẻ nội địa, Visa, Mastercard qua PayOS)
                       </span>
                     </label>
                   </div>
@@ -480,9 +560,20 @@ const Cart = () => {
                 {/* Checkout Button */}
                 <button
                   onClick={handleCheckout}
-                  className="w-full bg-black text-white py-5 label-sm font-bold tracking-[0.25em] hover:bg-neutral-800 transition-colors mb-4 cursor-pointer"
+                  disabled={createOrderMutation.isPending}
+                  className="w-full bg-black text-white py-5 label-sm font-bold tracking-[0.25em] hover:bg-neutral-800 transition-colors mb-4 cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2"
                 >
-                  THANH TOÁN
+                  {createOrderMutation.isPending ? (
+                    <>
+                      <svg className="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      <span>ĐANG XỬ LÝ...</span>
+                    </>
+                  ) : (
+                    "MUA HÀNG"
+                  )}
                 </button>
 
                 {/* Secure checkout badges */}
@@ -503,3 +594,4 @@ const Cart = () => {
 };
 
 export default Cart;
+

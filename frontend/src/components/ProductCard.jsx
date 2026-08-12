@@ -1,30 +1,16 @@
-import React, { useState } from "react";
-import { FiHeart } from "react-icons/fi";
-import { FaHeart } from "react-icons/fa";
+import React from "react";
 
 const ProductCard = ({
+  id,
   image,
   name,
   price,
+  slug,
   color,
   onClick,
-  showWishlist = false,
-  isWishlisted = false,
-  onWishlistToggle,
   layout = "home",
-  className = ""
+  className = "",
 }) => {
-  const [wish, setWish] = useState(isWishlisted);
-
-  const handleWishlistClick = (e) => {
-    e.stopPropagation();
-    const nextWish = !wish;
-    setWish(nextWish);
-    if (onWishlistToggle) {
-      onWishlistToggle(nextWish);
-    }
-  };
-
   return (
     <div
       onClick={onClick}
@@ -48,20 +34,6 @@ const ProductCard = ({
               <h3 className="body-md text-black font-normal leading-snug line-clamp-2">
                 {name}
               </h3>
-              {showWishlist && (
-                <button
-                  type="button"
-                  onClick={handleWishlistClick}
-                  aria-label="Add to wishlist"
-                  className="text-black hover:scale-110 active:scale-95 transition-transform duration-200 p-1 flex-shrink-0 cursor-pointer"
-                >
-                  {wish ? (
-                    <FaHeart size={18} className="text-red-500 fill-current" />
-                  ) : (
-                    <FiHeart size={18} />
-                  )}
-                </button>
-              )}
             </div>
             <span className="body-md text-black font-semibold mt-1 block">
               {price}

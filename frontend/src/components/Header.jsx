@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { FiSearch, FiShoppingBag, FiUser, FiMenu, FiX } from "react-icons/fi";
 import { useAuthStore } from "../store/useAuthStore";
 import { useLogout } from "../hooks/api/useAuth";
+import { useCart } from "../hooks/api/useCart";
 
 const Header = () => {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -15,7 +16,13 @@ const Header = () => {
   const variant = isHomepage ? "home" : "auth";
 
   const user = useAuthStore((state) => state.user);
+  const isUserLoggedIn = useAuthStore((state) => !!state.accessToken);
   const logoutMutation = useLogout();
+
+  const { data: cartItems } = useCart();
+  const cartCount = isUserLoggedIn && Array.isArray(cartItems)
+    ? cartItems.reduce((sum, item) => sum + (item.quantity || 1), 0)
+    : 0;
 
   useEffect(() => {
     const handleScroll = () => {
@@ -118,9 +125,11 @@ const Header = () => {
                 className={`relative cursor-pointer ${iconColor} hover:scale-105 transition-transform`}
               >
                 <FiShoppingBag size={18} />
-                <span className="absolute -top-1.5 -right-1.5 bg-black text-white text-[9px] w-4 h-4 rounded-full flex items-center justify-center border border-white font-sans font-bold">
-                  2
-                </span>
+                {cartCount > 0 && (
+                  <span className="absolute -top-1.5 -right-1.5 bg-black text-white text-[9px] w-4 h-4 rounded-full flex items-center justify-center border border-white font-sans font-bold">
+                    {cartCount > 99 ? "99+" : cartCount}
+                  </span>
+                )}
               </Link>
               <div className="relative group">
                 <button
@@ -204,6 +213,11 @@ const Header = () => {
                 className="relative cursor-pointer text-black hover:scale-105 transition-transform"
               >
                 <FiShoppingBag size={20} />
+                {cartCount > 0 && (
+                  <span className="absolute -top-1.5 -right-1.5 bg-black text-white text-[9px] w-4 h-4 rounded-full flex items-center justify-center border border-white font-sans font-bold">
+                    {cartCount > 99 ? "99+" : cartCount}
+                  </span>
+                )}
               </Link>
 
               {/* User Integration in Auth header */}
