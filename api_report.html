@@ -1,0 +1,1103 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Báo Cáo Đối Soát API: Contract - Backend - Frontend | QuocHuyStore</title>
+  <!-- Google Fonts & Tailwind CDN -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'monospace'],
+          },
+          colors: {
+            brand: {
+              50: '#eef2ff',
+              100: '#e0e7ff',
+              500: '#6366f1',
+              600: '#4f46e5',
+              700: '#4338ca',
+              900: '#312e81',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+    code, .font-mono {
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .method-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0.2rem 0.55rem;
+      border-radius: 0.375rem;
+      font-weight: 700;
+      font-size: 0.7rem;
+      letter-spacing: 0.05em;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .method-get { background-color: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; }
+    .method-post { background-color: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; }
+    .method-put { background-color: #fffbeb; color: #b45309; border: 1px solid #fde68a; }
+    .method-patch { background-color: #faf5ff; color: #7e22ce; border: 1px solid #e9d5ff; }
+    .method-delete { background-color: #fef2f2; color: #b91c1c; border: 1px solid #fecaca; }
+    .method-ws { background-color: #f0fdf4; color: #15803d; border: 1px solid #bbf7d0; }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.25rem 0.65rem;
+      border-radius: 9999px;
+      font-size: 0.72rem;
+      font-weight: 600;
+    }
+    .status-completed { background-color: #dcfce7; color: #15803d; }
+    .status-partial { background-color: #fef3c7; color: #b45309; }
+    .status-missing { background-color: #fee2e2; color: #b91c1c; }
+    .status-mock { background-color: #f3e8ff; color: #6b21a8; }
+
+    .slice-header {
+      background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+    }
+
+    /* Custom scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #f1f5f9;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 3px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen">
+
+  <!-- Top Navbar -->
+  <header class="bg-white border-b border-slate-200 sticky top-0 z-50 shadow-xs">
+    <div class="max-w-[1680px] mx-auto px-6 py-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center text-white font-black text-xl shadow-md">
+          QH
+        </div>
+        <div>
+          <h1 class="text-xl font-bold text-slate-900 tracking-tight flex items-center gap-2">
+            QuocHuyStore &bull; Báo Cáo Đối Soát API 3 Cột
+            <span class="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-indigo-100 text-indigo-700">v1.0 Ready</span>
+          </h1>
+          <p class="text-xs text-slate-500 font-medium">
+            Đối chiếu chuẩn hóa giữa API Contract &bull; Backend Controllers &bull; Frontend React App (Excluding AI Service)
+          </p>
+        </div>
+      </div>
+
+      <!-- Quick Filter & Stats -->
+      <div class="flex items-center gap-3 flex-wrap">
+        <button onclick="filterStatus('all')" id="btn-all" class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition bg-indigo-600 text-white shadow-xs">Tất cả (32 API)</button>
+        <button onclick="filterStatus('sync')" id="btn-sync" class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition bg-slate-100 text-slate-700 hover:bg-slate-200">Đã khớp BE-FE (17)</button>
+        <button onclick="filterStatus('be-only')" id="btn-be-only" class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition bg-slate-100 text-slate-700 hover:bg-slate-200">Chỉ BE (3)</button>
+        <button onclick="filterStatus('pending')" id="btn-pending" class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition bg-slate-100 text-slate-700 hover:bg-slate-200">Chưa làm (12)</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Summary KPI Cards -->
+  <div class="max-w-[1680px] mx-auto px-6 pt-6 pb-2">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center gap-4">
+        <div class="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-lg">
+          📋
+        </div>
+        <div>
+          <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Tổng số API Contract</p>
+          <h3 class="text-2xl font-black text-slate-800">32 Endpoints</h3>
+          <p class="text-[11px] text-slate-500 font-medium">Bao gồm 4 Slices chính</p>
+        </div>
+      </div>
+
+      <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center gap-4">
+        <div class="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold text-lg">
+          ⚡
+        </div>
+        <div>
+          <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Backend Controllers</p>
+          <h3 class="text-2xl font-black text-emerald-600">20 / 32 <span class="text-sm font-normal text-slate-500">(62.5%)</span></h3>
+          <p class="text-[11px] text-slate-500 font-medium">13 Controllers đã hoạt động</p>
+        </div>
+      </div>
+
+      <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center gap-4">
+        <div class="w-12 h-12 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold text-lg">
+          ⚛️
+        </div>
+        <div>
+          <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Frontend React App</p>
+          <h3 class="text-2xl font-black text-indigo-600">17 / 32 <span class="text-sm font-normal text-slate-500">(53.1%)</span></h3>
+          <p class="text-[11px] text-slate-500 font-medium">7 Hooks + TanStack Query</p>
+        </div>
+      </div>
+
+      <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center gap-4">
+        <div class="w-12 h-12 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center font-bold text-lg">
+          ⏳
+        </div>
+        <div>
+          <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Slice 4 (Reviews & Chat)</p>
+          <h3 class="text-2xl font-black text-rose-600">12 Chưa Triển Khai</h3>
+          <p class="text-[11px] text-slate-500 font-medium">Banners, Chat WS, Review, Promo</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Table Section (3 Columns) -->
+  <main class="max-w-[1680px] mx-auto px-6 py-6">
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+      
+      <!-- Table Header (Sticky) -->
+      <div class="grid grid-cols-12 bg-slate-900 text-white font-bold text-xs uppercase tracking-wider sticky top-[73px] z-40 shadow-sm">
+        <div class="col-span-4 p-4 border-r border-slate-800 flex items-center gap-2">
+          <span>1. Danh Sách API (Contract Specification)</span>
+        </div>
+        <div class="col-span-4 p-4 border-r border-slate-800 flex items-center gap-2">
+          <span>2. Backend Triển Khai (Spring Boot Controller)</span>
+        </div>
+        <div class="col-span-4 p-4 flex items-center gap-2">
+          <span>3. Frontend Triển Khai (React Hooks & Pages)</span>
+        </div>
+      </div>
+
+      <!-- SLICE 1: AUTHENTICATION, USER PROFILES & ADDRESSES -->
+      <div class="slice-group" data-slice="slice1">
+        <div class="slice-header text-white px-6 py-3 font-bold text-sm tracking-wide flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <span class="bg-indigo-500/30 text-indigo-300 text-xs px-2.5 py-0.5 rounded border border-indigo-400/30">SLICE 1</span>
+            <span>Authentication, User Profiles & Addresses (Xác thực & Người dùng)</span>
+          </div>
+          <span class="text-xs text-slate-300 font-normal">8 API Endpoints &bull; BE: 8/8 &bull; FE: 7/8</span>
+        </div>
+
+        <!-- 1.1 POST /auth/register -->
+        <div class="api-row grid grid-cols-12 border-b border-slate-100 hover:bg-slate-50/80 transition" data-status="sync">
+          <div class="col-span-4 p-4 border-r border-slate-100 space-y-1.5">
+            <div class="flex items-center gap-2 flex-wrap">
+              <span class="method-badge method-post">POST</span>
+              <span class="font-mono text-xs font-semibold text-slate-900">/auth/register</span>
+              <span class="text-[10px] px-2 py-0.5 rounded bg-slate-100 text-slate-600 font-medium">Public</span>
+            </div>
+            <p class="text-xs text-slate-600">Đăng ký tài khoản khách hàng mới.</p>
+            <div class="text-[11px] font-mono text-slate-500">
+              Payload: <span class="text-indigo-600 font-medium">RegisterRequestDto</span> &bull; Res: <span class="text-emerald-600 font-medium">201 UserResponseDto</span>
+            </div>
+          </div>
+
+          <div class="col-span-4 p-4 border-r border-slate-100 space-y-1.5">
+            <div class="flex items-center justify-between">
+              <span class="font-mono text-xs font-bold text-slate-800">AuthController.java</span>
+              <span class="status-badge status-completed">● Hoàn thành</span>
+            </div>
+            <p class="font-mono text-xs text-slate-600">public ResponseEntity&lt;UserResponseDto&gt; register(@Valid @RequestBody RegisterRequestDto request)</p>
+            <div class="text-[11px] text-slate-500">
+              Mã trả về: <code class="text-emerald-600 font-bold">201 CREATED</code> &bull; BCrypt encode &bull; Lưu Role USER
+            </div>
+          </div>
+
+          <div class="col-span-4 p-4 space-y-1.5">
+            <div class="flex items-center justify-between">
+              <span class="font-mono text-xs font-bold text-slate-800">useAuth.js (useRegister)</span>
+              <span class="status-badge status-completed">● Đã tích hợp</span>
+            </div>
+            <p class="text-xs text-slate-600">Sử dụng <code class="text-indigo-600 font-mono">useMutation</code> gửi payload đến <code class="font-mono">/auth/register</code>.</p>
+            <div class="text-[11px] text-slate-500">
+              Trang gọi: <span class="font-semibold text-slate-700">Register.jsx</span> (Form đăng ký tài khoản)
+            </div>
+          </div>
+        </div>
+
+        <!-- 1.2 POST /auth/login -->
+        <div class="api-row grid grid-cols-12 border-b border-slate-100 hover:bg-slate-50/80 transition" data-status="sync">
+          <div class="col-span-4 p-4 border-r border-slate-100 space-y-1.5">
+            <div class="flex items-center gap-2 flex-wrap">
+              <span class="method-badge method-post">POST</span>
+              <span class="font-mono text-xs font-semibold text-slate-900">/auth/login</span>
+              <span class="text-[10px] px-2 py-0.5 rounded bg-slate-100 text-slate-600 font-medium">Public</span>
+            </div>
+            <p class="text-xs text-slate-600">Đăng nhập tài khoản, cấp Access Token & HttpOnly Refresh Cookie.</p>
+            <div class="text-[11px] font-mono text-slate-500">
+              Payload: <span class="text-indigo-600 font-medium">LoginRequestDto</span> &bull; Res: <span class="text-emerald-600 font-medium">200 TokenResponseDto</span>
+            </div>
+          </div>
+
+          <div class="col-span-4 p-4 border-r border-slate-100 space-y-1.5">
+            <div class="flex items-center justify-between">
+              <span class="font-mono text-xs font-bold text-slate-800">AuthController.java</span>
+              <span class="status-badge status-completed">● Hoàn thành</span>
+            </div>
+            <p class="font-mono text-xs text-slate-600">public ResponseEntity&lt;TokenResponseDto&gt; login(@Valid @RequestBody LoginRequestDto request)</p>
+            <div class="text-[11px] text-slate-500">
+              Mã trả về: <code class="text-emerald-600 font-bold">200 OK</code> &bull; Set-Cookie: <code class="text-purple-600 font-mono">refreshToken (HttpOnly, Strict)</code>
+            </div>
+          </div>
+
+          <div class="col-span-4 p-4 space-y-1.5">
+            <div class="flex items-center justify-between">
+              <span class="font-mono text-xs font-bold text-slate-800">useAuth.js (useLogin)</span>
+              <span class="status-badge status-completed">● Đã tích hợp</span>
+            </div>
+            <p class="text-xs text-slate-600">Cập nhật user & accessToken vào Zustand Store (<code class="font-mono">useAuthStore</code>).</p>
+            <div class="text-[11px] text-slate-500">
+              Trang gọi: <span class="font-semibold text-slate-700">Login.jsx</span> &bull; <span class="font-semibold text-slate-700">AdminLogin.jsx</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 1.3 POST /auth/refresh -->
+        <div class="api-row grid grid-cols-12 border-b border-slate-100 hover:bg-slate-50/80 transition" data-status="sync">
+          <div class="col-span-4 p-4 border-r border-slate-100 space-y-1.5">
+            <div class="flex items-center gap-2 flex-wrap">
+              <span class="method-badge method-post">POST</span>
+              <span class="font-mono text-xs font-semibold text-slate-900">/auth/refresh</span>
+              <span class="text-[10px] px-2 py-0.5 rounded bg-slate-100 text-slate-600 font-medium">Public / Cookie</span>
+            </div>
+            <p class="text-xs text-slate-600">Cấp mới Access Token khi token hết hạn.</p>
+            <div class="text-[11px] font-mono text-slate-500">
+              Cookie / Payload: <span class="text-indigo-600 font-medium">RefreshTokenRequestDto</span> &bull; Res: <span class="text-emerald-600 font-medium">200 TokenResponseDto</span>
+            </div>
+          </div>
+
+          <div class="col-span-4 p-4 border-r border-slate-100 space-y-1.5">
+            <div class="flex items-center justify-between">
+              <span class="font-mono text-xs font-bold text-slate-800">AuthController.java</span>
+              <span class="status-badge status-completed">● Hoàn thành</span>
+            </div>
+            <p class="font-mono text-xs text-slate-600">public ResponseEntity&lt;TokenResponseDto&gt; refresh(@CookieValue String cookieRefreshToken, ...)</p>
+            <div class="text-[11px] text-slate-500">
+              Tương thích linh hoạt cả HttpOnly Cookie và Request Body fallback
+            </div>
+          </div>
+
+          <div class="col-span-4 p-4 space-y-1.5">
+            <div class="flex items-center justify-between">
+              <span class="font-mono text-xs font-bold text-slate-800">axiosClient.js & App.jsx</span>
+              <span class="status-badge status-completed">● Tự động (Interceptor)</span>
+            </div>
+            <p class="text-xs text-slate-600">Tự động bắt lỗi 401 JWT hết hạn và gọi refresh token ngầm (Silent Refresh) với hàng đợi request pending.</p>
+            <div class="text-[11px] text-slate-500">
+              Vị trí: <code class="font-mono text-slate-700">src/api/axiosClient.js</code> &bull; <code class="font-mono text-slate-700">src/App.jsx</code>
+            </div>
+          </div>
+        </div>
+
+        <!-- 1.4 POST /auth/logout -->
+        <div class="api-row grid grid-cols-12 border-b border-slate-100 hover:bg-slate-50/80 transition" data-status="sync">
+          <div class="col-span-4 p-4 border-r border-slate-100 space-y-1.5">
+            <div class="flex items-center gap-2 flex-wrap">
+              <span class="method-badge method-post">POST</span>
+              <span class="font-mono text-xs font-semibold text-slate-900">/auth/logout</span>
+              <span class="text-[10px] px-2 py-0.5 rounded bg-amber-100 text-amber-800 font-medium">Auth Required</span>
+            </div>
+            <p class="text-xs text-slate-600">Đăng xuất, xóa phiên làm việc và xóa cookie refreshToken.</p>
+            <div class="text-[11px] font-mono text-slate-500">
+              Payload: <span class="text-slate-500 font-medium">None</span> &bull; Res: <span class="text-emerald-600 font-medium">204 No Content</span>
+            </div>
+          </div>
+
+          <div class="col-span-4 p-4 border-r border-slate-100 space-y-1.5">
+            <div class="flex items-center justify-between">
+              <span class="font-mono text-xs font-bold text-slate-800">AuthController.java</span>
+              <span class="status-badge status-completed">● Hoàn thành</span>
+            </div>
+            <p class="font-mono text-xs text-slate-600">public ResponseEntity&lt;Void&gt; logout(@AuthenticationPrincipal UserPrincipal principal)</p>
+            <div class="text-[11px] text-slate-500">
+              Mã trả về: <code class="text-emerald-600 font-bold">204 NO_CONTENT</code> &bull; Set maxAge = 0 cho cookie
+            </div>
+          </div>
+
+          <div class="col-span-4 p-4 space-y-1.5">
+            <div class="flex items-center justify-between">
+              <span class="font-mono text-xs font-bold text-slate-800">useAuth.js (useLogout)</span>
+              <span class="status-badge status-completed">● Đã tích hợp</span>
+            </div>
+            <p class="text-xs text-slate-600">Xóa token trong Zustand Store, xóa header Bearer và chuyển hướng.</p>
+            <div class="text-[11px] text-slate-500">
+              Trang gọi: <span class="font-semibold text-slate-700">Header.jsx</span> &bull; <span class="font-semibold text-slate-700">AdminSidebar.jsx</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 1.5 GET /users/me -->
+        <div class="api-row grid grid-cols-12 border-b border-slate-100 hover:bg-slate-50/80 transition" data-status="sync">
+          <div class="col-span-4 p-4 border-r border-slate-100 space-y-1.5">
+            <div class="flex items-center gap-2 flex-wrap">
+              <span class="method-badge method-get">GET</span>
+              <span class="font-mono text-xs font-semibold text-slate-900">/users/me</span>
+              <span class="text-[10px] px-2 py-0.5 rounded bg-amber-100 text-amber-800 font-medium">Role USER</span>
+            </div>
+            <p class="text-xs text-slate-600">Lấy thông tin chi tiết hồ sơ người dùng hiện tại.</p>
+            <div class="text-[11px] font-mono text-slate-500">
+              Payload: <span class="text-slate-500 font-medium">None</span> &bull; Res: <span class="text-emerald-600 font-medium">200 UserDetailResponseDto</span>
+            </div>
+          </div>
+
+          <div class="col-span-4 p-4 border-r border-slate-100 space-y-1.5">
+            <div class="flex items-center justify-between">
+              <span class="font-mono text-xs font-bold text-slate-800">UserController.java</span>
+              <span class="status-badge status-completed">● Hoàn thành</span>
+            </div>
+            <p class="font-mono text-xs text-slate-600">public ResponseEntity&lt;UserDetailResponseDto&gt; getProfile(@AuthenticationPrincipal ...)</p>
+            <div class="text-[11px] text-slate-500">
+              Lấy id từ Security Context &bull; Map DTO chi tiết họ tên, email, phone, avatar
+            </div>
+          </div>
+
+          <div class="col-span-4 p-4 space-y-1.5">
+            <div class="flex items-center justify-between">
+              <span class="font-mono text-xs font-bold text-slate-800">useAuth.js (useProfile)</span>
+              <span class="status-badge status-completed">● Đã tích hợp</span>
+            </div>
+            <p class="text-xs text-slate-600">Query caching <code class="font-mono text-indigo-600">["profile"]</code>, load dữ liệu tài khoản.</p>
+            <div class="text-[11px] text-slate-500">
+              Trang gọi: <span class="font-semibold text-slate-700">Profile.jsx</span> (Tab Tài khoản)
+            </div>
+          </div>
+        </div>
+
+        <!-- 1.6 PUT /users/me -->
+        <div class="api-row grid grid-cols-12 border-b border-slate-100 hover:bg-slate-50/80 transition" data-status="sync">
+          <div class="col-span-4 p-4 border-r border-slate-100 space-y-1.5">
+            <div class="flex items-center gap-2 flex-wrap">
+              <span class="method-badge method-put">PUT</span>
+              <span class="font-mono text-xs font-semibold text-slate-900">/users/me</span>
+              <span class="text-[10px] px-2 py-0.5 rounded bg-amber-100 text-amber-800 font-medium">Role USER</span>
+            </div>
+            <p class="text-xs text-slate-600">Cập nhật thông tin họ tên, số điện thoại của người dùng.</p>
+            <div class="text-[11px] font-mono text-slate-500">
+              Payload: <span class="text-indigo-600 font-medium">UserUpdateRequestDto</span> &bull; Res: <span class="text-emerald-600 font-medium">200 UserResponseDto</span>
+            </div>
+          </div>
+
+          <div class="col-span-4 p-4 border-r border-slate-100 space-y-1.5">
+            <div class="flex items-center justify-between">
+              <span class="font-mono text-xs font-bold text-slate-800">UserController.java</span>
+              <span class="status-badge status-completed">● Hoàn thành</span>
+            </div>
+            <p class="font-mono text-xs text-slate-600">public ResponseEntity&lt;UserResponseDto&gt; updateProfile(@Valid @RequestBody ...)</p>
+            <div class="text-[11px] text-slate-500">
+              Validation ràng buộc định dạng &bull; Cập nhật entity User
+            </div>
+          </div>
+
+          <div class="col-span-4 p-4 space-y-1.5">
+            <div class="flex items-center justify-between">
+              <span class="font-mono text-xs font-bold text-slate-800">useAuth.js (useUpdateProfile)</span>
+              <span class="status-badge status-completed">● Đã tích hợp</span>
+            </div>
+            <p class="text-xs text-slate-600">Mutation cập nhật profile và invalidate cache <code class="font-mono text-indigo-600">["profile"]</code>.</p>
+            <div class="text-[11px] text-slate-500">
+              Trang gọi: <span class="font-semibold text-slate-700">Profile.jsx</span> (Form cập nhật thông tin)
+            </div>
+          </div>
+        </div>
+
+        <!-- 1.7 DELETE /users/me -->
+        <div class="api-row grid grid-cols-12 border-b border-slate-100 hover:bg-slate-50/80 transition" data-status="be-only">
+          <div class="col-span-4 p-4 border-r border-slate-100 space-y-1.5">
+            <div class="flex items-center gap-2 flex-wrap">
+              <span class="method-badge method-delete">DELETE</span>
+              <span class="font-mono text-xs font-semibold text-slate-900">/users/me</span>
+              <span class="text-[10px] px-2 py-0.5 rounded bg-amber-100 text-amber-800 font-medium">Role USER</span>
+            </div>
+            <p class="text-xs text-slate-600">Xóa mềm (Soft Delete / Vô hiệu hóa) tài khoản người dùng hiện tại.</p>
+            <div class="text-[11px] font-mono text-slate-500">
+              Payload: <span class="text-slate-500 font-medium">None</span> &bull; Res: <span class="text-emerald-600 font-medium">204 No Content</span>
+            </div>
+          </div>
+
+          <div class="col-span-4 p-4 border-r border-slate-100 space-y-1.5">
+            <div class="flex items-center justify-between">
+              <span class="font-mono text-xs font-bold text-slate-800">UserController.java</span>
+              <span class="status-badge status-completed">● Hoàn thành</span>
+            </div>
+            <p class="font-mono text-xs text-slate-600">public ResponseEntity&lt;Void&gt; softDelete(@AuthenticationPrincipal ...)</p>
+            <div class="text-[11px] text-slate-500">
+              Gán cờ <code class="font-mono text-rose-600">isActive = false</code> &bull; Trả về <code class="text-emerald-600 font-bold">204 NO_CONTENT</code>
+            </div>
+          </div>
+
+          <div class="col-span-4 p-4 space-y-1.5 bg-amber-50/30">
+            <div class="flex items-center justify-between">
+              <span class="font-mono text-xs font-bold text-slate-400">Chưa có Hook</span>
+              <span class="status-badge status-missing">✕ Chưa nối FE</span>
+            </div>
+            <p class="text-xs text-slate-500">Frontend chưa tạo hook <code class="font-mono">useDeleteAccount</code> và chưa có nút xác nhận xóa tài khoản trong giao diện Settings.</p>
+          </div>
+        </div>
+
+        <!-- 1.8 Addresses CRUD (GET, POST, GET/:id, PUT/:id, DELETE/:id) -->
+        <div class="api-row grid grid-cols-12 border-b border-slate-100 hover:bg-slate-50/80 transition" data-status="sync">
+          <div class="col-span-4 p-4 border-r border-slate-100 space-y-1.5">
+            <div class="flex items-center gap-2 flex-wrap">
+              <span class="method-badge method-get">GET</span>
+              <span class="method-badge method-post">POST</span>
+              <span class="method-badge method-put">PUT</span>
+              <span class="method-badge method-delete">DELETE</span>
+              <span class="font-mono text-xs font-semibold text-slate-900">/addresses/**</span>
+              <span class="text-[10px] px-2 py-0.5 rounded bg-amber-100 text-amber-800 font-medium">Role USER</span>
+            </div>
+            <p class="text-xs text-slate-600">Quản lý sổ địa chỉ giao hàng của người dùng (Danh sách, Tạo mới, Sửa, Xóa).</p>
+            <div class="text-[11px] font-mono text-slate-500">
+              Entity: <span class="text-indigo-600 font-medium">AddressRequestDto / AddressResponseDto</span>
+            </div>
+          </div>
+
+          <div class="col-span-4 p-4 border-r border-slate-100 space-y-1.5">
+            <div class="flex items-center justify-between">
+              <span class="font-mono text-xs font-bold text-slate-800">AddressController.java</span>
+              <span class="status-badge status-completed">● Hoàn thành trọn bộ</span>
+            </div>
+            <ul class="text-xs font-mono text-slate-600 space-y-0.5">
+              <li>&bull; <code class="text-emerald-600">GET /addresses</code> (PageResponseDto)</li>
+              <li>&bull; <code class="text-blue-600">POST /addresses</code> (201 Created)</li>
+              <li>&bull; <code class="text-amber-600">PUT /addresses/{id}</code> (200 OK)</li>
+              <li>&bull; <code class="text-rose-600">DELETE /addresses/{id}</code> (204 No Content)</li>
+            </ul>
+          </div>
+
+          <div class="col-span-4 p-4 space-y-1.5">
+            <div class="flex items-center justify-between">
+              <span class="font-mono text-xs font-bold text-slate-800">useAddress.js</span>
+              <span class="status-badge status-completed">● Đã tích hợp trọn bộ</span>
+            </div>
+            <p class="text-xs text-slate-600">Cung cấp đầy đủ 4 hooks: <code class="font-mono">useAddresses</code>, <code class="font-mono">useCreateAddress</code>, <code class="font-mono">useUpdateAddress</code>, <code class="font-mono">useDeleteAddress</code>.</p>
+            <div class="text-[11px] text-slate-500">
+              Trang gọi: <span class="font-semibold text-slate-700">Profile.jsx</span> (Sổ địa chỉ) &bull; <span class="font-semibold text-slate-700">Cart.jsx</span> (Chọn địa chỉ nhận hàng)
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SLICE 2: PRODUCT CATALOG & CATEGORIES -->
+      <div class="slice-group" data-slice="slice2">
+        <div class="slice-header text-white px-6 py-3 font-bold text-sm tracking-wide flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <span class="bg-indigo-500/30 text-indigo-300 text-xs px-2.5 py-0.5 rounded border border-indigo-400/30">SLICE 2</span>
+            <span>Product Catalog, Colors, Variations & Categories (Sản phẩm & Danh mục)</span>
+          </div>
+          <span class="text-xs text-slate-300 font-normal">7 Nhóm Endpoints &bull; BE: 7/7 &bull; FE: 7/7</span>
+        </div>
+
+        <!-- 2.1 GET /products & GET /products/{slug} -->
+        <div class="api-row grid grid-cols-12 border-b border-slate-100 hover:bg-slate-50/80 transition" data-status="sync">
+          <div class="col-span-4 p-4 border-r border-slate-100 space-y-1.5">
+            <div class="flex items-center gap-2 flex-wrap">
+              <span class="method-badge method-get">GET</span>
+              <span class="font-mono text-xs font-semibold text-slate-900">/products & /products/{slug}</span>
+              <span class="text-[10px] px-2 py-0.5 rounded bg-slate-100 text-slate-600 font-medium">Public</span>
+            </div>
+            <p class="text-xs text-slate-600">Lấy danh sách sản phẩm phân trang (lọc theo category, search, min/max price, sort) và xem chi tiết theo slug.</p>
+            <div class="text-[11px] font-mono text-slate-500">
+              Res: <span class="text-emerald-600 font-medium">PageResponseDto&lt;ProductListResponseDto&gt; / ProductDetailResponseDto</span>
+            </div>
+          </div>
+
+          <div class="col-span-4 p-4 border-r border-slate-100 space-y-1.5">
+            <div class="flex items-center justify-between">
+              <span class="font-mono text-xs font-bold text-slate-800">ProductController.java</span>
+              <span class="status-badge status-completed">● Hoàn thành</span>
+            </div>
+            <ul class="text-xs font-mono text-slate-600 space-y-0.5">
+              <li>&bull; <code class="text-emerald-600">getProducts(...)</code>: Đầy đủ tham số lọc, sort, pagination</li>
+              <li>&bull; <code class="text-emerald-600">getProductBySlug(...)</code>: Tìm theo Slug, load kèm colors & variations</li>
+            </ul>
+          </div>
+
+          <div class="col-span-4 p-4 space-y-1.5">
+            <div class="flex items-center justify-between">
+              <span class="font-mono text-xs font-bold text-slate-800">useProducts.js</span>
+              <span class="status-badge status-completed">● Đã tích hợp</span>
+            </div>
+            <p class="text-xs text-slate-600">Cung cấp <code class="font-mono">useProducts()</code> & <code class="font-mono">useProductDetail(slug)</code> với React Query cache mượt mà.</p>
+            <div class="text-[11px] text-slate-500">
+              Trang gọi: <span class="font-semibold text-slate-700">Product.jsx</span> &bull; <span class="font-semibold text-slate-700">ProductDetail.jsx</span> &bull; <span class="font-semibold text-slate-700">AdminProducts.jsx</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2.2 GET /categories & Admin Categories CRUD -->
+        <div class="api-row grid grid-cols-12 border-b border-slate-100 hover:bg-slate-50/80 transition" data-status="sync">
+          <div class="col-span-4 p-4 border-r border-slate-100 space-y-1.5">
+            <div class="flex items-center gap-2 flex-wrap">
+              <span class="method-badge method-get">GET</span>
+              <span class="font-mono text-xs font-semibold text-slate-900">/categories</span>
+              <span class="text-[10px] px-2 py-0.5 rounded bg-slate-100 text-slate-600 font-medium">Public</span>
+            </div>
+            <div class="flex items-center gap-2 flex-wrap mt-1">
+              <span class="method-badge method-post">POST</span>
+              <span class="method-badge method-put">PUT</span>
+              <span class="method-badge method-delete">DELETE</span>
+              <span class="font-mono text-xs font-semibold text-slate-900">/admin/categories/**</span>
+              <span class="text-[10px] px-2 py-0.5 rounded bg-purple-100 text-purple-800 font-medium">Role ADMIN</span>
+            </div>
+            <p class="text-xs text-slate-600">Quản trị danh mục sản phẩm (List, Create, Update, Delete có ràng buộc tồn tại items).</p>
+          </div>
+
+          <div class="col-span-4 p-4 border-r border-slate-100 space-y-1.5">
+            <div class="flex items-center justify-between">
+              <span class="font-mono text-xs font-bold text-slate-800">CategoryController & AdminCategoryController</span>
+              <span class="status-badge status-completed">● Hoàn thành</span>
+            </div>
+            <ul class="text-xs font-mono text-slate-600 space-y-0.5">
+              <li>&bull; <code class="text-emerald-600">GET /categories</code>: Tìm kiếm phân trang</li>
+              <li>&bull; <code class="text-blue-600">POST /admin/categories</code> (201 Created)</li>
+              <li>&bull; <code class="text-amber-600">PUT /admin/categories/{id}</code> (200 OK)</li>
+              <li>&bull; <code class="text-rose-600">DELETE /admin/categories/{id}</code> (204 No Content)</li>
+            </ul>
+          </div>
+
+          <div class="col-span-4 p-4 space-y-1.5">
+            <div class="flex items-center justify-between">
+              <span class="font-mono text-xs font-bold text-slate-800">useCategories.js</span>
+              <span class="status-badge status-completed">● Đã tích hợp</span>
+            </div>
+            <p class="text-xs text-slate-600">Cung cấp <code class="font-mono">useCategories</code>, <code class="font-mono">useCreateCategory</code>, <code class="font-mono">useUpdateCategory</code>, <code class="font-mono">useDeleteCategory</code>.</p>
+            <div class="text-[11px] text-slate-500">
+              Trang gọi: <span class="font-semibold text-slate-700">AdminCategories.jsx</span> &bull; <span class="font-semibold text-slate-700">AdminProducts.jsx</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2.3 Admin Products CRUD (POST, PUT, DELETE /admin/products/**) -->
+        <div class="api-row grid grid-cols-12 border-b border-slate-100 hover:bg-slate-50/80 transition" data-status="sync">
+          <div class="col-span-4 p-4 border-r border-slate-100 space-y-1.5">
+            <div class="flex items-center gap-2 flex-wrap">
+              <span class="method-badge method-post">POST</span>
+              <span class="method-badge method-put">PUT</span>
+              <span class="method-badge method-delete">DELETE</span>
+              <span class="font-mono text-xs font-semibold text-slate-900">/admin/products/**</span>
+              <span class="text-[10px] px-2 py-0.5 rounded bg-purple-100 text-purple-800 font-medium">Role ADMIN</span>
+            </div>
+            <p class="text-xs text-slate-600">Thêm, sửa, xóa sản phẩm kèm upload ảnh (Multipart Form Data: file + metadata JSON).</p>
+          </div>
+
+          <div class="col-span-4 p-4 border-r border-slate-100 space-y-1.5">
+            <div class="flex items-center justify-between">
+              <span class="font-mono text-xs font-bold text-slate-800">AdminProductController.java</span>
+              <span class="status-badge status-completed">● Hoàn thành</span>
+            </div>
+            <p class="text-xs text-slate-600">Xử lý parse JSON metadata qua <code class="font-mono">ObjectMapper</code> + Validator kiểm tra ràng buộc + Cloudinary upload.</p>
+            <div class="text-[11px] text-slate-500">
+              Hỗ trợ tự động tạo Slug SEO chuẩn từ tên sản phẩm
+            </div>
+          </div>
+
+          <div class="col-span-4 p-4 space-y-1.5">
+            <div class="flex items-center justify-between">
+              <span class="font-mono text-xs font-bold text-slate-800">useProducts.js</span>
+              <span class="status-badge status-completed">● Đã tích hợp</span>
+            </div>
+            <p class="text-xs text-slate-600">Hooks: <code class="font-mono">useCreateProduct</code>, <code class="font-mono">useUpdateProduct</code>, <code class="font-mono">useDeleteProduct</code> tự động build <code class="font-mono">FormData</code>.</p>
+            <div class="text-[11px] text-slate-500">
+              Trang gọi: <span class="font-semibold text-slate-700">AdminProducts.jsx</span> (Modal thêm/sửa sản phẩm)
+            </div>
+          </div>
+        </div>
+
+        <!-- 2.4 Admin Product Colors & Variations Management -->
+        <div class="api-row grid grid-cols-12 border-b border-slate-100 hover:bg-slate-50/80 transition" data-status="sync">
+          <div class="col-span-4 p-4 border-r border-slate-100 space-y-1.5">
+            <div class="flex items-center gap-2 flex-wrap">
+              <span class="method-badge method-post">POST</span>
+              <span class="method-badge method-put">PUT</span>
+              <span class="method-badge method-patch">PATCH</span>
+              <span class="method-badge method-delete">DELETE</span>
+              <span class="font-mono text-xs font-semibold text-slate-900">/admin/colors/** & /admin/variations/**</span>
+            </div>
+            <p class="text-xs text-slate-600">Quản lý Màu sắc kèm ảnh riêng biệt và các Biến thể kích cỡ (Size), Cập nhật tồn kho (Stock Quantity).</p>
+          </div>
+
+          <div class="col-span-4 p-4 border-r border-slate-100 space-y-1.5">
+            <div class="flex items-center justify-between">
+              <span class="font-mono text-xs font-bold text-slate-800">AdminProductColorController & AdminProductVariationController</span>
+              <span class="status-badge status-completed">● Hoàn thành</span>
+            </div>
+            <ul class="text-xs font-mono text-slate-600 space-y-0.5">
+              <li>&bull; Color: <code class="text-blue-600">POST /admin/products/{id}/colors</code>, <code class="text-amber-600">PUT /admin/colors/{id}</code>, <code class="text-rose-600">DELETE /admin/colors/{id}</code></li>
+              <li>&bull; Variation: <code class="text-blue-600">POST .../variations</code>, <code class="text-amber-600">PUT .../variations/{id}</code>, <code class="text-purple-600">PATCH .../stock</code>, <code class="text-rose-600">DELETE</code></li>
+            </ul>
+          </div>
+
+          <div class="col-span-4 p-4 space-y-1.5">
+            <div class="flex items-center justify-between">
+              <span class="font-mono text-xs font-bold text-slate-800">useProducts.js</span>
+              <span class="status-badge status-completed">● Đã tích hợp</span>
+            </div>
+            <p class="text-xs text-slate-600">Cung cấp đầy đủ 7 hooks quản lý màu sắc và biến thể kích cỡ / tồn kho.</p>
+            <div class="text-[11px] text-slate-500">
+              Trang gọi: <span class="font-semibold text-slate-700">AdminProducts.jsx</span> (Drawer quản lý Color/Variation)
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SLICE 3: CUSTOMER CARTS & ORDER MANAGEMENT -->
+      <div class="slice-group" data-slice="slice3">
+        <div class="slice-header text-white px-6 py-3 font-bold text-sm tracking-wide flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <span class="bg-indigo-500/30 text-indigo-300 text-xs px-2.5 py-0.5 rounded border border-indigo-400/30">SLICE 3</span>
+            <span>Customer Carts, Orders & Payment Gateways (Giỏ hàng, Đơn hàng & Thanh toán)</span>
+          </div>
+          <span class="text-xs text-slate-300 font-normal">6 Nhóm Endpoints &bull; BE: 6/6 &bull; FE: 4/6</span>
+        </div>
+
+        <!-- 3.1 Cart CRUD (GET, POST, PATCH, DELETE /cart/**) -->
+        <div class="api-row grid grid-cols-12 border-b border-slate-100 hover:bg-slate-50/80 transition" data-status="sync">
+          <div class="col-span-4 p-4 border-r border-slate-100 space-y-1.5">
+            <div class="flex items-center gap-2 flex-wrap">
+              <span class="method-badge method-get">GET</span>
+              <span class="method-badge method-post">POST</span>
+              <span class="method-badge method-patch">PATCH</span>
+              <span class="method-badge method-delete">DELETE</span>
+              <span class="font-mono text-xs font-semibold text-slate-900">/cart/**</span>
+              <span class="text-[10px] px-2 py-0.5 rounded bg-amber-100 text-amber-800 font-medium">Role USER</span>
+            </div>
+            <p class="text-xs text-slate-600">Xem giỏ hàng, thêm sản phẩm (auto-increment nếu đã có), cập nhật số lượng, xóa item.</p>
+          </div>
+
+          <div class="col-span-4 p-4 border-r border-slate-100 space-y-1.5">
+            <div class="flex items-center justify-between">
+              <span class="font-mono text-xs font-bold text-slate-800">CartController.java</span>
+              <span class="status-badge status-completed">● Hoàn thành</span>
+            </div>
+            <ul class="text-xs font-mono text-slate-600 space-y-0.5">
+              <li>&bull; <code class="text-emerald-600">GET /cart</code>: Trả về List&lt;CartItemResponseDto&gt;</li>
+              <li>&bull; <code class="text-blue-600">POST /cart</code>: Thêm biến thể vào giỏ hàng</li>
+              <li>&bull; <code class="text-purple-600">PATCH /cart/{id}</code>: Đổi số lượng</li>
+              <li>&bull; <code class="text-rose-600">DELETE /cart/{id}</code>: Xóa mục khỏi giỏ</li>
+            </ul>
+          </div>
+
+          <div class="col-span-4 p-4 space-y-1.5">
+            <div class="flex items-center justify-between">
+              <span class="font-mono text-xs font-bold text-slate-800">useCart.js</span>
+              <span class="status-badge status-completed">● Đã tích hợp</span>
+            </div>
+            <p class="text-xs text-slate-600">Cung cấp <code class="font-mono">useCart</code>, <code class="font-mono">useAddToCart</code>, <code class="font-mono">useUpdateCartItem</code>, <code class="font-mono">useRemoveFromCart</code>.</p>
+            <div class="text-[11px] text-slate-500">
+              Trang gọi: <span class="font-semibold text-slate-700">Cart.jsx</span> &bull; <span class="font-semibold text-slate-700">ProductDetail.jsx</span> &bull; <span class="font-semibold text-slate-700">Header.jsx (Badge giỏ hàng)</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 3.2 Orders (POST /orders, GET /orders, PATCH /orders/:id/cancel) -->
+        <div class="api-row grid grid-cols-12 border-b border-slate-100 hover:bg-slate-50/80 transition" data-status="sync">
+          <div class="col-span-4 p-4 border-r border-slate-100 space-y-1.5">
+            <div class="flex items-center gap-2 flex-wrap">
+              <span class="method-badge method-post">POST</span>
+              <span class="method-badge method-get">GET</span>
+              <span class="method-badge method-patch">PATCH</span>
+              <span class="font-mono text-xs font-semibold text-slate-900">/orders & /orders/{id}/cancel</span>
+            </div>
+            <p class="text-xs text-slate-600">Đặt hàng (hỗ trợ COD & PayOS QR Online), xem lịch sử đơn hàng của tôi, hủy đơn (nếu PENDING_APPROVAL).</p>
+          </div>
+
+          <div class="col-span-4 p-4 border-r border-slate-100 space-y-1.5">
+            <div class="flex items-center justify-between">
+              <span class="font-mono text-xs font-bold text-slate-800">OrderController.java</span>
+              <span class="status-badge status-completed">● Hoàn thành</span>
+            </div>
+            <p class="text-xs text-slate-600">Tạo đơn hàng, trừ kho sản phẩm, tạo link thanh toán PayOS tự động nếu chọn Online Payment, xử lý hoàn kho khi hủy đơn.</p>
+          </div>
+
+          <div class="col-span-4 p-4 space-y-1.5">
+            <div class="flex items-center justify-between">
+              <span class="font-mono text-xs font-bold text-slate-800">useOrders.js</span>
+              <span class="status-badge status-completed">● Đã tích hợp</span>
+            </div>
+            <p class="text-xs text-slate-600">Hooks: <code class="font-mono">useCreateOrder</code> (chuyển hướng PayOS nếu có paymentUrl), <code class="font-mono">useUserOrders</code>, <code class="font-mono">useCancelOrder</code>.</p>
+            <div class="text-[11px] text-slate-500">
+              Trang gọi: <span class="font-semibold text-slate-700">Cart.jsx</span> (Checkout) &bull; <span class="font-semibold text-slate-700">Orders.jsx</span> &bull; <span class="font-semibold text-slate-700">Profile.jsx</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 3.3 GET /orders/{id} (Chi tiết đơn hàng) -->
+        <div class="api-row grid grid-cols-12 border-b border-slate-100 hover:bg-slate-50/80 transition" data-status="be-only">
+          <div class="col-span-4 p-4 border-r border-slate-100 space-y-1.5">
+            <div class="flex items-center gap-2 flex-wrap">
+              <span class="method-badge method-get">GET</span>
+              <span class="font-mono text-xs font-semibold text-slate-900">/orders/{id}</span>
+              <span class="text-[10px] px-2 py-0.5 rounded bg-amber-100 text-amber-800 font-medium">Role USER</span>
+            </div>
+            <p class="text-xs text-slate-600">Xem chi tiết 1 đơn hàng theo ID (kiểm tra chặt chẽ quyền sở hữu của user).</p>
+            <div class="text-[11px] font-mono text-slate-500">
+              Res: <span class="text-emerald-600 font-medium">200 OrderResponseDto</span>
+            </div>
+          </div>
+
+          <div class="col-span-4 p-4 border-r border-slate-100 space-y-1.5">
+            <div class="flex items-center justify-between">
+              <span class="font-mono text-xs font-bold text-slate-800">OrderController.java</span>
+              <span class="status-badge status-completed">● Hoàn thành</span>
+            </div>
+            <p class="font-mono text-xs text-slate-600">public ResponseEntity&lt;OrderResponseDto&gt; getOrderById(@AuthenticationPrincipal ... @PathVariable Long id)</p>
+            <div class="text-[11px] text-slate-500">
+              Đảm bảo chỉ trả về đơn nếu đúng userId người đặt
+            </div>
+          </div>
+
+          <div class="col-span-4 p-4 space-y-1.5 bg-purple-50/40">
+            <div class="flex items-center justify-between">
+              <span class="font-mono text-xs font-bold text-purple-900">OrderDetail.jsx</span>
+              <span class="status-badge status-mock">⚠️ Đang dùng Mock Data</span>
+            </div>
+            <p class="text-xs text-slate-600"><code class="font-mono">OrderDetail.jsx</code> hiện đang đọc từ object tĩnh <code class="font-mono text-purple-700">ORDER_DATABASE</code> thay vì gọi API.</p>
+            <div class="text-[11px] text-purple-700 font-medium">
+              Khuyến nghị: Viết hook <code class="font-mono">useOrderDetail(id)</code> trong <code class="font-mono">useOrders.js</code> để nối thực tế.
+            </div>
+          </div>
+        </div>
+
+        <!-- 3.4 GET /orders/tracking (Guest Tracking) -->
+        <div class="api-row grid grid-cols-12 border-b border-slate-100 hover:bg-slate-50/80 transition" data-status="be-only">
+          <div class="col-span-4 p-4 border-r border-slate-100 space-y-1.5">
+            <div class="flex items-center gap-2 flex-wrap">
+              <span class="method-badge method-get">GET</span>
+              <span class="font-mono text-xs font-semibold text-slate-900">/orders/tracking</span>
+              <span class="text-[10px] px-2 py-0.5 rounded bg-slate-100 text-slate-600 font-medium">Public (Guest)</span>
+            </div>
+            <p class="text-xs text-slate-600">Tra cứu tình trạng đơn hàng cho khách vãng lai bằng số điện thoại & họ tên người nhận.</p>
+            <div class="text-[11px] font-mono text-slate-500">
+              Params: <span class="text-indigo-600 font-medium">phone, name</span> &bull; Res: <span class="text-emerald-600 font-medium">PageResponseDto&lt;OrderTrackingResponseDto&gt;</span>
+            </div>
+          </div>
+
+          <div class="col-span-4 p-4 border-r border-slate-100 space-y-1.5">
+            <div class="flex items-center justify-between">
+              <span class="font-mono text-xs font-bold text-slate-800">OrderController.java</span>
+              <span class="status-badge status-completed">● Hoàn thành</span>
+            </div>
+            <p class="font-mono text-xs text-slate-600">public ResponseEntity&lt;PageResponseDto&lt;OrderTrackingResponseDto&gt;&gt; trackOrders(...)</p>
+            <div class="text-[11px] text-slate-500">
+              Bảo mật ẩn các thông tin nhạy cảm của khách
+            </div>
+          </div>
+
+          <div class="col-span-4 p-4 space-y-1.5 bg-amber-50/30">
+            <div class="flex items-center justify-between">
+              <span class="font-mono text-xs font-bold text-slate-400">Chưa có Hook / UI</span>
+              <span class="status-badge status-missing">✕ Chưa nối FE</span>
+            </div>
+            <p class="text-xs text-slate-500">Frontend chưa có giao diện Tra Cứu Đơn Hàng Vãng Lai dành cho khách không đăng nhập.</p>
+          </div>
+        </div>
+
+        <!-- 3.5 Admin Orders Management (GET /admin/orders, PATCH /admin/orders/:id/status) -->
+        <div class="api-row grid grid-cols-12 border-b border-slate-100 hover:bg-slate-50/80 transition" data-status="sync">
+          <div class="col-span-4 p-4 border-r border-slate-100 space-y-1.5">
+            <div class="flex items-center gap-2 flex-wrap">
+              <span class="method-badge method-get">GET</span>
+              <span class="method-badge method-patch">PATCH</span>
+              <span class="font-mono text-xs font-semibold text-slate-900">/admin/orders/**</span>
+              <span class="text-[10px] px-2 py-0.5 rounded bg-purple-100 text-purple-800 font-medium">Role ADMIN</span>
+            </div>
+            <p class="text-xs text-slate-600">Quản trị toàn bộ đơn hàng hệ thống (lọc status, userId, phân trang) và cập nhật luồng trạng thái đơn.</p>
+          </div>
+
+          <div class="col-span-4 p-4 border-r border-slate-100 space-y-1.5">
+            <div class="flex items-center justify-between">
+              <span class="font-mono text-xs font-bold text-slate-800">AdminOrderController.java</span>
+              <span class="status-badge status-completed">● Hoàn thành</span>
+            </div>
+            <ul class="text-xs font-mono text-slate-600 space-y-0.5">
+              <li>&bull; <code class="text-emerald-600">GET /admin/orders</code>: Danh sách kèm thông tin khách</li>
+              <li>&bull; <code class="text-purple-600">PATCH /admin/orders/{id}/status</code>: Chuyển trạng thái đơn hàng</li>
+            </ul>
+          </div>
+
+          <div class="col-span-4 p-4 space-y-1.5">
+            <div class="flex items-center justify-between">
+              <span class="font-mono text-xs font-bold text-slate-800">useAdminOrders.js</span>
+              <span class="status-badge status-completed">● Đã tích hợp</span>
+            </div>
+            <p class="text-xs text-slate-600">Hooks: <code class="font-mono">useAdminOrders</code> & <code class="font-mono">useUpdateOrderStatus</code>.</p>
+            <div class="text-[11px] text-slate-500">
+              Trang gọi: <span class="font-semibold text-slate-700">AdminOrders.jsx</span> (Bảng quản lý đơn, lọc trạng thái, cập nhật quy trình giao vận)
+            </div>
+          </div>
+        </div>
+
+        <!-- 3.6 Payment Webhook (POST /payment/payos-webhook) -->
+        <div class="api-row grid grid-cols-12 border-b border-slate-100 hover:bg-slate-50/80 transition" data-status="sync">
+          <div class="col-span-4 p-4 border-r border-slate-100 space-y-1.5">
+            <div class="flex items-center gap-2 flex-wrap">
+              <span class="method-badge method-post">POST</span>
+              <span class="font-mono text-xs font-semibold text-slate-900">/payment/payos-webhook</span>
+              <span class="text-[10px] px-2 py-0.5 rounded bg-slate-100 text-slate-600 font-medium">Public Webhook</span>
+            </div>
+            <p class="text-xs text-slate-600">Webhook nhận thông báo kết quả giao dịch tự động từ cổng thanh toán trực tuyến PayOS.</p>
+          </div>
+
+          <div class="col-span-4 p-4 border-r border-slate-100 space-y-1.5">
+            <div class="flex items-center justify-between">
+              <span class="font-mono text-xs font-bold text-slate-800">PaymentController.java</span>
+              <span class="status-badge status-completed">● Hoàn thành</span>
+            </div>
+            <p class="text-xs text-slate-600">Xác thực chữ ký số webhook SDK PayOS, tự động chuyển đơn sang <code class="font-mono text-emerald-600 font-bold">AWAITING_PICKUP</code> (khi thành công) hoặc <code class="font-mono text-rose-600 font-bold">CANCELED</code>.</p>
+          </div>
+
+          <div class="col-span-4 p-4 space-y-1.5 bg-slate-50">
+            <div class="flex items-center justify-between">
+              <span class="font-mono text-xs font-bold text-slate-600">Server-to-Server</span>
+              <span class="status-badge status-completed">● Không áp dụng FE</span>
+            </div>
+            <p class="text-xs text-slate-500">Cơ chế Server-to-Server Webhook do PayOS Gateway tự động gọi về Backend. Phía FE chỉ redirect URL thanh toán.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- SLICE 4: CHAT, MARKETING BANNERS & PRODUCT REVIEWS -->
+      <div class="slice-group" data-slice="slice4">
+        <div class="slice-header text-white px-6 py-3 font-bold text-sm tracking-wide flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <span class="bg-rose-500/30 text-rose-300 text-xs px-2.5 py-0.5 rounded border border-rose-400/30">SLICE 4</span>
+            <span>Chat Realtime, Marketing Banners, Promotions & Reviews (Tin nhắn, Banner, Khuyến mãi & Đánh giá)</span>
+          </div>
+          <span class="text-xs text-slate-300 font-normal">11 Endpoints &bull; BE: 0/11 (Chưa tạo Controller) &bull; FE: 0/11</span>
+        </div>
+
+        <!-- 4.1 Banners API -->
+        <div class="api-row grid grid-cols-12 border-b border-slate-100 hover:bg-slate-50/80 transition" data-status="pending">
+          <div class="col-span-4 p-4 border-r border-slate-100 space-y-1.5">
+            <div class="flex items-center gap-2 flex-wrap">
+              <span class="method-badge method-get">GET</span>
+              <span class="font-mono text-xs font-semibold text-slate-900">/banners</span>
+              <span class="text-[10px] px-2 py-0.5 rounded bg-slate-100 text-slate-600 font-medium">Public</span>
+            </div>
+            <div class="flex items-center gap-2 flex-wrap mt-1">
+              <span class="method-badge method-post">POST</span>
+              <span class="method-badge method-put">PUT</span>
+              <span class="method-badge method-delete">DELETE</span>
+              <span class="font-mono text-xs font-semibold text-slate-900">/admin/banners/**</span>
+              <span class="text-[10px] px-2 py-0.5 rounded bg-purple-100 text-purple-800 font-medium">Role ADMIN</span>
+            </div>
+            <p class="text-xs text-slate-600">Lấy danh sách banner trang chủ & Quản trị banner quảng cáo (upload ảnh Cloudinary, link điều hướng).</p>
+          </div>
+
+          <div class="col-span-4 p-4 border-r border-slate-100 space-y-1.5 bg-rose-50/30">
+            <div class="flex items-center justify-between">
+              <span class="font-mono text-xs font-bold text-rose-800">BannerController.java</span>
+              <span class="status-badge status-missing">✕ Chưa triển khai</span>
+            </div>
+            <p class="text-xs text-slate-500">Chưa có Controller, Service, Repository và Entity Banner trong Backend.</p>
+          </div>
+
+          <div class="col-span-4 p-4 space-y-1.5 bg-purple-50/30">
+            <div class="flex items-center justify-between">
+              <span class="font-mono text-xs font-bold text-purple-800">Home.jsx</span>
+              <span class="status-badge status-mock">⚠️ Dùng Static Banner</span>
+            </div>
+            <p class="text-xs text-slate-500">Giao diện Home.jsx hiện đang hardcode banner trình chiếu trực tiếp.</p>
+          </div>
+        </div>
+
+        <!-- 4.2 Promotions API -->
+        <div class="api-row grid grid-cols-12 border-b border-slate-100 hover:bg-slate-50/80 transition" data-status="pending">
+          <div class="col-span-4 p-4 border-r border-slate-100 space-y-1.5">
+            <div class="flex items-center gap-2 flex-wrap">
+              <span class="method-badge method-get">GET</span>
+              <span class="method-badge method-post">POST</span>
+              <span class="method-badge method-put">PUT</span>
+              <span class="method-badge method-delete">DELETE</span>
+              <span class="font-mono text-xs font-semibold text-slate-900">/admin/promotions/**</span>
+              <span class="text-[10px] px-2 py-0.5 rounded bg-purple-100 text-purple-800 font-medium">Role ADMIN</span>
+            </div>
+            <p class="text-xs text-slate-600">Quản lý mã giảm giá, chiết khấu phần trăm / giá trị cố định, thời hạn kích hoạt.</p>
+          </div>
+
+          <div class="col-span-4 p-4 border-r border-slate-100 space-y-1.5 bg-rose-50/30">
+            <div class="flex items-center justify-between">
+              <span class="font-mono text-xs font-bold text-rose-800">PromotionController.java</span>
+              <span class="status-badge status-missing">✕ Chưa triển khai</span>
+            </div>
+            <p class="text-xs text-slate-500">Chưa có Controller và Service quản trị voucher/khuyến mãi trong Backend.</p>
+          </div>
+
+          <div class="col-span-4 p-4 space-y-1.5 bg-rose-50/30">
+            <div class="flex items-center justify-between">
+              <span class="font-mono text-xs font-bold text-slate-400">Chưa có Hook / UI</span>
+              <span class="status-badge status-missing">✕ Chưa triển khai</span>
+            </div>
+            <p class="text-xs text-slate-500">Chưa có hook quản lý promotion và trang quản trị Voucher trong Admin.</p>
+          </div>
+        </div>
+
+        <!-- 4.3 Reviews API -->
+        <div class="api-row grid grid-cols-12 border-b border-slate-100 hover:bg-slate-50/80 transition" data-status="pending">
+          <div class="col-span-4 p-4 border-r border-slate-100 space-y-1.5">
+            <div class="flex items-center gap-2 flex-wrap">
+              <span class="method-badge method-get">GET</span>
+              <span class="font-mono text-xs font-semibold text-slate-900">/products/{slug}/reviews</span>
+              <span class="text-[10px] px-2 py-0.5 rounded bg-slate-100 text-slate-600 font-medium">Public</span>
+            </div>
+            <div class="flex items-center gap-2 flex-wrap mt-1">
+              <span class="method-badge method-post">POST</span>
+              <span class="font-mono text-xs font-semibold text-slate-900">/reviews</span>
+              <span class="text-[10px] px-2 py-0.5 rounded bg-amber-100 text-amber-800 font-medium">Role USER</span>
+            </div>
+            <p class="text-xs text-slate-600">Xem đánh giá sản phẩm (lọc số sao) & Người dùng gửi đánh giá / nhận xét kèm hình ảnh feedback.</p>
+          </div>
+
+          <div class="col-span-4 p-4 border-r border-slate-100 space-y-1.5 bg-rose-50/30">
+            <div class="flex items-center justify-between">
+              <span class="font-mono text-xs font-bold text-rose-800">ReviewController.java</span>
+              <span class="status-badge status-missing">✕ Chưa triển khai</span>
+            </div>
+            <p class="text-xs text-slate-500">Chưa có ReviewController, ReviewService và bảng Review trong Database.</p>
+          </div>
+
+          <div class="col-span-4 p-4 space-y-1.5 bg-purple-50/30">
+            <div class="flex items-center justify-between">
+              <span class="font-mono text-xs font-bold text-purple-800">ProductDetail.jsx</span>
+              <span class="status-badge status-mock">⚠️ Dùng Mock Review</span>
+            </div>
+            <p class="text-xs text-slate-500">Mục đánh giá sản phẩm trong ProductDetail hiện đang hiển thị feedback mẫu cố định.</p>
+          </div>
+        </div>
+
+        <!-- 4.4 Realtime Chat & Messages (STOMP WebSocket) -->
+        <div class="api-row grid grid-cols-12 border-b border-slate-100 hover:bg-slate-50/80 transition" data-status="pending">
+          <div class="col-span-4 p-4 border-r border-slate-100 space-y-1.5">
+            <div class="flex items-center gap-2 flex-wrap">
+              <span class="method-badge method-get">GET</span>
+              <span class="method-badge method-post">POST</span>
+              <span class="font-mono text-xs font-semibold text-slate-900">/messages</span>
+            </div>
+            <div class="flex items-center gap-2 flex-wrap mt-1">
+              <span class="method-badge method-ws">WS</span>
+              <span class="font-mono text-xs font-semibold text-slate-900">/ws & /topic/chat/{id}</span>
+              <span class="text-[10px] px-2 py-0.5 rounded bg-indigo-100 text-indigo-800 font-medium">STOMP Broker</span>
+            </div>
+            <p class="text-xs text-slate-600">Hệ thống chat hỗ trợ khách hàng thời gian thực qua giao thức WebSocket STOMP.</p>
+          </div>
+
+          <div class="col-span-4 p-4 border-r border-slate-100 space-y-1.5 bg-rose-50/30">
+            <div class="flex items-center justify-between">
+              <span class="font-mono text-xs font-bold text-rose-800">MessageController & WebSocketConfig</span>
+              <span class="status-badge status-missing">✕ Chưa triển khai</span>
+            </div>
+            <p class="text-xs text-slate-500">SecurityConfig đã mở <code class="font-mono">/ws/**</code> nhưng chưa cấu hình MessageBroker và Controller chat.</p>
+          </div>
+
+          <div class="col-span-4 p-4 space-y-1.5 bg-rose-50/30">
+            <div class="flex items-center justify-between">
+              <span class="font-mono text-xs font-bold text-slate-400">Chưa có Hook / Client</span>
+              <span class="status-badge status-missing">✕ Chưa triển khai</span>
+            </div>
+            <p class="text-xs text-slate-500">Frontend chưa cài thư viện STOMP client (như <code class="font-mono">@stomp/stompjs</code>) và chưa dựng widget Live Chat.</p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Summary Checklist & Recommendations -->
+    <div class="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs">
+        <h3 class="font-bold text-slate-900 text-sm uppercase tracking-wide mb-4 flex items-center gap-2">
+          <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+          Các phần đã hoàn thiện xuất sắc (Slice 1, 2, 3)
+        </h3>
+        <ul class="text-xs text-slate-600 space-y-2.5">
+          <li class="flex items-start gap-2">
+            <span class="text-emerald-500 font-bold">✓</span>
+            <span><strong>Authentication & Token Rotation:</strong> Đăng nhập, đăng ký, đăng xuất, Refresh Token ngầm với HttpOnly Cookie và Axios Interceptor hoạt động đồng bộ.</span>
+          </li>
+          <li class="flex items-start gap-2">
+            <span class="text-emerald-500 font-bold">✓</span>
+            <span><strong>Catalog & Admin Quản Trị Kho:</strong> Phân cấp đầy đủ Sản phẩm &rarr; Màu sắc &rarr; Biến thể kích thước &rarr; Tồn kho &rarr; Ảnh Cloudinary.</span>
+          </li>
+          <li class="flex items-start gap-2">
+            <span class="text-emerald-500 font-bold">✓</span>
+            <span><strong>Giỏ Hàng & Thanh Toán PayOS:</strong> Đặt hàng, tự động sinh QR chuyển khoản PayOS, Webhook cập nhật đơn và hoàn trả kho khi hủy đơn.</span>
+          </li>
+        </ul>
+      </div>
+
+      <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs">
+        <h3 class="font-bold text-slate-900 text-sm uppercase tracking-wide mb-4 flex items-center gap-2">
+          <span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
+          Kế hoạch hoàn thiện tiếp theo (Next Steps)
+        </h3>
+        <ul class="text-xs text-slate-600 space-y-2.5">
+          <li class="flex items-start gap-2">
+            <span class="text-amber-500 font-bold">1.</span>
+            <span><strong>Nối API cho OrderDetail:</strong> Thay thế Mock Data trong <code class="font-mono">OrderDetail.jsx</code> bằng hook <code class="font-mono">useOrderDetail(id)</code> gọi <code class="font-mono">GET /orders/{id}</code>.</span>
+          </li>
+          <li class="flex items-start gap-2">
+            <span class="text-amber-500 font-bold">2.</span>
+            <span><strong>Triển khai Tra cứu đơn vãng lai:</strong> Xây dựng trang tra cứu Guest Tracking gọi <code class="font-mono">GET /orders/tracking?phone=&name=</code>.</span>
+          </li>
+          <li class="flex items-start gap-2">
+            <span class="text-amber-500 font-bold">3.</span>
+            <span><strong>Triển khai Slice 4:</strong> Tạo Controller & Service cho Banners, Reviews và Promotions theo đúng hợp đồng trong <code class="font-mono">api-contract.md</code>.</span>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </main>
+
+  <!-- Interactive Filter Script -->
+  <script>
+    function filterStatus(status) {
+      const rows = document.querySelectorAll('.api-row');
+      const buttons = {
+        'all': document.getElementById('btn-all'),
+        'sync': document.getElementById('btn-sync'),
+        'be-only': document.getElementById('btn-be-only'),
+        'pending': document.getElementById('btn-pending')
+      };
+
+      // Reset button styles
+      Object.keys(buttons).forEach(key => {
+        buttons[key].className = 'px-3.5 py-1.5 rounded-lg text-xs font-bold transition bg-slate-100 text-slate-700 hover:bg-slate-200';
+      });
+      buttons[status].className = 'px-3.5 py-1.5 rounded-lg text-xs font-bold transition bg-indigo-600 text-white shadow-xs';
+
+      // Filter rows
+      rows.forEach(row => {
+        const rowStatus = row.getAttribute('data-status');
+        if (status === 'all') {
+          row.style.display = '';
+        } else if (status === 'sync') {
+          row.style.display = (rowStatus === 'sync') ? '' : 'none';
+        } else if (status === 'be-only') {
+          row.style.display = (rowStatus === 'be-only') ? '' : 'none';
+        } else if (status === 'pending') {
+          row.style.display = (rowStatus === 'pending') ? '' : 'none';
+        }
+      });
+    }
+  </script>
+</body>
+</html>

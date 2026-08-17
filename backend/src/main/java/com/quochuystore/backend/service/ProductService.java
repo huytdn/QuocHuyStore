@@ -20,6 +20,8 @@ public interface ProductService {
 
     ProductDetailResponseDto getProductBySlug(String slug);
 
+    ProductDetailResponseDto getProductById(Long id);
+
     ProductDetailResponseDto createProduct(ProductCreateRequestDto request, MultipartFile file);
 
     ProductDetailResponseDto updateProduct(Long id, ProductUpdateRequestDto request, MultipartFile file);

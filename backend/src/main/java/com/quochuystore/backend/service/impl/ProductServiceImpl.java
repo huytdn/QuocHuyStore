@@ -116,6 +116,16 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public ProductDetailResponseDto getProductById(Long id) {
+        log.info("Fetching product detail by id: {} (no cache)", id);
+        Product product = productRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Product not found with id: " + id));
+
+        return getProductDetailResponseDto(product);
+    }
+
+    @Override
     @Transactional
     public ProductDetailResponseDto createProduct(ProductCreateRequestDto request, MultipartFile file) {
         log.info("Creating product with name: {}, slug: {}", request.getName(), request.getSlug());
