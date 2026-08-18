@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { FiChevronRight, FiChevronDown, FiZoomIn, FiX } from "react-icons/fi";
+import { toast } from "react-toastify";
 import Footer from "../components/Footer";
 import { useProductDetail, useProducts } from "../hooks/api/useProducts";
 import { useAddToCart } from "../hooks/api/useCart";
@@ -64,14 +65,14 @@ const ProductDetail = () => {
 
   const handleAddToCart = () => {
     if (!isUserLoggedIn) {
-      alert("Vui lòng đăng nhập để thêm sản phẩm vào giỏ hàng!");
+      toast.warn("Vui lòng đăng nhập để thêm sản phẩm vào giỏ hàng!");
       navigate("/login");
       return;
     }
 
     const variationId = selectedVariation?.variationId;
     if (!variationId) {
-      alert("Sản phẩm tạm thời hết hàng hoặc không hợp lệ!");
+      toast.error("Sản phẩm tạm thời hết hàng hoặc không hợp lệ!");
       return;
     }
 
@@ -80,12 +81,13 @@ const ProductDetail = () => {
       {
         onSuccess: () => {
           setAddedToCart(true);
+          toast.success("Đã thêm vào giỏ hàng!");
           setTimeout(() => {
             setAddedToCart(false);
           }, 2000);
         },
         onError: (err) => {
-          alert(err.response?.data?.message || "Thêm vào giỏ hàng thất bại!");
+          toast.error(err.response?.data?.message || "Thêm vào giỏ hàng thất bại!");
         },
       }
     );
@@ -93,14 +95,14 @@ const ProductDetail = () => {
 
   const handleBuyNow = () => {
     if (!isUserLoggedIn) {
-      alert("Vui lòng đăng nhập để tiến hành mua hàng!");
+      toast.warn("Vui lòng đăng nhập để tiến hành mua hàng!");
       navigate("/login");
       return;
     }
 
     const variationId = selectedVariation?.variationId;
     if (!variationId) {
-      alert("Sản phẩm tạm thời hết hàng hoặc không hợp lệ!");
+      toast.error("Sản phẩm tạm thời hết hàng hoặc không hợp lệ!");
       return;
     }
 
@@ -111,7 +113,7 @@ const ProductDetail = () => {
           navigate("/cart");
         },
         onError: (err) => {
-          alert(err.response?.data?.message || "Mua hàng thất bại!");
+          toast.error(err.response?.data?.message || "Mua hàng thất bại!");
         },
       }
     );

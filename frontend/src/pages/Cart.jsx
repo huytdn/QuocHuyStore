@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { FiArrowLeft, FiPlus, FiMinus, FiTrash2, FiChevronDown, FiCreditCard, FiShield, FiCheckCircle } from "react-icons/fi";
+import { toast } from "react-toastify";
 import Footer from "../components/Footer";
 import { useAuthStore } from "../store/useAuthStore";
 import { useAddresses, useCreateAddress } from "../hooks/api/useAddress";
@@ -69,7 +70,7 @@ const Cart = () => {
     if (newQty < 1) return;
     updateCartItemMutation.mutate({ cartItemId, quantity: newQty }, {
       onError: (err) => {
-        alert(err.response?.data?.message || "Cập nhật số lượng thất bại!");
+        toast.error(err.response?.data?.message || "Cập nhật số lượng thất bại!");
       }
     });
   };
@@ -78,8 +79,11 @@ const Cart = () => {
   const handleRemoveItem = (cartItemId) => {
     if (window.confirm("Bạn có chắc chắn muốn xóa sản phẩm này khỏi giỏ hàng?")) {
       removeFromCartMutation.mutate(cartItemId, {
+        onSuccess: () => {
+          toast.success("Đã xóa sản phẩm khỏi giỏ hàng!");
+        },
         onError: (err) => {
-          alert(err.response?.data?.message || "Xóa sản phẩm thất bại!");
+          toast.error(err.response?.data?.message || "Xóa sản phẩm thất bại!");
         }
       });
     }
@@ -98,12 +102,15 @@ const Cart = () => {
     if (discountCode.toUpperCase() === "LUMIERE10") {
       setDiscountApplied(true);
       setDiscountValue(0.1); // 10% off
+      toast.success("Áp dụng mã giảm giá 10% thành công!");
     } else if (discountCode.trim() === "") {
       setDiscountError("Vui lòng nhập mã giảm giá");
+      toast.warn("Vui lòng nhập mã giảm giá");
     } else {
       setDiscountError("Mã giảm giá không hợp lệ. Thử: LUMIERE10");
       setDiscountApplied(false);
       setDiscountValue(0);
+      toast.error("Mã giảm giá không hợp lệ!");
     }
   };
 
@@ -125,9 +132,10 @@ const Cart = () => {
             setSelectedAddress(newAddr.id);
             setNewAddressText("");
             setNewAddressOpen(false);
+            toast.success("Thêm địa chỉ giao hàng thành công!");
           },
           onError: (err) => {
-            alert(err.response?.data?.message || "Thêm địa chỉ thất bại!");
+            toast.error(err.response?.data?.message || "Thêm địa chỉ thất bại!");
           },
         }
       );
@@ -140,13 +148,14 @@ const Cart = () => {
       setSelectedAddress(nextId);
       setNewAddressText("");
       setNewAddressOpen(false);
+      toast.success("Đã thêm địa chỉ giao hàng!");
     }
   };
 
   // Checkout handling
   const handleCheckout = () => {
     if (items.length === 0) {
-      alert("Giỏ hàng của bạn đang trống!");
+      toast.warn("Giỏ hàng của bạn đang trống!");
       return;
     }
 
@@ -165,7 +174,7 @@ const Cart = () => {
     }
 
     if (!shippingAddressDetail || shippingAddressDetail.trim() === "") {
-      alert("Vui lòng chọn hoặc nhập địa chỉ giao hàng!");
+      toast.warn("Vui lòng chọn hoặc nhập địa chỉ giao hàng!");
       return;
     }
 
@@ -187,10 +196,11 @@ const Cart = () => {
             // COD -> Show Success View
             setCreatedOrderData(orderResponse);
             setCheckoutComplete(true);
+            toast.success("Đặt hàng thành công!");
           }
         },
         onError: (err) => {
-          alert(err.response?.data?.message || "Đặt hàng thất bại. Vui lòng thử lại!");
+          toast.error(err.response?.data?.message || "Đặt hàng thất bại. Vui lòng thử lại!");
         },
       }
     );

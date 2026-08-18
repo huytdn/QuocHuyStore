@@ -98,11 +98,15 @@ export const useUpdateProduct = () => {
       }
       formData.append("metadata", JSON.stringify(metadata));
 
-      const response = await axiosClient.put(`/admin/products/${id}`, formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
+      const response = await axiosClient.put(
+        `/admin/products/${id}`,
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
         },
-      });
+      );
       return response.data;
     },
     onSuccess: () => {
@@ -130,7 +134,7 @@ export const useCreateColor = () => {
           headers: {
             "Content-Type": "multipart/form-data",
           },
-        }
+        },
       );
       return response.data; // ProductColorResponseDto
     },
@@ -193,7 +197,7 @@ export const useCreateVariation = () => {
     mutationFn: async ({ colorId, size, unitPrice, stockQuantity }) => {
       const response = await axiosClient.post(
         `/admin/colors/${colorId}/variations`,
-        { size, unitPrice, stockQuantity }
+        { size, unitPrice, stockQuantity },
       );
       return response.data; // ProductVariationResponseDto
     },
@@ -232,9 +236,12 @@ export const useUpdateStock = () => {
 
   return useMutation({
     mutationFn: async ({ id, stockQuantity }) => {
-      const response = await axiosClient.patch(`/admin/variations/${id}/stock`, {
-        stockQuantity,
-      });
+      const response = await axiosClient.patch(
+        `/admin/variations/${id}/stock`,
+        {
+          stockQuantity,
+        },
+      );
       return response.data;
     },
     onSuccess: () => {

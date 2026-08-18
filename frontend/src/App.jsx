@@ -23,6 +23,8 @@ import AdminAnalytics from "./pages/admin/AdminAnalytics";
 import AdminCustomers from "./pages/admin/AdminCustomers";
 import AdminRoute from "./components/admin/AdminRoute";
 import AdminLogin from "./pages/admin/AdminLogin";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 // Global promise to coalesce concurrent silent refresh calls on startup (e.g. React StrictMode)
 let silentRefreshPromise = null;
@@ -180,8 +182,19 @@ const App = () => {
           }
         />
         <Route path="/about" element={<About />} />
-        {/* <Route path="/collection/:category" element={<CategoriesCollection />} /> */}
       </Routes>
+      <ToastContainer
+        position="top-right"
+        autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="light"
+      />
     </>
   );
 };

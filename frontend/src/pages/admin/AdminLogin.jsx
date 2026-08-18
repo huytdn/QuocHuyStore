@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+import { toast } from "react-toastify";
 import { useLogin } from "../../hooks/api/useAuth";
 import { useAuthStore } from "../../store/useAuthStore";
 import modelImage from "../../assets/admin-model.jpg";
@@ -189,7 +190,7 @@ const AdminLogin = () => {
                   href="#" 
                   onClick={(e) => {
                     e.preventDefault();
-                    alert("Tính năng quên mật khẩu dành cho Quản trị viên: Vui lòng liên hệ bộ phận hỗ trợ kỹ thuật để khôi phục!");
+                    toast.info("Tính năng quên mật khẩu dành cho Quản trị viên: Vui lòng liên hệ bộ phận hỗ trợ kỹ thuật để khôi phục!");
                   }}
                   className="text-[10px] font-bold text-neutral-500 uppercase hover:text-black transition-colors underline underline-offset-4 decoration-neutral-300"
                 >
