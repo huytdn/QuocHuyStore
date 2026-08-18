@@ -10,4 +10,7 @@ public final class CacheKeyConstants {
 
     public static final String CATEGORY_ALL_KEY = "qhs:categories:all";
     public static final long CATEGORY_CACHE_TTL_HOURS = 24;
+
+    public static final String USER_LIKES_PREFIX = "qhs:users:likes:";
+    public static final long USER_LIKES_TTL_HOURS = 24;
 }

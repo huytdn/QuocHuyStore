@@ -4,12 +4,14 @@ import com.quochuystore.backend.dto.PageResponseDto;
 import com.quochuystore.backend.dto.product.response.ProductDetailResponseDto;
 import com.quochuystore.backend.dto.product.response.ProductListResponseDto;
 import com.quochuystore.backend.service.ProductService;
+import com.quochuystore.backend.security.UserPrincipal;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
@@ -24,6 +26,7 @@ public class ProductController {
 
     @GetMapping
     public ResponseEntity<PageResponseDto<ProductListResponseDto>> getProducts(
+            @AuthenticationPrincipal UserPrincipal principal,
             @RequestParam(required = false) Long categoryId,
             @RequestParam(required = false) String search,
             @RequestParam(required = false) BigDecimal minPrice,
@@ -33,8 +36,8 @@ public class ProductController {
             @RequestParam(defaultValue = "id,desc") String sort) {
 
         log.info(
-                "REST request to get products. categoryId: {}, search: {}, minPrice: {}, maxPrice: {}, page: {}, size: {}, sort: {}",
-                categoryId, search, minPrice, maxPrice, page, size, sort);
+                "REST request to get products. user: {}, categoryId: {}, search: {}, minPrice: {}, maxPrice: {}, page: {}, size: {}, sort: {}",
+                principal != null ? principal.getId() : "anonymous", categoryId, search, minPrice, maxPrice, page, size, sort);
 
         String[] sortParams = sort.split(",");
         String property = sortParams[0];
@@ -45,15 +48,18 @@ public class ProductController {
 
         Pageable pageable = PageRequest.of(page, size, Sort.by(direction, property));
         PageResponseDto<ProductListResponseDto> response = productService.getProducts(
-                categoryId, search, minPrice, maxPrice, pageable);
+                categoryId, search, minPrice, maxPrice, pageable, principal);
 
         return ResponseEntity.ok(response);
     }
 
     @GetMapping("/{slug}")
-    public ResponseEntity<ProductDetailResponseDto> getProductBySlug(@PathVariable String slug) {
-        log.info("REST request to get product detail by slug: {}", slug);
-        ProductDetailResponseDto response = productService.getProductBySlug(slug);
+    public ResponseEntity<ProductDetailResponseDto> getProductBySlug(
+            @PathVariable String slug,
+            @AuthenticationPrincipal UserPrincipal principal) {
+        log.info("REST request to get product detail by slug: {}, user: {}",
+                slug, principal != null ? principal.getId() : "anonymous");
+        ProductDetailResponseDto response = productService.getProductBySlug(slug, principal);
         return ResponseEntity.ok(response);
     }
 }
