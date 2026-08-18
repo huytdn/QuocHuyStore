@@ -34,6 +34,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -119,9 +120,15 @@ public class OrderServiceImpl implements OrderService {
                     .build());
         }
 
+        // Deduct stock in ascending variationId order (not request/cart order) so that two concurrent
+        // checkouts touching the same two products always acquire the products-row lock (taken by the
+        // update_product_min_price trigger on each variation UPDATE) in the same global order — otherwise
+        // opposite-order concurrent checkouts on the same pair of products can deadlock.
         // If rows_affected = 0 the stock was already exhausted by a concurrent order.
-        for (int i = 0; i < purchaseItems.size(); i++) {
-            CartItemRequestDto itemDto = purchaseItems.get(i);
+        List<CartItemRequestDto> deductionOrder = purchaseItems.stream()
+                .sorted(Comparator.comparing(CartItemRequestDto::getVariationId))
+                .collect(Collectors.toList());
+        for (CartItemRequestDto itemDto : deductionOrder) {
             int affected = productVariationRepository.deductStock(itemDto.getVariationId(), itemDto.getQuantity());
             if (affected == 0) {
                 ProductVariation variation = variationMap.get(itemDto.getVariationId());

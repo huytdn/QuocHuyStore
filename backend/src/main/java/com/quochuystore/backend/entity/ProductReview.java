@@ -8,8 +8,15 @@ import org.hibernate.annotations.UpdateTimestamp;
 import java.time.OffsetDateTime;
 
 @Entity
-@Table(name = "product_reviews", uniqueConstraints = @UniqueConstraint(name = "unique_user_product_review", columnNames = {
-        "user_id", "product_id" }))
+@Table(name = "product_reviews",
+        uniqueConstraints = {
+                @UniqueConstraint(name = "unique_user_product_review", columnNames = { "user_id", "product_id" }),
+                @UniqueConstraint(name = "uq_product_reviews_order_item", columnNames = { "order_item_id" })
+        },
+        indexes = {
+                @Index(name = "idx_product_reviews_product_created", columnList = "product_id, created_at DESC, id DESC"),
+                @Index(name = "idx_product_reviews_product_rating_created", columnList = "product_id, rating, created_at DESC, id DESC")
+        })
 @Getter
 @Setter
 @NoArgsConstructor
