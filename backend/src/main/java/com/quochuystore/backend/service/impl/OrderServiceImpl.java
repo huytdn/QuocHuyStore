@@ -178,14 +178,6 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public OrderResponseDto getOrderById(Long id, UUID userId) {
-        Order order = orderRepository.findByIdAndUserIdWithItems(id, userId)
-                .orElseThrow(() -> new ResourceNotFoundException("Order not found or access denied"));
-        return OrderMapper.toOrderResponseDto(order);
-    }
-
-    @Override
     @Transactional
     public OrderResponseDto cancelOrder(Long id, UUID userId) {
         List<OrderStatus> allowedStatuses = List.of(OrderStatus.PENDING_APPROVAL, OrderStatus.PENDING_PAYMENT);

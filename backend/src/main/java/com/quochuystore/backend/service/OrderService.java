@@ -15,8 +15,6 @@ public interface OrderService {
 
     PageResponseDto<OrderResponseDto> getOrders(UUID userId, OrderStatus status, int page, int size);
 
-    OrderResponseDto getOrderById(Long id, UUID userId);
-
     OrderResponseDto cancelOrder(Long id, UUID userId);
 
     PageResponseDto<OrderTrackingResponseDto> trackOrders(String phone, String name, int page, int size);
