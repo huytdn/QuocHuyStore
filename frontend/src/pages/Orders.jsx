@@ -11,6 +11,7 @@ import {
   FiCreditCard,
   FiEye,
 } from "react-icons/fi";
+import { toast } from "react-toastify";
 import Footer from "../components/Footer";
 import { useAuthStore } from "../store/useAuthStore";
 import { useUserOrders, useCancelOrder } from "../hooks/api/useOrders";
@@ -54,7 +55,7 @@ const Orders = () => {
       setCancelingOrderId(orderId);
       cancelOrderMutation.mutate(orderId, {
         onSuccess: () => {
-          alert(`Đã hủy đơn hàng #LM-${orderId} thành công!`);
+          toast.success(`Đã hủy đơn hàng #LM-${orderId} thành công!`);
           setCancelingOrderId(null);
           refetch();
           if (selectedOrder && selectedOrder.orderId === orderId) {
@@ -62,7 +63,7 @@ const Orders = () => {
           }
         },
         onError: (err) => {
-          alert(err.response?.data?.message || "Hủy đơn hàng thất bại!");
+          toast.error(err.response?.data?.message || "Hủy đơn hàng thất bại!");
           setCancelingOrderId(null);
         },
       });

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { toast } from "react-toastify";
 import AdminSidebar from "../../components/admin/AdminSidebar";
 import AdminHeader from "../../components/admin/AdminHeader";
 import {
@@ -49,6 +50,7 @@ const AdminCategories = () => {
 
     if (!categoryName.trim()) {
       setErrorMessage("Vui lòng nhập tên danh mục!");
+      toast.warn("Vui lòng nhập tên danh mục!");
       return;
     }
 
@@ -58,15 +60,15 @@ const AdminCategories = () => {
         { id: editingCategory.id, name: categoryName.trim() },
         {
           onSuccess: () => {
-            alert("Cập nhật danh mục thành công!");
+            toast.success("Cập nhật danh mục thành công!");
             setIsModalOpen(false);
             setCategoryName("");
             setEditingCategory(null);
           },
           onError: (err) => {
-            setErrorMessage(
-              err.response?.data?.message || "Cập nhật danh mục thất bại!"
-            );
+            const msg = err.response?.data?.message || "Cập nhật danh mục thất bại!";
+            setErrorMessage(msg);
+            toast.error(msg);
           },
         }
       );
@@ -76,14 +78,14 @@ const AdminCategories = () => {
         { name: categoryName.trim() },
         {
           onSuccess: () => {
-            alert("Thêm danh mục mới thành công!");
+            toast.success("Thêm danh mục mới thành công!");
             setIsModalOpen(false);
             setCategoryName("");
           },
           onError: (err) => {
-            setErrorMessage(
-              err.response?.data?.message || "Thêm danh mục thất bại!"
-            );
+            const msg = err.response?.data?.message || "Thêm danh mục thất bại!";
+            setErrorMessage(msg);
+            toast.error(msg);
           },
         }
       );
@@ -94,10 +96,10 @@ const AdminCategories = () => {
     if (window.confirm(`Bạn có chắc chắn muốn xóa danh mục "${name}"?`)) {
       deleteCategoryMutation.mutate(id, {
         onSuccess: () => {
-          alert("Xóa danh mục thành công!");
+          toast.success("Xóa danh mục thành công!");
         },
         onError: (err) => {
-          alert(err.response?.data?.message || "Xóa danh mục thất bại!");
+          toast.error(err.response?.data?.message || "Xóa danh mục thất bại!");
         },
       });
     }

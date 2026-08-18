@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { FiCamera, FiRefreshCw, FiImage, FiArrowRight } from "react-icons/fi";
+import { toast } from "react-toastify";
 import Footer from "../components/Footer";
 
 const SAMPLE_IMAGE = "https://lh3.googleusercontent.com/aida-public/AB6AXuC1khJ1vYbalmwkBOt8Q2eGT5W4XqM8zRDLIwi_kCuQSpeNO0NfDRl6FmgRFBVsuJcBr9GhKHFa12XVCJ9iM6pIzprGMBxMpqc4YMm_G-cEItvzkrHSWktVN4KKYUUc7AMu_HW5CtIgWsANCPSvcW5JmDvSSJW_lZWoVeN28NDDSrvXvHTICRaIA2ToRoi5MsThhOZCjSVmQUjEC4-fnBC9Di5qr4AQdcLQ3mNHIGUCLROF_1IazrBBZ0tu6VTV2k8ewKZ4QJC4-Bk";
@@ -90,7 +91,7 @@ const SmartSearch = () => {
   // Core processing
   const processFile = (file) => {
     if (!file.type.startsWith("image/")) {
-      alert("Vui lòng tải lên một tệp ảnh hợp lệ.");
+      toast.error("Vui lòng tải lên một tệp ảnh hợp lệ.");
       return;
     }
     const reader = new FileReader();

@@ -1,6 +1,7 @@
 import React from "react";
 import { Link, useParams, useNavigate } from "react-router-dom";
 import { FiArrowLeft, FiDownload, FiInfo } from "react-icons/fi";
+import { toast } from "react-toastify";
 import Footer from "../components/Footer";
 
 const ORDER_DATABASE = {
@@ -116,16 +117,16 @@ const OrderDetail = () => {
   };
 
   const handleReorder = (item) => {
-    alert(`Đã thêm lại sản phẩm "${item.name}" vào giỏ hàng.`);
+    toast.success(`Đã thêm lại sản phẩm "${item.name}" vào giỏ hàng.`);
     navigate("/cart");
   };
 
   const handleWriteReview = (item) => {
-    alert(`Mở giao diện đánh giá cho sản phẩm "${item.name}".`);
+    toast.info(`Mở giao diện đánh giá cho sản phẩm "${item.name}".`);
   };
 
   const handleSupportClick = () => {
-    alert("Bộ phận CSKH của LUMIÈRE sẽ liên hệ hỗ trợ bạn trong vòng 15 phút.");
+    toast.info("Bộ phận CSKH của LUMIÈRE sẽ liên hệ hỗ trợ bạn trong vòng 15 phút.");
   };
 
   return (

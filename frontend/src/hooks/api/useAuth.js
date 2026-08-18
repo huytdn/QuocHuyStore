@@ -68,3 +68,19 @@ export const useUpdateProfile = () => {
     },
   });
 };
+
+export const useSoftDeleteAccount = () => {
+  const logoutStore = useAuthStore((state) => state.logout);
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async () => {
+      await axiosClient.delete("/users/me");
+    },
+    onSuccess: () => {
+      logoutStore();
+      queryClient.clear();
+    },
+  });
+};
+
