@@ -33,6 +33,8 @@ public final class OrderMapper {
                 .receiverName(order.getReceiverName())
                 .receiverPhone(order.getReceiverPhone())
                 .shippingAddressDetail(order.getShippingAddressDetail())
+                .voucherCode(order.getVoucherCode())
+                .discountAmount(order.getDiscountAmount())
                 .totalPrice(order.getTotalPrice())
                 .status(order.getStatus())
                 .paymentMethod(order.getPaymentMethod())

@@ -6,8 +6,6 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.OffsetDateTime;
-import java.util.HashSet;
-import java.util.Set;
 
 @Entity
 @Table(name = "categories")
@@ -25,11 +23,6 @@ public class Category {
 
     @Column(name = "name", nullable = false, unique = true, length = 30)
     private String name;
-
-    @ManyToMany(fetch = FetchType.LAZY)
-    @JoinTable(name = "category_promotions", joinColumns = @JoinColumn(name = "category_id"), inverseJoinColumns = @JoinColumn(name = "promotion_id"))
-    @Builder.Default
-    private Set<Promotion> promotions = new HashSet<>();
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)

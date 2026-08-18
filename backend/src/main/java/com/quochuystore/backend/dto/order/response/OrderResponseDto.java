@@ -18,6 +18,8 @@ public class OrderResponseDto {
     private String receiverName;
     private String receiverPhone;
     private String shippingAddressDetail;
+    private String voucherCode;
+    private BigDecimal discountAmount;
     private BigDecimal totalPrice;
     private OrderStatus status;
     private PaymentMethod paymentMethod;
