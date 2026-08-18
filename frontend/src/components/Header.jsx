@@ -152,6 +152,12 @@ const Header = () => {
                       Hồ sơ
                     </Link>
                     <Link
+                      to="/wishlist"
+                      className="block px-4 py-2 text-xs font-semibold tracking-wider hover:bg-neutral-100 uppercase border-t border-neutral-100"
+                    >
+                      Sản phẩm yêu thích
+                    </Link>
+                    <Link
                       to="/orders"
                       className="block px-4 py-2 text-xs font-semibold tracking-wider hover:bg-neutral-100 uppercase border-t border-neutral-100"
                     >
@@ -237,6 +243,12 @@ const Header = () => {
                       Hồ sơ
                     </Link>
                     <Link
+                      to="/wishlist"
+                      className="block px-4 py-2 text-xs font-semibold tracking-wider hover:bg-neutral-100 uppercase border-t border-neutral-100"
+                    >
+                      Sản phẩm yêu thích
+                    </Link>
+                    <Link
                       to="/orders"
                       className="block px-4 py-2 text-xs font-semibold tracking-wider hover:bg-neutral-100 uppercase border-t border-neutral-100"
                     >
@@ -316,11 +328,25 @@ const Header = () => {
           {user ? (
             <>
               <Link
-                to="/dashboard"
+                to="/profile"
                 onClick={toggleMenu}
                 className="font-serif text-3xl font-semibold tracking-wider hover:text-secondary transition-colors"
               >
-                BẢNG ĐIỀU KHIỂN
+                HỒ SƠ CÁ NHÂN
+              </Link>
+              <Link
+                to="/wishlist"
+                onClick={toggleMenu}
+                className="font-serif text-3xl font-semibold tracking-wider hover:text-secondary transition-colors"
+              >
+                SẢN PHẨM YÊU THÍCH
+              </Link>
+              <Link
+                to="/orders"
+                onClick={toggleMenu}
+                className="font-serif text-3xl font-semibold tracking-wider hover:text-secondary transition-colors"
+              >
+                ĐƠN HÀNG CỦA TÔI
               </Link>
               <button
                 onClick={() => {
