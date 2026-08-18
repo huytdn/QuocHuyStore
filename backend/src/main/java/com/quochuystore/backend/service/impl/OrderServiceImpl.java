@@ -110,6 +110,7 @@ public class OrderServiceImpl implements OrderService {
                     .productVariation(variation)
                     .productName(variation.getProductColor().getProduct().getName())
                     .colorName(variation.getProductColor().getColorName())
+                    .imageUrl(variation.getProductColor().getImageUrl())
                     .sizeName(variation.getSize())
                     .quantity(itemDto.getQuantity())
                     .priceAtPurchase(variation.getUnitPrice())

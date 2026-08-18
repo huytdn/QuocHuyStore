@@ -4,12 +4,12 @@ import { toast } from "react-toastify";
 import AdminSidebar from "../../components/admin/AdminSidebar";
 import AdminHeader from "../../components/admin/AdminHeader";
 import {
-  useProducts,
+  useAdminProducts,
   useDeleteProduct,
   useCategories,
   useCreateProduct,
   useUpdateProduct,
-  useProductDetail,
+  useAdminProductDetail,
   useCreateColor,
   useUpdateColor,
   useDeleteColor,
@@ -20,9 +20,7 @@ import {
 } from "../../hooks/api/useProducts";
 
 const ManageColorsModal = ({ product, onClose }) => {
-  const { data: productDetail, isLoading } = useProductDetail(
-    product?.slug || product?.id
-  );
+  const { data: productDetail, isLoading } = useAdminProductDetail(product?.id);
   const createColorMutation = useCreateColor();
   const updateColorMutation = useUpdateColor();
   const deleteColorMutation = useDeleteColor();
@@ -651,7 +649,7 @@ const ProductTableRow = ({
   onDelete,
   formatPrice,
 }) => {
-  const { data: detail } = useProductDetail(product.slug || product.id);
+  const { data: detail } = useAdminProductDetail(product.id);
 
   // Calculate real total stock from all colors and size variations
   let realStock = 0;
@@ -785,7 +783,7 @@ const AdminProducts = () => {
   const matchedCat = backendCategories.find((c) => c.name === selectedCategory);
   const categoryId = matchedCat?.id;
 
-  const { data: pageData, isLoading: isProductsLoading } = useProducts({
+  const { data: pageData, isLoading: isProductsLoading } = useAdminProducts({
     page: activePage - 1,
     size: 10,
     categoryId: categoryId || undefined,

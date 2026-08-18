@@ -42,6 +42,9 @@ public class OrderItem {
     @Column(name = "size_name", nullable = false, length = 10)
     private String sizeName;
 
+    @Column(name = "image_url", columnDefinition = "TEXT")
+    private String imageUrl;
+
     @Column(name = "quantity", nullable = false)
     private Integer quantity;
 

@@ -21,4 +21,6 @@ public class ProductDetailResponseDto {
     private Integer reviewCount;
     private Integer feedbackCount;
     private List<ProductColorResponseDto> colors;
+    @Builder.Default
+    private Boolean isLikedByMe = false;
 }
