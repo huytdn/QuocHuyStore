@@ -11,6 +11,7 @@ import {
   FiClock,
   FiAlertTriangle,
   FiShield,
+  FiHeart,
 } from "react-icons/fi";
 import { toast } from "react-toastify";
 import { useAuthStore } from "../store/useAuthStore";
@@ -323,10 +324,17 @@ const Profile = () => {
             </div>
 
             {/* Profile editing triggers */}
-            <div className="w-full md:w-auto select-none">
+            <div className="w-full md:w-auto flex flex-col sm:flex-row gap-3 select-none">
+              <Link
+                to="/wishlist"
+                className="w-full sm:w-auto border border-neutral-300 hover:border-black text-black px-6 py-4.5 label-sm tracking-widest font-semibold hover:bg-neutral-50 transition-all cursor-pointer flex items-center justify-center gap-2 uppercase"
+              >
+                <FiHeart size={14} className="text-red-600" />
+                <span>Yêu thích</span>
+              </Link>
               <button
                 onClick={() => setIsEditModalOpen(true)}
-                className="w-full md:w-auto bg-black text-white px-12 py-4.5 label-sm tracking-widest font-semibold hover:bg-neutral-800 transition-colors cursor-pointer"
+                className="w-full sm:w-auto bg-black text-white px-10 py-4.5 label-sm tracking-widest font-semibold hover:bg-neutral-800 transition-colors cursor-pointer text-center uppercase"
               >
                 Chỉnh sửa hồ sơ
               </button>

@@ -14,6 +14,7 @@ import SmartSearch from "./pages/SmartSearch";
 import Orders from "./pages/Orders";
 import OrderDetail from "./pages/OrderDetail";
 import Profile from "./pages/Profile";
+import Wishlist from "./pages/Wishlist";
 import About from "./pages/About";
 import AdminProducts from "./pages/admin/AdminProducts";
 import AdminCategories from "./pages/admin/AdminCategories";
@@ -129,6 +130,14 @@ const App = () => {
           element={
             <ProtectedRoute>
               <Profile />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/wishlist"
+          element={
+            <ProtectedRoute>
+              <Wishlist />
             </ProtectedRoute>
           }
         />

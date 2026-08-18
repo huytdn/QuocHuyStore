@@ -1,14 +1,21 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { FiSearch, FiChevronDown } from "react-icons/fi";
+import { toast } from "react-toastify";
 import ProductCard from "../components/ProductCard";
 import Footer from "../components/Footer";
 import { useProducts } from "../hooks/api/useProducts";
+import { useToggleLike } from "../hooks/api/useLikes";
+import { useAuthStore } from "../store/useAuthStore";
 
 const Product = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const isUserLoggedIn = useAuthStore((state) => !!state.accessToken);
   const [searchQuery, setSearchQuery] = useState("");
   const [activePage, setActivePage] = useState(1);
+
+  const toggleLikeMutation = useToggleLike();
 
   const { data: pageData, isLoading: isProductsLoading, isError } = useProducts({
     page: activePage - 1,
@@ -19,12 +26,34 @@ const Product = () => {
   const backendProducts = pageData?.content || [];
   const totalPages = pageData?.totalPages || 0;
 
+  const handleToggleLike = (productId, productName) => {
+    if (!isUserLoggedIn) {
+      toast.warn("Vui lòng đăng nhập để lưu sản phẩm yêu thích!");
+      navigate("/login", { state: { from: location } });
+      return;
+    }
+
+    toggleLikeMutation.mutate(productId, {
+      onSuccess: (res) => {
+        if (res.isLiked) {
+          toast.success(`Đã thêm "${productName}" vào danh sách yêu thích!`);
+        } else {
+          toast.info(`Đã xóa "${productName}" khỏi danh sách yêu thích!`);
+        }
+      },
+      onError: (err) => {
+        toast.error(err.response?.data?.message || "Không thể cập nhật yêu thích!");
+      },
+    });
+  };
+
   const displayProducts = backendProducts.map((p) => ({
     id: p.id,
     name: p.name,
     slug: p.slug || p.id,
     price: p.minPrice ? Number(p.minPrice).toLocaleString("vi-VN") + "đ" : "Liên hệ",
     image: p.thumbnailUrl,
+    isLikedByMe: !!p.isLikedByMe,
   }));
 
   return (
@@ -120,6 +149,8 @@ const Product = () => {
                   image={product.image}
                   slug={product.slug}
                   layout="collection"
+                  isLiked={product.isLikedByMe}
+                  onToggleLike={() => handleToggleLike(product.id, product.name)}
                   onClick={() => navigate(`/product/${product.slug}`)}
                 />
               ))}
