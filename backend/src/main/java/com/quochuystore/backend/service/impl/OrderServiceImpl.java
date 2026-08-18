@@ -21,6 +21,7 @@ import com.quochuystore.backend.repository.OrderRepository;
 import com.quochuystore.backend.repository.ProductVariationRepository;
 import com.quochuystore.backend.repository.UserRepository;
 import com.quochuystore.backend.service.OrderService;
+import com.quochuystore.backend.service.VoucherService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -48,6 +49,7 @@ public class OrderServiceImpl implements OrderService {
     private final CartItemRepository cartItemRepository;
     private final ProductVariationRepository productVariationRepository;
     private final UserRepository userRepository;
+    private final VoucherService voucherService;
 
     @Override
     @Transactional
@@ -129,7 +131,17 @@ public class OrderServiceImpl implements OrderService {
             }
         }
 
-        // --- Step 4: Persist Order with final totalPrice in a single save ---
+        // --- Step 4: Apply Voucher (if provided) and persist Order with final totalPrice ---
+        BigDecimal discountAmount = BigDecimal.ZERO;
+        String appliedVoucherCode = null;
+        BigDecimal finalTotalPrice = totalPrice;
+
+        if (request.getVoucherCode() != null && !request.getVoucherCode().isBlank()) {
+            discountAmount = voucherService.applyVoucherToOrder(userId, request.getVoucherCode(), totalPrice);
+            appliedVoucherCode = request.getVoucherCode().trim().toUpperCase();
+            finalTotalPrice = totalPrice.subtract(discountAmount).max(BigDecimal.ZERO);
+        }
+
         OrderStatus status = request.getPaymentMethod() == PaymentMethod.COD
                 ? OrderStatus.PENDING_APPROVAL
                 : OrderStatus.PENDING_PAYMENT;
@@ -139,8 +151,9 @@ public class OrderServiceImpl implements OrderService {
                 .receiverName(request.getReceiverName())
                 .receiverPhone(request.getReceiverPhone())
                 .shippingAddressDetail(request.getShippingAddressDetail())
-                .discountAmount(BigDecimal.ZERO)
-                .totalPrice(totalPrice)
+                .voucherCode(appliedVoucherCode)
+                .discountAmount(discountAmount)
+                .totalPrice(finalTotalPrice)
                 .status(status)
                 .paymentMethod(request.getPaymentMethod())
                 .build();
@@ -178,14 +191,6 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public OrderResponseDto getOrderById(Long id, UUID userId) {
-        Order order = orderRepository.findByIdAndUserIdWithItems(id, userId)
-                .orElseThrow(() -> new ResourceNotFoundException("Order not found or access denied"));
-        return OrderMapper.toOrderResponseDto(order);
-    }
-
-    @Override
     @Transactional
     public OrderResponseDto cancelOrder(Long id, UUID userId) {
         List<OrderStatus> allowedStatuses = List.of(OrderStatus.PENDING_APPROVAL, OrderStatus.PENDING_PAYMENT);
@@ -202,6 +207,9 @@ public class OrderServiceImpl implements OrderService {
                 .orElseThrow(() -> new ResourceNotFoundException("Order not found or access denied"));
 
         restoreStockForOrder(order);
+        if (order.getVoucherCode() != null) {
+            voucherService.restoreVoucherUsage(userId, order.getVoucherCode());
+        }
 
         return OrderMapper.toOrderResponseDto(order);
     }
@@ -288,8 +296,11 @@ public class OrderServiceImpl implements OrderService {
                         "Order can only be cancelled when its status is PENDING_APPROVAL or AWAITING_PICKUP. Current status: "
                                 + previousStatus);
             }
-            // Restore stock
+            // Restore stock and voucher
             restoreStockForOrder(order);
+            if (order.getVoucherCode() != null && order.getUser() != null) {
+                voucherService.restoreVoucherUsage(order.getUser().getId(), order.getVoucherCode());
+            }
         } else {
             // Step-by-step state transition validation
             boolean isValidTransition = false;
@@ -309,6 +320,9 @@ public class OrderServiceImpl implements OrderService {
 
             if (status == OrderStatus.DELIVERY_FAILED) {
                 restoreStockForOrder(order);
+                if (order.getVoucherCode() != null && order.getUser() != null) {
+                    voucherService.restoreVoucherUsage(order.getUser().getId(), order.getVoucherCode());
+                }
             }
         }
 
@@ -377,6 +391,9 @@ public class OrderServiceImpl implements OrderService {
             Order order = orderRepository.findByIdWithItems(orderId)
                     .orElseThrow(() -> new ResourceNotFoundException("Order not found with id: " + orderId));
             restoreStockForOrder(order);
+            if (order.getVoucherCode() != null && order.getUser() != null) {
+                voucherService.restoreVoucherUsage(order.getUser().getId(), order.getVoucherCode());
+            }
             return true;
         }
         return false;

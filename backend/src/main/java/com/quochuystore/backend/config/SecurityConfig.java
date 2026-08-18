@@ -49,7 +49,7 @@ public class SecurityConfig {
                         .requestMatchers("/payment/**").permitAll()
                         .requestMatchers("/ws/**").permitAll()
                         .requestMatchers("/admin/**").hasRole("ADMIN")
-                        .requestMatchers("/users/**", "/addresses/**", "/cart/**", "/cart").hasRole("USER")
+                        .requestMatchers("/users/**", "/addresses/**", "/cart/**", "/cart", "/vouchers/**").hasRole("USER")
                         // User-facing order endpoints: authenticated users only, admin excluded
                         .requestMatchers(HttpMethod.GET, "/orders", "/orders/**").hasRole("USER")
                         .requestMatchers(HttpMethod.PATCH, "/orders/*/cancel").hasRole("USER")

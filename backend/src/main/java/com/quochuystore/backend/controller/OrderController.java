@@ -67,15 +67,6 @@ public class OrderController {
         return ResponseEntity.ok(orderService.getOrders(principal.getId(), status, page, size));
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<OrderResponseDto> getOrderById(
-            @AuthenticationPrincipal UserPrincipal principal,
-            @PathVariable Long id) {
-
-        log.info("REST request to fetch order details. userId: {}, orderId: {}", principal.getId(), id);
-        return ResponseEntity.ok(orderService.getOrderById(id, principal.getId()));
-    }
-
     @PatchMapping("/{id}/cancel")
     public ResponseEntity<OrderResponseDto> cancelOrder(
             @AuthenticationPrincipal UserPrincipal principal,

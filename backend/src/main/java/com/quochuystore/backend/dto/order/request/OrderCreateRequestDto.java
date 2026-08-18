@@ -30,6 +30,8 @@ public class OrderCreateRequestDto {
     @NotNull(message = "Payment method is required")
     private PaymentMethod paymentMethod;
 
+    private String voucherCode;
+
     @Valid
     private List<CartItemRequestDto> items;
 }
