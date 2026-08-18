@@ -19,4 +19,6 @@ public class ProductListResponseDto {
     private String categoryName;
     private Double averageStar;
     private Integer reviewCount;
+    @Builder.Default
+    private Boolean isLikedByMe = false;
 }

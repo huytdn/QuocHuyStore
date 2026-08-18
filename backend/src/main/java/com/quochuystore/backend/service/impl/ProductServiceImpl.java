@@ -31,9 +31,15 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.quochuystore.backend.entity.enums.UserRole;
+import com.quochuystore.backend.security.UserPrincipal;
+import com.quochuystore.backend.service.LikeService;
+
 import java.math.BigDecimal;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 @Service
@@ -48,6 +54,7 @@ public class ProductServiceImpl implements ProductService {
     private final ImageService imageService;
     private final StringRedisTemplate redisTemplate;
     private final ObjectMapper objectMapper;
+    private final LikeService likeService;
 
     @Override
     @Transactional(readOnly = true)
@@ -57,14 +64,37 @@ public class ProductServiceImpl implements ProductService {
             BigDecimal minPrice,
             BigDecimal maxPrice,
             Pageable pageable) {
-        log.info("Fetching products list - categoryId: {}, search: {}, minPrice: {}, maxPrice: {}, pageable: {}",
-                categoryId, search, minPrice, maxPrice, pageable);
+        return getProducts(categoryId, search, minPrice, maxPrice, pageable, null);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public PageResponseDto<ProductListResponseDto> getProducts(
+            Long categoryId,
+            String search,
+            BigDecimal minPrice,
+            BigDecimal maxPrice,
+            Pageable pageable,
+            UserPrincipal principal) {
+        log.info("Fetching products list - categoryId: {}, search: {}, minPrice: {}, maxPrice: {}, pageable: {}, user: {}",
+                categoryId, search, minPrice, maxPrice, pageable, principal != null ? principal.getId() : "anonymous");
 
         Page<Product> productPage = productRepository.findActiveProductsWithFilters(
                 categoryId, search, minPrice, maxPrice, pageable);
 
+        Set<Long> likedProductIds = Collections.emptySet();
+        if (principal != null && principal.getRole() == UserRole.USER) {
+            List<Long> pageProductIds = productPage.getContent().stream()
+                    .map(Product::getId)
+                    .toList();
+            likedProductIds = likeService.getLikedProductIdsForProducts(principal.getId(), pageProductIds);
+        }
+
+        final Set<Long> finalLikedProductIds = likedProductIds;
         List<ProductListResponseDto> content = productPage.getContent().stream()
-                .map(ProductMapper::toProductListResponseDto)
+                .map(product -> ProductMapper.toProductListResponseDto(
+                        product,
+                        finalLikedProductIds.contains(product.getId())))
                 .toList();
 
         return PageResponseDto.<ProductListResponseDto>builder()
@@ -80,39 +110,66 @@ public class ProductServiceImpl implements ProductService {
     @Override
     @Transactional(readOnly = true)
     public ProductDetailResponseDto getProductBySlug(String slug) {
-        log.info("Fetching product detail by slug: {}", slug);
+        return getProductBySlug(slug, null);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public ProductDetailResponseDto getProductBySlug(String slug, UserPrincipal principal) {
+        log.info("Fetching product detail by slug: {}, user: {}", slug, principal != null ? principal.getId() : "anonymous");
         String cacheKey = CacheKeyConstants.PRODUCT_SLUG_PREFIX + slug;
+        ProductDetailResponseDto responseDto = null;
 
         // 1. Try Cache
         try {
             String cachedJson = redisTemplate.opsForValue().get(cacheKey);
             if (cachedJson != null) {
                 log.info("Cache Hit for product slug: {}", slug);
-                return objectMapper.readValue(cachedJson, ProductDetailResponseDto.class);
+                responseDto = objectMapper.readValue(cachedJson, ProductDetailResponseDto.class);
             }
         } catch (Exception e) {
             log.error("Failed to read product slug: {} from cache", slug, e);
         }
 
         // 2. Cache Miss
-        log.info("Cache Miss for product slug: {}. Loading from database.", slug);
-        Product product = productRepository.findBySlugAndIsActive(slug, true)
-                .orElseThrow(() -> new ResourceNotFoundException("Product not found with slug: " + slug));
+        if (responseDto == null) {
+            log.info("Cache Miss for product slug: {}. Loading from database.", slug);
+            Product product = productRepository.findBySlugAndIsActive(slug, true)
+                    .orElseThrow(() -> new ResourceNotFoundException("Product not found with slug: " + slug));
 
-        ProductDetailResponseDto responseDto = getProductDetailResponseDto(product);
+            responseDto = getProductDetailResponseDto(product);
 
-        // 3. Write Cache
-        try {
-            String json = objectMapper.writeValueAsString(responseDto);
-            redisTemplate.opsForValue().set(cacheKey, json, CacheKeyConstants.PRODUCT_CACHE_TTL_MINUTES,
-                    TimeUnit.MINUTES);
-            log.info("Successfully cached product slug: {} with TTL of {} minutes", slug,
-                    CacheKeyConstants.PRODUCT_CACHE_TTL_MINUTES);
-        } catch (Exception e) {
-            log.error("Failed to write product slug: {} to cache", slug, e);
+            // 3. Write Cache (Clean catalog data with isLikedByMe = false to avoid user cache leakage)
+            try {
+                responseDto.setIsLikedByMe(false);
+                String json = objectMapper.writeValueAsString(responseDto);
+                redisTemplate.opsForValue().set(cacheKey, json, CacheKeyConstants.PRODUCT_CACHE_TTL_MINUTES,
+                        TimeUnit.MINUTES);
+                log.info("Successfully cached product slug: {} with TTL of {} minutes", slug,
+                        CacheKeyConstants.PRODUCT_CACHE_TTL_MINUTES);
+            } catch (Exception e) {
+                log.error("Failed to write product slug: {} to cache", slug, e);
+            }
         }
 
+        // 4. Decorate isLikedByMe for customer
+        boolean isLiked = false;
+        if (principal != null && principal.getRole() == UserRole.USER) {
+            isLiked = likeService.isProductLikedByUser(principal.getId(), responseDto.getId());
+        }
+
+        responseDto.setIsLikedByMe(isLiked);
         return responseDto;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public ProductDetailResponseDto getProductById(Long id) {
+        log.info("Fetching product detail by id: {} (no cache)", id);
+        Product product = productRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Product not found with id: " + id));
+
+        return getProductDetailResponseDto(product);
     }
 
     @Override

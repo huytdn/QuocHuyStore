@@ -1,21 +1,27 @@
 package com.quochuystore.backend.controller;
 
 import tools.jackson.databind.ObjectMapper;
+import com.quochuystore.backend.dto.PageResponseDto;
 import com.quochuystore.backend.dto.product.request.ProductCreateRequestDto;
 import com.quochuystore.backend.dto.product.request.ProductUpdateRequestDto;
 import com.quochuystore.backend.dto.product.response.ProductDetailResponseDto;
+import com.quochuystore.backend.dto.product.response.ProductListResponseDto;
 import com.quochuystore.backend.service.ProductService;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
 import jakarta.validation.Validator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.math.BigDecimal;
 import java.util.Set;
 
 @RestController
@@ -27,6 +33,41 @@ public class AdminProductController {
     private final ProductService productService;
     private final ObjectMapper objectMapper;
     private final Validator validator;
+
+    @GetMapping
+    public ResponseEntity<PageResponseDto<ProductListResponseDto>> getProducts(
+            @RequestParam(required = false) Long categoryId,
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) BigDecimal minPrice,
+            @RequestParam(required = false) BigDecimal maxPrice,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "id,desc") String sort) {
+
+        log.info(
+                "REST request (admin) to get products. categoryId: {}, search: {}, minPrice: {}, maxPrice: {}, page: {}, size: {}, sort: {}",
+                categoryId, search, minPrice, maxPrice, page, size, sort);
+
+        String[] sortParams = sort.split(",");
+        String property = sortParams[0];
+        Sort.Direction direction = Sort.Direction.DESC;
+        if (sortParams.length > 1 && "asc".equalsIgnoreCase(sortParams[1])) {
+            direction = Sort.Direction.ASC;
+        }
+
+        Pageable pageable = PageRequest.of(page, size, Sort.by(direction, property));
+        PageResponseDto<ProductListResponseDto> response = productService.getProducts(
+                categoryId, search, minPrice, maxPrice, pageable);
+
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<ProductDetailResponseDto> getProductById(@PathVariable Long id) {
+        log.info("REST request (admin) to get product detail by id: {}", id);
+        ProductDetailResponseDto response = productService.getProductById(id);
+        return ResponseEntity.ok(response);
+    }
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ProductDetailResponseDto> createProduct(

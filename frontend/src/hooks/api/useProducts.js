@@ -15,6 +15,28 @@ export const useProducts = (params = {}) => {
   });
 };
 
+export const useAdminProducts = (params = {}) => {
+  return useQuery({
+    queryKey: ["admin-products", params],
+    queryFn: async () => {
+      const response = await axiosClient.get("/admin/products", { params });
+      return response.data; // PageResponseDto<ProductListResponseDto>
+    },
+    placeholderData: (previousData) => previousData,
+  });
+};
+
+export const useAdminProductDetail = (id) => {
+  return useQuery({
+    queryKey: ["admin-product", id],
+    queryFn: async () => {
+      const response = await axiosClient.get(`/admin/products/${id}`);
+      return response.data; // ProductDetailResponseDto
+    },
+    enabled: !!id,
+  });
+};
+
 export const useProductDetail = (slug) => {
   return useQuery({
     queryKey: ["product", slug],
@@ -35,6 +57,8 @@ export const useDeleteProduct = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["products"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-products"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-product"] });
     },
   });
 };
@@ -57,6 +81,8 @@ export const useCreateProduct = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["products"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-products"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-product"] });
     },
   });
 };
@@ -81,6 +107,8 @@ export const useUpdateProduct = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["products"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-products"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-product"] });
       queryClient.invalidateQueries({ queryKey: ["product"] });
     },
   });
@@ -109,6 +137,8 @@ export const useCreateColor = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["product"] });
       queryClient.invalidateQueries({ queryKey: ["products"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-products"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-product"] });
     },
   });
 };
@@ -134,6 +164,8 @@ export const useUpdateColor = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["product"] });
       queryClient.invalidateQueries({ queryKey: ["products"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-products"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-product"] });
     },
   });
 };
@@ -148,6 +180,8 @@ export const useDeleteColor = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["product"] });
       queryClient.invalidateQueries({ queryKey: ["products"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-products"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-product"] });
     },
   });
 };
@@ -166,6 +200,8 @@ export const useCreateVariation = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["product"] });
       queryClient.invalidateQueries({ queryKey: ["products"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-products"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-product"] });
     },
   });
 };
@@ -185,6 +221,8 @@ export const useUpdateVariation = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["product"] });
       queryClient.invalidateQueries({ queryKey: ["products"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-products"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-product"] });
     },
   });
 };
@@ -202,6 +240,8 @@ export const useUpdateStock = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["product"] });
       queryClient.invalidateQueries({ queryKey: ["products"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-products"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-product"] });
     },
   });
 };
@@ -216,6 +256,8 @@ export const useDeleteVariation = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["product"] });
       queryClient.invalidateQueries({ queryKey: ["products"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-products"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-product"] });
     },
   });
 };

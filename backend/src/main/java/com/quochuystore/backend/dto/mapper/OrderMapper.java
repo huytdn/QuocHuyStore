@@ -50,6 +50,7 @@ public final class OrderMapper {
                 .productName(item.getProductName())
                 .colorName(item.getColorName())
                 .sizeName(item.getSizeName())
+                .imageUrl(item.getImageUrl())
                 .quantity(item.getQuantity())
                 .priceAtPurchase(item.getPriceAtPurchase())
                 .build();

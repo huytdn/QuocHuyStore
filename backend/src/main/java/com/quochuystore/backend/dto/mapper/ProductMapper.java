@@ -38,6 +38,10 @@ public final class ProductMapper {
     }
 
     public static ProductListResponseDto toProductListResponseDto(Product product) {
+        return toProductListResponseDto(product, false);
+    }
+
+    public static ProductListResponseDto toProductListResponseDto(Product product, boolean isLikedByMe) {
         return ProductListResponseDto.builder()
                 .id(product.getId())
                 .name(product.getName())
@@ -48,11 +52,18 @@ public final class ProductMapper {
                 .categoryName(product.getCategory() != null ? product.getCategory().getName() : null)
                 .averageStar(product.getAverageStar() != null ? product.getAverageStar().doubleValue() : 0.0)
                 .reviewCount(product.getReviewCount())
+                .isLikedByMe(isLikedByMe)
                 .build();
     }
 
     public static ProductDetailResponseDto toProductDetailResponseDto(Product product,
             List<ProductColorResponseDto> colors) {
+        return toProductDetailResponseDto(product, colors, false);
+    }
+
+    public static ProductDetailResponseDto toProductDetailResponseDto(Product product,
+            List<ProductColorResponseDto> colors,
+            boolean isLikedByMe) {
         return ProductDetailResponseDto.builder()
                 .id(product.getId())
                 .name(product.getName())
@@ -65,6 +76,7 @@ public final class ProductMapper {
                 .reviewCount(product.getReviewCount())
                 .feedbackCount(product.getFeedbackCount())
                 .colors(colors)
+                .isLikedByMe(isLikedByMe)
                 .build();
     }
 
