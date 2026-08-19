@@ -49,6 +49,7 @@ public final class OrderMapper {
         }
 
         return OrderItemResponseDto.builder()
+                .orderItemId(item.getId())
                 .productName(item.getProductName())
                 .colorName(item.getColorName())
                 .sizeName(item.getSizeName())
