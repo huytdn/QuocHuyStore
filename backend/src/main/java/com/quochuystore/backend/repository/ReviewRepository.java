@@ -3,6 +3,7 @@ package com.quochuystore.backend.repository;
 import com.quochuystore.backend.dto.review.response.ReviewResponseDto;
 import com.quochuystore.backend.entity.OrderItem;
 import com.quochuystore.backend.entity.ProductReview;
+import com.quochuystore.backend.entity.enums.OrderStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -36,8 +37,10 @@ public interface ReviewRepository extends JpaRepository<ProductReview, Long> {
             "JOIN FETCH pc.product p " +
             "JOIN oi.order o " +
             "WHERE oi.id = :orderItemId AND o.user.id = :userId " +
-            "AND o.status = com.quochuystore.backend.entity.enums.OrderStatus.DELIVERED")
-    Optional<OrderItem> findEligibleOrderItem(@Param("orderItemId") UUID orderItemId, @Param("userId") UUID userId);
+            "AND o.status = :status")
+    Optional<OrderItem> findEligibleOrderItem(@Param("orderItemId") UUID orderItemId,
+            @Param("userId") UUID userId,
+            @Param("status") OrderStatus status);
 
     @Modifying(flushAutomatically = true, clearAutomatically = true)
     @Query(value = "INSERT INTO product_reviews " +
