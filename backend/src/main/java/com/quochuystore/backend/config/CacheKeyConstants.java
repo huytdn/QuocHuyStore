@@ -13,4 +13,8 @@ public final class CacheKeyConstants {
 
     public static final String USER_LIKES_PREFIX = "qhs:users:likes:";
     public static final long USER_LIKES_TTL_HOURS = 24;
+
+    public static final String CHAT_ROOM_PREFIX = "qhs:chat:room:";
+    public static final int CHAT_ROOM_BUFFER_SIZE = 50;
+    public static final long CHAT_ROOM_TTL_HOURS = 1;
 }
