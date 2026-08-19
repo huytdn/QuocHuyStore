@@ -20,6 +20,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
@@ -41,6 +42,7 @@ public class ReviewServiceImpl implements ReviewService {
     private final StringRedisTemplate redisTemplate;
 
     @Override
+    @Transactional(readOnly = true)
     public PageResponseDto<ReviewResponseDto> getProductReviews(String slug, Integer rating, int page, int size) {
         if (rating != null && (rating < 1 || rating > 5)) {
             throw new BadRequestException("Rating must be between 1 and 5");
@@ -82,6 +84,7 @@ public class ReviewServiceImpl implements ReviewService {
     }
 
     @Override
+    @Transactional
     public ReviewResponseDto upsertReview(UUID userId, ReviewCreateRequestDto request, MultipartFile file) {
         validateFile(file);
 
