@@ -1,6 +1,6 @@
 package com.quochuystore.backend.service.impl;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import com.quochuystore.backend.config.CacheKeyConstants;
 import com.quochuystore.backend.dto.PageResponseDto;
 import com.quochuystore.backend.dto.mapper.MessageMapper;
