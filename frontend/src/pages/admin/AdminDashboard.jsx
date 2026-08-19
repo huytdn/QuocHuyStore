@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 import AdminSidebar from "../../components/admin/AdminSidebar";
 import AdminHeader from "../../components/admin/AdminHeader";
 import {
@@ -145,7 +146,7 @@ const AdminDashboard = () => {
 
             <div className="flex items-center gap-3">
               <button
-                onClick={() => alert("Xuất báo cáo định dạng PDF/Excel...")}
+                onClick={() => toast.info("Đang khởi tạo tải báo cáo phân tích PDF/Excel...")}
                 className="px-5 py-2.5 bg-white border border-neutral-300 hover:border-black text-black text-xs font-bold tracking-widest uppercase transition-all duration-200 flex items-center gap-2 cursor-pointer active:scale-95 shadow-xs"
               >
                 <FiDownload size={14} />

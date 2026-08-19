@@ -11,6 +11,7 @@ import {
   FiCreditCard,
   FiEye,
 } from "react-icons/fi";
+import { toast } from "react-toastify";
 import Footer from "../components/Footer";
 import { useAuthStore } from "../store/useAuthStore";
 import { useUserOrders, useCancelOrder } from "../hooks/api/useOrders";
@@ -54,7 +55,7 @@ const Orders = () => {
       setCancelingOrderId(orderId);
       cancelOrderMutation.mutate(orderId, {
         onSuccess: () => {
-          alert(`Đã hủy đơn hàng #LM-${orderId} thành công!`);
+          toast.success(`Đã hủy đơn hàng #LM-${orderId} thành công!`);
           setCancelingOrderId(null);
           refetch();
           if (selectedOrder && selectedOrder.orderId === orderId) {
@@ -62,7 +63,7 @@ const Orders = () => {
           }
         },
         onError: (err) => {
-          alert(err.response?.data?.message || "Hủy đơn hàng thất bại!");
+          toast.error(err.response?.data?.message || "Hủy đơn hàng thất bại!");
           setCancelingOrderId(null);
         },
       });
@@ -301,42 +302,78 @@ const Orders = () => {
                     </div>
 
                     {/* Order Details Body */}
-                    <div className="py-4 grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
-                      {/* Products List Preview */}
+                    <div className="py-4 grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                      {/* Products List Preview (Limit to 3 items) */}
                       <div className="lg:col-span-8 space-y-3">
                         {order.items && order.items.length > 0 ? (
-                          order.items.map((item, idx) => {
-                            const itemPrice =
-                              item.priceAtPurchase ?? item.unitPrice ?? 0;
-                            const itemSize = item.sizeName ?? item.size;
+                          <>
+                            <div className="space-y-3">
+                              {order.items.slice(0, 3).map((item, idx) => {
+                                const itemPrice =
+                                  item.priceAtPurchase ?? item.unitPrice ?? 0;
+                                const itemSize = item.sizeName ?? item.size;
+                                const itemImg = item.imageUrl || item.image || item.thumbnailUrl;
 
-                            return (
-                              <div
-                                key={idx}
-                                className="flex items-center justify-between text-xs py-1"
+                                return (
+                                  <div
+                                    key={idx}
+                                    className="flex items-center gap-3.5 text-xs py-1.5 border-b border-neutral-100 last:border-b-0"
+                                  >
+                                    {/* Thumbnail Image */}
+                                    <div className="w-14 h-16 sm:w-16 sm:h-20 bg-neutral-100 border border-neutral-200 shrink-0 overflow-hidden flex items-center justify-center">
+                                      {itemImg ? (
+                                        <img
+                                          src={itemImg}
+                                          alt={item.productName || "Product"}
+                                          className="w-full h-full object-cover"
+                                        />
+                                      ) : (
+                                        <div className="w-full h-full flex flex-col items-center justify-center text-[9px] font-serif text-neutral-400 font-bold bg-neutral-50 tracking-widest uppercase">
+                                          LMR
+                                        </div>
+                                      )}
+                                    </div>
+
+                                    {/* Product Meta */}
+                                    <div className="flex-1 min-w-0">
+                                      <p className="font-semibold text-black text-sm truncate">
+                                        {item.productName ||
+                                          item.name ||
+                                          `Sản phẩm #${item.productVariationId || item.id}`}
+                                      </p>
+                                      <p className="text-neutral-500 mt-0.5 text-xs">
+                                        {item.colorName && `Màu: ${item.colorName}`}
+                                        {itemSize && ` | Size: ${itemSize}`}
+                                      </p>
+                                      <p className="text-neutral-500 mt-1 text-xs">
+                                        Đơn giá: <span className="font-mono">{formatPrice(itemPrice)}</span> × <span className="font-bold text-black">{item.quantity}</span>
+                                      </p>
+                                    </div>
+
+                                    {/* Line Total */}
+                                    <div className="text-right shrink-0">
+                                      <p className="font-bold text-black text-sm">
+                                        {formatPrice(Number(itemPrice) * item.quantity)}
+                                      </p>
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+
+                            {/* Show More prompt if > 3 items */}
+                            {order.items.length > 3 && (
+                              <button
+                                onClick={() => setSelectedOrder(order)}
+                                className="w-full text-left py-2.5 px-3.5 bg-neutral-50 hover:bg-neutral-100 border border-dashed border-neutral-300 text-xs font-semibold text-neutral-700 hover:text-black flex items-center justify-between transition-colors cursor-pointer mt-2"
                               >
-                                <div>
-                                  <p className="font-semibold text-black text-sm">
-                                    {item.productName ||
-                                      item.name ||
-                                      `Sản phẩm #${item.productVariationId || item.id}`}
-                                  </p>
-                                  <p className="text-neutral-500 mt-0.5">
-                                    {item.colorName && `Màu: ${item.colorName}`}
-                                    {itemSize && ` | Size: ${itemSize}`}
-                                  </p>
-                                </div>
-                                <div className="text-right">
-                                  <p className="font-bold text-black">
-                                    x{item.quantity}
-                                  </p>
-                                  <p className="text-neutral-500 font-mono">
-                                    {formatPrice(itemPrice)}
-                                  </p>
-                                </div>
-                              </div>
-                            );
-                          })
+                                <span>+ Còn lại {order.items.length - 3} sản phẩm khác trong đơn</span>
+                                <span className="underline underline-offset-4 text-[11px] uppercase tracking-wider font-bold">
+                                  Xem chi tiết →
+                                </span>
+                              </button>
+                            )}
+                          </>
                         ) : (
                           <p className="text-xs text-neutral-400 italic">
                             Đơn hàng không có danh mục chi tiết
@@ -553,33 +590,46 @@ const Orders = () => {
                           const itemPrice =
                             item.priceAtPurchase ?? item.unitPrice ?? 0;
                           const itemSize = item.sizeName ?? item.size;
+                          const itemImg = item.imageUrl || item.image || item.thumbnailUrl;
                           const lineTotal = Number(itemPrice) * item.quantity;
+
                           return (
-                            <tr key={idx}>
-                              <td className="py-3 px-4 font-semibold text-black">
-                                {item.productName ||
-                                  item.name ||
-                                  `Sản phẩm #${item.productVariationId || item.id}`}
-                                {item.colorName && (
-                                  <span className="text-neutral-500 font-normal">
-                                    {" "}
-                                    - {item.colorName}
-                                  </span>
-                                )}
-                                {itemSize && (
-                                  <span className="text-neutral-500 font-normal">
-                                    {" "}
-                                    ({itemSize})
-                                  </span>
-                                )}
+                            <tr key={idx} className="hover:bg-neutral-50/50 transition-colors">
+                              <td className="py-3 px-4">
+                                <div className="flex items-center gap-3.5">
+                                  <div className="w-12 h-14 bg-neutral-100 border border-neutral-200 shrink-0 overflow-hidden flex items-center justify-center">
+                                    {itemImg ? (
+                                      <img
+                                        src={itemImg}
+                                        alt={item.productName || "Product"}
+                                        className="w-full h-full object-cover"
+                                      />
+                                    ) : (
+                                      <span className="text-[9px] font-serif text-neutral-400 font-bold tracking-widest uppercase">
+                                        LMR
+                                      </span>
+                                    )}
+                                  </div>
+                                  <div>
+                                    <p className="font-semibold text-black text-sm">
+                                      {item.productName ||
+                                        item.name ||
+                                        `Sản phẩm #${item.productVariationId || item.id}`}
+                                    </p>
+                                    <p className="text-neutral-500 text-xs mt-0.5">
+                                      {item.colorName && `Màu: ${item.colorName}`}
+                                      {itemSize && ` | Size: ${itemSize}`}
+                                    </p>
+                                  </div>
+                                </div>
                               </td>
                               <td className="py-3 px-4 text-center font-bold">
                                 {item.quantity}
                               </td>
-                              <td className="py-3 px-4 text-right">
+                              <td className="py-3 px-4 text-right font-mono">
                                 {formatPrice(itemPrice)}
                               </td>
-                              <td className="py-3 px-4 text-right font-bold">
+                              <td className="py-3 px-4 text-right font-bold font-mono">
                                 {formatPrice(lineTotal)}
                               </td>
                             </tr>

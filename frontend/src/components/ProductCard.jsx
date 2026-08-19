@@ -1,4 +1,6 @@
 import React from "react";
+import { FiHeart } from "react-icons/fi";
+import { FaHeart } from "react-icons/fa";
 
 const ProductCard = ({
   id,
@@ -7,6 +9,8 @@ const ProductCard = ({
   price,
   slug,
   color,
+  isLiked = false,
+  onToggleLike,
   onClick,
   layout = "home",
   className = "",
@@ -23,6 +27,29 @@ const ProductCard = ({
           alt={name}
           className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
         />
+
+        {/* Floating Like / Wishlist Button */}
+        {onToggleLike && (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onToggleLike(e);
+            }}
+            aria-label={isLiked ? "Bỏ yêu thích" : "Yêu thích sản phẩm"}
+            className={`absolute top-3 right-3 w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300 backdrop-blur-md shadow-xs cursor-pointer ${
+              isLiked
+                ? "bg-white/90 text-red-600 opacity-100 scale-100"
+                : "bg-white/70 text-neutral-600 opacity-0 group-hover:opacity-100 hover:bg-white hover:text-black hover:scale-110 active:scale-95"
+            }`}
+          >
+            {isLiked ? (
+              <FaHeart size={14} className="text-red-600 animate-pulse-once" />
+            ) : (
+              <FiHeart size={14} />
+            )}
+          </button>
+        )}
       </div>
 
       {/* Details Row */}

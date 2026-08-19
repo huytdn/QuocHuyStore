@@ -14,6 +14,7 @@ import SmartSearch from "./pages/SmartSearch";
 import Orders from "./pages/Orders";
 import OrderDetail from "./pages/OrderDetail";
 import Profile from "./pages/Profile";
+import Wishlist from "./pages/Wishlist";
 import About from "./pages/About";
 import AdminProducts from "./pages/admin/AdminProducts";
 import AdminCategories from "./pages/admin/AdminCategories";
@@ -23,6 +24,8 @@ import AdminAnalytics from "./pages/admin/AdminAnalytics";
 import AdminCustomers from "./pages/admin/AdminCustomers";
 import AdminRoute from "./components/admin/AdminRoute";
 import AdminLogin from "./pages/admin/AdminLogin";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 // Global promise to coalesce concurrent silent refresh calls on startup (e.g. React StrictMode)
 let silentRefreshPromise = null;
@@ -130,6 +133,14 @@ const App = () => {
             </ProtectedRoute>
           }
         />
+        <Route
+          path="/wishlist"
+          element={
+            <ProtectedRoute>
+              <Wishlist />
+            </ProtectedRoute>
+          }
+        />
         <Route path="/admin/login" element={<AdminLogin />} />
         <Route
           path="/admin/products"
@@ -180,8 +191,19 @@ const App = () => {
           }
         />
         <Route path="/about" element={<About />} />
-        {/* <Route path="/collection/:category" element={<CategoriesCollection />} /> */}
       </Routes>
+      <ToastContainer
+        position="top-right"
+        autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="light"
+      />
     </>
   );
 };

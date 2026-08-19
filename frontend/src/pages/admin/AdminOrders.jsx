@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { toast } from "react-toastify";
 import AdminSidebar from "../../components/admin/AdminSidebar";
 import AdminHeader from "../../components/admin/AdminHeader";
 import {
@@ -128,14 +129,14 @@ const AdminOrders = () => {
           if (newStatus === "DELIVERY_FAILED" || newStatus === "CANCELED") {
             notice += " (Số lượng kho hàng đã được tự động hoàn trả).";
           }
-          showToast(notice);
+          toast.success(notice);
           setUpdatingOrderId(null);
           if (selectedOrder && selectedOrder.orderId === orderId) {
             setSelectedOrder(updatedData);
           }
         },
         onError: (err) => {
-          alert(
+          toast.error(
             err.response?.data?.message || "Cập nhật trạng thái thất bại!"
           );
           setUpdatingOrderId(null);

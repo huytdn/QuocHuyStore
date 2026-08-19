@@ -1,16 +1,22 @@
 import React, { useState, useEffect } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
-import { FiChevronRight, FiChevronDown, FiZoomIn, FiX } from "react-icons/fi";
+import { Link, useNavigate, useParams, useLocation } from "react-router-dom";
+import { FiChevronRight, FiChevronDown, FiZoomIn, FiX, FiHeart } from "react-icons/fi";
+import { FaHeart } from "react-icons/fa";
+import { toast } from "react-toastify";
+import ProductCard from "../components/ProductCard";
 import Footer from "../components/Footer";
 import { useProductDetail, useProducts } from "../hooks/api/useProducts";
 import { useAddToCart } from "../hooks/api/useCart";
+import { useToggleLike } from "../hooks/api/useLikes";
 import { useAuthStore } from "../store/useAuthStore";
 
 const ProductDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const isUserLoggedIn = useAuthStore((state) => !!state.accessToken);
   const addToCartMutation = useAddToCart();
+  const toggleLikeMutation = useToggleLike();
 
   // Fetch product detail from backend
   const { data: product, isLoading: isProductLoading } = useProductDetail(id);
@@ -64,14 +70,14 @@ const ProductDetail = () => {
 
   const handleAddToCart = () => {
     if (!isUserLoggedIn) {
-      alert("Vui lòng đăng nhập để thêm sản phẩm vào giỏ hàng!");
+      toast.warn("Vui lòng đăng nhập để thêm sản phẩm vào giỏ hàng!");
       navigate("/login");
       return;
     }
 
     const variationId = selectedVariation?.variationId;
     if (!variationId) {
-      alert("Sản phẩm tạm thời hết hàng hoặc không hợp lệ!");
+      toast.error("Sản phẩm tạm thời hết hàng hoặc không hợp lệ!");
       return;
     }
 
@@ -80,12 +86,13 @@ const ProductDetail = () => {
       {
         onSuccess: () => {
           setAddedToCart(true);
+          toast.success("Đã thêm vào giỏ hàng!");
           setTimeout(() => {
             setAddedToCart(false);
           }, 2000);
         },
         onError: (err) => {
-          alert(err.response?.data?.message || "Thêm vào giỏ hàng thất bại!");
+          toast.error(err.response?.data?.message || "Thêm vào giỏ hàng thất bại!");
         },
       }
     );
@@ -93,14 +100,14 @@ const ProductDetail = () => {
 
   const handleBuyNow = () => {
     if (!isUserLoggedIn) {
-      alert("Vui lòng đăng nhập để tiến hành mua hàng!");
+      toast.warn("Vui lòng đăng nhập để tiến hành mua hàng!");
       navigate("/login");
       return;
     }
 
     const variationId = selectedVariation?.variationId;
     if (!variationId) {
-      alert("Sản phẩm tạm thời hết hàng hoặc không hợp lệ!");
+      toast.error("Sản phẩm tạm thời hết hàng hoặc không hợp lệ!");
       return;
     }
 
@@ -111,10 +118,33 @@ const ProductDetail = () => {
           navigate("/cart");
         },
         onError: (err) => {
-          alert(err.response?.data?.message || "Mua hàng thất bại!");
+          toast.error(err.response?.data?.message || "Mua hàng thất bại!");
         },
       }
     );
+  };
+
+  const handleToggleLike = () => {
+    if (!isUserLoggedIn) {
+      toast.warn("Vui lòng đăng nhập để lưu sản phẩm yêu thích!");
+      navigate("/login", { state: { from: location } });
+      return;
+    }
+
+    if (!product?.id) return;
+
+    toggleLikeMutation.mutate(product.id, {
+      onSuccess: (res) => {
+        if (res.isLiked) {
+          toast.success(`Đã thêm "${product.name}" vào danh sách yêu thích!`);
+        } else {
+          toast.info(`Đã xóa "${product.name}" khỏi danh sách yêu thích!`);
+        }
+      },
+      onError: (err) => {
+        toast.error(err.response?.data?.message || "Không thể cập nhật danh sách yêu thích!");
+      },
+    });
   };
 
   if (isProductLoading) {
@@ -208,6 +238,7 @@ const ProductDetail = () => {
                 alt={product.name}
                 className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
               />
+
               {(activeImage || product.thumbnailUrl) && (
                 <div className="absolute bottom-5 right-5 flex flex-col gap-2">
                   <button
@@ -314,12 +345,34 @@ const ProductDetail = () => {
                 {addedToCart ? "Đã thêm vào giỏ hàng!" : "Thêm vào giỏ hàng"}
               </button>
 
-              <button
-                onClick={handleBuyNow}
-                className="w-full border border-black text-black bg-transparent h-14 label-sm font-semibold tracking-[0.2em] hover:bg-black hover:text-white transition-all duration-300 active:scale-[0.99] cursor-pointer uppercase text-xs"
-              >
-                Mua ngay
-              </button>
+              <div className="flex gap-3">
+                <button
+                  onClick={handleBuyNow}
+                  className="flex-1 border border-black text-black bg-transparent h-14 label-sm font-semibold tracking-[0.2em] hover:bg-black hover:text-white transition-all duration-300 active:scale-[0.99] cursor-pointer uppercase text-xs"
+                >
+                  Mua ngay
+                </button>
+
+                <button
+                  onClick={handleToggleLike}
+                  aria-label={product.isLikedByMe ? "Đã lưu vào yêu thích" : "Thêm vào yêu thích"}
+                  className={`px-5 border h-14 label-sm font-semibold tracking-wider transition-all duration-300 active:scale-[0.99] cursor-pointer flex items-center justify-center gap-2 uppercase text-xs ${
+                    product.isLikedByMe
+                      ? "border-red-500 bg-red-50/60 text-red-600 hover:bg-red-100/60"
+                      : "border-neutral-300 text-neutral-700 hover:border-black hover:text-black bg-white"
+                  }`}
+                  title={product.isLikedByMe ? "Đã lưu vào danh sách yêu thích" : "Lưu vào danh sách yêu thích"}
+                >
+                  {product.isLikedByMe ? (
+                    <FaHeart size={16} className="text-red-600" />
+                  ) : (
+                    <FiHeart size={16} />
+                  )}
+                  <span className="hidden sm:inline">
+                    {product.isLikedByMe ? "Đã thích" : "Yêu thích"}
+                  </span>
+                </button>
+              </div>
             </div>
 
             {/* Product Details Accordion */}
@@ -411,27 +464,36 @@ const ProductDetail = () => {
 
             <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-left">
               {relatedProducts.map((item) => (
-                <div
+                <ProductCard
                   key={item.id}
+                  id={item.id}
+                  name={item.name}
+                  price={item.minPrice ? Number(item.minPrice).toLocaleString("vi-VN") + "₫" : "Liên hệ"}
+                  image={item.thumbnailUrl}
+                  slug={item.slug || item.id}
+                  layout="collection"
+                  isLiked={item.isLikedByMe}
+                  onToggleLike={() => {
+                    if (!isUserLoggedIn) {
+                      toast.warn("Vui lòng đăng nhập để lưu sản phẩm yêu thích!");
+                      navigate("/login", { state: { from: location } });
+                      return;
+                    }
+                    toggleLikeMutation.mutate(item.id, {
+                      onSuccess: (res) => {
+                        if (res.isLiked) {
+                          toast.success(`Đã thêm "${item.name}" vào danh sách yêu thích!`);
+                        } else {
+                          toast.info(`Đã xóa "${item.name}" khỏi danh sách yêu thích!`);
+                        }
+                      },
+                      onError: (err) => {
+                        toast.error(err.response?.data?.message || "Không thể cập nhật danh sách yêu thích!");
+                      },
+                    });
+                  }}
                   onClick={() => navigate(`/product/${item.slug || item.id}`)}
-                  className="group cursor-pointer flex flex-col"
-                >
-                  <div className="aspect-[2/3] overflow-hidden bg-[#efeded] mb-5">
-                    <img
-                      src={item.thumbnailUrl}
-                      alt={item.name}
-                      className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
-                    />
-                  </div>
-                  <h3 className="body-md text-black font-normal truncate pr-4">
-                    {item.name}
-                  </h3>
-                  <p className="label-sm text-neutral-500 font-semibold mt-1.5">
-                    {item.minPrice
-                      ? Number(item.minPrice).toLocaleString("vi-VN") + "₫"
-                      : "Liên hệ"}
-                  </p>
-                </div>
+                />
               ))}
             </div>
           </section>

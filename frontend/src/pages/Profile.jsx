@@ -9,9 +9,13 @@ import {
   FiTrash2,
   FiX,
   FiClock,
+  FiAlertTriangle,
+  FiShield,
+  FiHeart,
 } from "react-icons/fi";
+import { toast } from "react-toastify";
 import { useAuthStore } from "../store/useAuthStore";
-import { useUpdateProfile, useProfile } from "../hooks/api/useAuth";
+import { useUpdateProfile, useProfile, useSoftDeleteAccount } from "../hooks/api/useAuth";
 import { useAddresses, useCreateAddress, useUpdateAddress, useDeleteAddress } from "../hooks/api/useAddress";
 import { useUserOrders } from "../hooks/api/useOrders";
 import Footer from "../components/Footer";
@@ -21,7 +25,11 @@ const Profile = () => {
   const user = useAuthStore((state) => state.user);
   const { data: profile } = useProfile();
   const updateProfileMutation = useUpdateProfile();
+  const softDeleteMutation = useSoftDeleteAccount();
   const isUpdating = updateProfileMutation.isPending;
+  const isDeleting = softDeleteMutation.isPending;
+
+  const [isDeleteAccountOpen, setIsDeleteAccountOpen] = useState(false);
 
   // Real Recent Orders API (Limit to 3 recent orders)
   const { data: recentOrdersPage, isLoading: isOrdersLoading } = useUserOrders({
@@ -117,7 +125,7 @@ const Profile = () => {
   const handleEditProfileSubmit = (e) => {
     e.preventDefault();
     if (!editForm.name.trim() || !editForm.phone.trim()) {
-      alert("Vui lòng điền đầy đủ họ tên và số điện thoại.");
+      toast.warn("Vui lòng điền đầy đủ họ tên và số điện thoại.");
       return;
     }
 
@@ -129,10 +137,11 @@ const Profile = () => {
       {
         onSuccess: () => {
           setIsEditModalOpen(false);
+          toast.success("Cập nhật hồ sơ thành công!");
         },
         onError: (err) => {
           const errMsg = err.response?.data?.message || "Cập nhật hồ sơ thất bại, vui lòng thử lại!";
-          alert(errMsg);
+          toast.error(errMsg);
         },
       }
     );
@@ -145,7 +154,7 @@ const Profile = () => {
       !addressForm.receiverPhone.trim() ||
       !addressForm.addressDetail.trim()
     ) {
-      alert("Vui lòng nhập đầy đủ thông tin.");
+      toast.warn("Vui lòng nhập đầy đủ thông tin địa chỉ.");
       return;
     }
     createAddressMutation.mutate(
@@ -158,9 +167,10 @@ const Profile = () => {
       {
         onSuccess: () => {
           setIsAddAddressOpen(false);
+          toast.success("Thêm địa chỉ giao hàng thành công!");
         },
         onError: (err) => {
-          alert(err.response?.data?.message || "Thêm địa chỉ thất bại!");
+          toast.error(err.response?.data?.message || "Thêm địa chỉ thất bại!");
         },
       }
     );
@@ -173,7 +183,7 @@ const Profile = () => {
       !editAddressForm.receiverPhone.trim() ||
       !editAddressForm.addressDetail.trim()
     ) {
-      alert("Vui lòng nhập đầy đủ thông tin.");
+      toast.warn("Vui lòng nhập đầy đủ thông tin địa chỉ.");
       return;
     }
     updateAddressMutation.mutate(
@@ -189,9 +199,10 @@ const Profile = () => {
       {
         onSuccess: () => {
           setIsEditAddressOpen(false);
+          toast.success("Cập nhật địa chỉ thành công!");
         },
         onError: (err) => {
-          alert(err.response?.data?.message || "Cập nhật địa chỉ thất bại!");
+          toast.error(err.response?.data?.message || "Cập nhật địa chỉ thất bại!");
         },
       }
     );
@@ -209,8 +220,11 @@ const Profile = () => {
         },
       },
       {
+        onSuccess: () => {
+          toast.success("Đã đặt làm địa chỉ mặc định!");
+        },
         onError: (err) => {
-          alert(err.response?.data?.message || "Đặt địa chỉ mặc định thất bại!");
+          toast.error(err.response?.data?.message || "Đặt địa chỉ mặc định thất bại!");
         },
       }
     );
@@ -219,11 +233,27 @@ const Profile = () => {
   const handleRemoveAddress = (addressId) => {
     if (window.confirm("Bạn có chắc chắn muốn xóa địa chỉ này?")) {
       deleteAddressMutation.mutate(addressId, {
+        onSuccess: () => {
+          toast.success("Xóa địa chỉ thành công!");
+        },
         onError: (err) => {
-          alert(err.response?.data?.message || "Xóa địa chỉ thất bại!");
+          toast.error(err.response?.data?.message || "Xóa địa chỉ thất bại!");
         },
       });
     }
+  };
+
+  const handleConfirmSoftDeleteAccount = () => {
+    softDeleteMutation.mutate(undefined, {
+      onSuccess: () => {
+        setIsDeleteAccountOpen(false);
+        toast.success("Tài khoản của bạn đã được vô hiệu hóa thành công.");
+        navigate("/login");
+      },
+      onError: (err) => {
+        toast.error(err.response?.data?.message || "Vô hiệu hóa tài khoản thất bại!");
+      },
+    });
   };
 
   const getStatusBadgeStyle = (status) => {
@@ -294,10 +324,17 @@ const Profile = () => {
             </div>
 
             {/* Profile editing triggers */}
-            <div className="w-full md:w-auto select-none">
+            <div className="w-full md:w-auto flex flex-col sm:flex-row gap-3 select-none">
+              <Link
+                to="/wishlist"
+                className="w-full sm:w-auto border border-neutral-300 hover:border-black text-black px-6 py-4.5 label-sm tracking-widest font-semibold hover:bg-neutral-50 transition-all cursor-pointer flex items-center justify-center gap-2 uppercase"
+              >
+                <FiHeart size={14} className="text-red-600" />
+                <span>Yêu thích</span>
+              </Link>
               <button
                 onClick={() => setIsEditModalOpen(true)}
-                className="w-full md:w-auto bg-black text-white px-12 py-4.5 label-sm tracking-widest font-semibold hover:bg-neutral-800 transition-colors cursor-pointer"
+                className="w-full sm:w-auto bg-black text-white px-10 py-4.5 label-sm tracking-widest font-semibold hover:bg-neutral-800 transition-colors cursor-pointer text-center uppercase"
               >
                 Chỉnh sửa hồ sơ
               </button>
@@ -406,6 +443,39 @@ const Profile = () => {
                     ))}
                   </div>
                 )}
+              </div>
+
+              {/* Account Security & Danger Zone Section */}
+              <div className="mt-14 pt-10 border-t border-neutral-200">
+                <div className="flex items-center gap-2 mb-2 select-none">
+                  <FiShield size={18} className="text-black" />
+                  <h3 className="font-serif text-xl font-semibold text-black uppercase tracking-wider">
+                    Bảo mật & Thiết lập tài khoản
+                  </h3>
+                </div>
+                <p className="text-xs text-neutral-500 font-light mb-6">
+                  Quản lý các tùy chọn bảo mật và trạng thái tài khoản của bạn trên hệ thống.
+                </p>
+
+                <div className="border border-red-200 bg-red-50/40 p-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                  <div>
+                    <div className="flex items-center gap-2 mb-1">
+                      <FiAlertTriangle size={16} className="text-red-600" />
+                      <h4 className="font-semibold text-sm text-red-900">
+                        Vô hiệu hóa tài khoản
+                      </h4>
+                    </div>
+                    <p className="text-xs text-neutral-600 font-light leading-relaxed">
+                      Tạm ngưng hoạt động tài khoản và đăng xuất khỏi tất cả thiết bị. Dữ liệu của bạn sẽ được bảo lưu an toàn.
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => setIsDeleteAccountOpen(true)}
+                    className="border border-red-600 text-red-600 hover:bg-red-600 hover:text-white px-5 py-2.5 text-xs font-semibold uppercase tracking-wider transition-colors cursor-pointer whitespace-nowrap select-none"
+                  >
+                    Vô hiệu hóa
+                  </button>
+                </div>
               </div>
           </div>
 
@@ -772,6 +842,52 @@ const Profile = () => {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Account Deactivation Confirmation Modal */}
+      {isDeleteAccountOpen && (
+        <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4 backdrop-blur-[2px]">
+          <div className="bg-white text-black w-full max-w-[450px] shadow-2xl relative flex flex-col p-6 text-left border border-neutral-200">
+            <div className="flex justify-between items-center mb-4 pb-2 border-b border-neutral-200">
+              <div className="flex items-center gap-2 text-red-600">
+                <FiAlertTriangle size={20} />
+                <h3 className="font-serif text-lg font-semibold text-black uppercase tracking-wide">
+                  Xác nhận vô hiệu hóa
+                </h3>
+              </div>
+              <button
+                onClick={() => setIsDeleteAccountOpen(false)}
+                className="text-neutral-400 hover:text-black transition-colors cursor-pointer"
+                aria-label="Close modal"
+              >
+                <FiX size={20} />
+              </button>
+            </div>
+
+            <p className="text-sm text-neutral-600 font-light leading-relaxed mb-6">
+              Bạn có chắc chắn muốn vô hiệu hóa tài khoản của mình? Bạn sẽ bị đăng xuất ngay lập tức và tài khoản sẽ được tạm ngưng trên hệ thống.
+            </p>
+
+            <div className="flex gap-3 select-none">
+              <button
+                type="button"
+                disabled={isDeleting}
+                onClick={handleConfirmSoftDeleteAccount}
+                className="flex-1 bg-red-600 text-white py-3 text-xs font-semibold uppercase tracking-wider hover:bg-red-700 transition-colors cursor-pointer disabled:opacity-50"
+              >
+                {isDeleting ? "Đang xử lý..." : "Xác nhận vô hiệu hóa"}
+              </button>
+              <button
+                type="button"
+                disabled={isDeleting}
+                onClick={() => setIsDeleteAccountOpen(false)}
+                className="flex-1 border border-neutral-300 py-3 text-xs font-semibold uppercase tracking-wider hover:bg-neutral-100 transition-colors cursor-pointer"
+              >
+                Hủy
+              </button>
+            </div>
           </div>
         </div>
       )}

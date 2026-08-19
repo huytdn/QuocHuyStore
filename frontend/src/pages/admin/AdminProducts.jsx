@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 import AdminSidebar from "../../components/admin/AdminSidebar";
 import AdminHeader from "../../components/admin/AdminHeader";
 import {
@@ -57,6 +58,7 @@ const ManageColorsModal = ({ product, onClose }) => {
     setColorError("");
     if (!colorName.trim() || !colorFile) {
       setColorError("Vui lòng nhập tên màu và chọn file hình ảnh!");
+      toast.warn("Vui lòng nhập tên màu và chọn file hình ảnh!");
       return;
     }
 
@@ -71,12 +73,12 @@ const ManageColorsModal = ({ product, onClose }) => {
           setColorName("");
           setColorFile(null);
           setColorError("");
-          alert("Thêm màu sắc thành công!");
+          toast.success("Thêm màu sắc thành công!");
         },
         onError: (err) => {
-          setColorError(
-            err.response?.data?.message || "Thêm màu sắc thất bại!"
-          );
+          const msg = err.response?.data?.message || "Thêm màu sắc thất bại!";
+          setColorError(msg);
+          toast.error(msg);
         },
       }
     );
@@ -91,7 +93,7 @@ const ManageColorsModal = ({ product, onClose }) => {
   const handleSaveEditColor = (e, colorId) => {
     e.preventDefault();
     if (!editColorName.trim()) {
-      alert("Tên màu sắc không được để trống!");
+      toast.warn("Tên màu sắc không được để trống!");
       return;
     }
 
@@ -106,10 +108,10 @@ const ManageColorsModal = ({ product, onClose }) => {
           setEditingColorId(null);
           setEditColorName("");
           setEditColorFile(null);
-          alert("Cập nhật màu sắc thành công!");
+          toast.success("Cập nhật màu sắc thành công!");
         },
         onError: (err) => {
-          alert(err.response?.data?.message || "Cập nhật màu sắc thất bại!");
+          toast.error(err.response?.data?.message || "Cập nhật màu sắc thất bại!");
         },
       }
     );
@@ -118,9 +120,9 @@ const ManageColorsModal = ({ product, onClose }) => {
   const handleDeleteColor = (colorId, name) => {
     if (window.confirm(`Bạn có chắc muốn xóa màu sắc "${name}"?`)) {
       deleteColorMutation.mutate(colorId, {
-        onSuccess: () => alert("Xóa màu thành công!"),
+        onSuccess: () => toast.success("Xóa màu thành công!"),
         onError: (err) =>
-          alert(
+          toast.error(
             err.response?.data?.message ||
               "Xóa màu thất bại! (Có thể có biến thể đang hoạt động)"
           ),
@@ -133,6 +135,7 @@ const ManageColorsModal = ({ product, onClose }) => {
     setVarError("");
     if (!varSize.trim() || !varPrice || varStock === "") {
       setVarError("Vui lòng nhập đầy đủ Size, Đơn giá và Số lượng tồn!");
+      toast.warn("Vui lòng nhập đầy đủ Size, Đơn giá và Số lượng tồn!");
       return;
     }
 
@@ -149,12 +152,12 @@ const ManageColorsModal = ({ product, onClose }) => {
           setVarPrice("");
           setVarStock("");
           setAddingVariationForColorId(null);
-          alert("Thêm kích thước biến thể thành công!");
+          toast.success("Thêm kích thước biến thể thành công!");
         },
         onError: (err) => {
-          setVarError(
-            err.response?.data?.message || "Thêm biến thể thất bại!"
-          );
+          const msg = err.response?.data?.message || "Thêm biến thể thất bại!";
+          setVarError(msg);
+          toast.error(msg);
         },
       }
     );
@@ -170,7 +173,7 @@ const ManageColorsModal = ({ product, onClose }) => {
   const handleSaveEditVariation = (e, variationId) => {
     e.preventDefault();
     if (!editVarSize.trim() || !editVarPrice || editVarStock === "") {
-      alert("Vui lòng nhập đầy đủ Size, Đơn giá và Tồn kho!");
+      toast.warn("Vui lòng nhập đầy đủ Size, Đơn giá và Tồn kho!");
       return;
     }
 
@@ -184,10 +187,10 @@ const ManageColorsModal = ({ product, onClose }) => {
       {
         onSuccess: () => {
           setEditingVariationId(null);
-          alert("Cập nhật biến thể thành công!");
+          toast.success("Cập nhật biến thể thành công!");
         },
         onError: (err) => {
-          alert(err.response?.data?.message || "Cập nhật biến thể thất bại!");
+          toast.error(err.response?.data?.message || "Cập nhật biến thể thất bại!");
         },
       }
     );
@@ -201,16 +204,16 @@ const ManageColorsModal = ({ product, onClose }) => {
     if (inputStr !== null && inputStr.trim() !== "") {
       const newStock = parseInt(inputStr, 10);
       if (isNaN(newStock) || newStock < 0) {
-        alert("Số lượng tồn kho không hợp lệ!");
+        toast.warn("Số lượng tồn kho không hợp lệ!");
         return;
       }
 
       updateStockMutation.mutate(
         { id: v.variationId, stockQuantity: newStock },
         {
-          onSuccess: () => alert("Cập nhật tồn kho thành công!"),
+          onSuccess: () => toast.success("Cập nhật tồn kho thành công!"),
           onError: (err) =>
-            alert(err.response?.data?.message || "Cập nhật kho thất bại!"),
+            toast.error(err.response?.data?.message || "Cập nhật kho thất bại!"),
         }
       );
     }
@@ -219,9 +222,9 @@ const ManageColorsModal = ({ product, onClose }) => {
   const handleDeleteVariation = (variationId, size) => {
     if (window.confirm(`Bạn có chắc muốn xóa size "${size}"?`)) {
       deleteVariationMutation.mutate(variationId, {
-        onSuccess: () => alert("Xóa biến thể thành công!"),
+        onSuccess: () => toast.success("Xóa biến thể thành công!"),
         onError: (err) =>
-          alert(err.response?.data?.message || "Xóa thất bại!"),
+          toast.error(err.response?.data?.message || "Xóa thất bại!"),
       });
     }
   };
@@ -868,7 +871,7 @@ const AdminProducts = () => {
     ) {
       deleteProductMutation.mutate(id, {
         onSuccess: () => {
-          alert("Xóa sản phẩm thành công!");
+          toast.success("Xóa sản phẩm thành công!");
           setSelectedProductIds((prev) => {
             const updated = new Set(prev);
             updated.delete(id);
@@ -876,7 +879,7 @@ const AdminProducts = () => {
           });
         },
         onError: (err) => {
-          alert(err.response?.data?.message || "Xóa sản phẩm thất bại!");
+          toast.error(err.response?.data?.message || "Xóa sản phẩm thất bại!");
         },
       });
     }
@@ -920,11 +923,13 @@ const AdminProducts = () => {
 
     if (!newProduct.name || !newProduct.slug || !newProduct.categoryId) {
       setValidationError("Vui lòng nhập đầy đủ Tên, Slug và chọn Danh mục!");
+      toast.warn("Vui lòng nhập đầy đủ Tên, Slug và chọn Danh mục!");
       return;
     }
 
     if (!editingProduct && !selectedFile) {
       setValidationError("Vui lòng chọn ảnh đại diện cho sản phẩm mới!");
+      toast.warn("Vui lòng chọn ảnh đại diện cho sản phẩm mới!");
       return;
     }
 
@@ -945,16 +950,16 @@ const AdminProducts = () => {
         },
         {
           onSuccess: () => {
-            alert("Cập nhật thông tin sản phẩm thành công!");
+            toast.success("Cập nhật thông tin sản phẩm thành công!");
             setIsModalOpen(false);
             setEditingProduct(null);
             setNewProduct({ name: "", slug: "", description: "", categoryId: "" });
             setSelectedFile(null);
           },
           onError: (err) => {
-            setValidationError(
-              err.response?.data?.message || "Cập nhật sản phẩm thất bại!"
-            );
+            const msg = err.response?.data?.message || "Cập nhật sản phẩm thất bại!";
+            setValidationError(msg);
+            toast.error(msg);
           },
         }
       );
@@ -967,15 +972,15 @@ const AdminProducts = () => {
         },
         {
           onSuccess: () => {
-            alert("Tạo sản phẩm mới thành công!");
+            toast.success("Tạo sản phẩm mới thành công!");
             setIsModalOpen(false);
             setNewProduct({ name: "", slug: "", description: "", categoryId: "" });
             setSelectedFile(null);
           },
           onError: (err) => {
-            setValidationError(
-              err.response?.data?.message || "Tạo sản phẩm thất bại!"
-            );
+            const msg = err.response?.data?.message || "Tạo sản phẩm thất bại!";
+            setValidationError(msg);
+            toast.error(msg);
           },
         }
       );
