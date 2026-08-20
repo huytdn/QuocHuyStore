@@ -12,4 +12,6 @@ public interface ReviewService {
     PageResponseDto<ReviewResponseDto> getProductReviews(String slug, Integer rating, int page, int size);
 
     ReviewResponseDto upsertReview(UUID userId, ReviewCreateRequestDto request, MultipartFile file);
+
+    PageResponseDto<ReviewResponseDto> getAdminReviews(Integer rating, Long productId, Boolean hasImage, String search, int page, int size);
 }

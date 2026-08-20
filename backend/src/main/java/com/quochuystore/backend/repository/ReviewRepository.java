@@ -71,4 +71,31 @@ public interface ReviewRepository extends JpaRepository<ProductReview, Long> {
             "FROM ProductReview r JOIN r.user u WHERE r.user.id = :userId AND r.product.id = :productId")
     Optional<ReviewResponseDto> findProjectionByUserIdAndProductId(@Param("userId") UUID userId,
             @Param("productId") Long productId);
+
+    @Query(value = "SELECT new com.quochuystore.backend.dto.review.response.ReviewResponseDto(" +
+            "r.id, u.id, u.displayName, r.rating, r.variationName, r.content, r.imageUrl, r.createdAt) " +
+            "FROM ProductReview r " +
+            "JOIN r.user u " +
+            "WHERE (:rating IS NULL OR r.rating = :rating) " +
+            "AND (:productId IS NULL OR r.product.id = :productId) " +
+            "AND (:hasImage IS NULL OR (:hasImage = true AND r.imageUrl IS NOT NULL) OR (:hasImage = false AND r.imageUrl IS NULL)) " +
+            "AND (CAST(:search AS string) IS NULL OR :search = '' " +
+            "     OR LOWER(u.displayName) LIKE CONCAT('%', LOWER(CAST(:search AS string)), '%') " +
+            "     OR LOWER(r.variationName) LIKE CONCAT('%', LOWER(CAST(:search AS string)), '%') " +
+            "     OR LOWER(r.content) LIKE CONCAT('%', LOWER(CAST(:search AS string)), '%'))",
+            countQuery = "SELECT COUNT(r) FROM ProductReview r " +
+            "JOIN r.user u " +
+            "WHERE (:rating IS NULL OR r.rating = :rating) " +
+            "AND (:productId IS NULL OR r.product.id = :productId) " +
+            "AND (:hasImage IS NULL OR (:hasImage = true AND r.imageUrl IS NOT NULL) OR (:hasImage = false AND r.imageUrl IS NULL)) " +
+            "AND (CAST(:search AS string) IS NULL OR :search = '' " +
+            "     OR LOWER(u.displayName) LIKE CONCAT('%', LOWER(CAST(:search AS string)), '%') " +
+            "     OR LOWER(r.variationName) LIKE CONCAT('%', LOWER(CAST(:search AS string)), '%') " +
+            "     OR LOWER(r.content) LIKE CONCAT('%', LOWER(CAST(:search AS string)), '%'))")
+    Page<ReviewResponseDto> findAdminReviews(
+            @Param("rating") Integer rating,
+            @Param("productId") Long productId,
+            @Param("hasImage") Boolean hasImage,
+            @Param("search") String search,
+            Pageable pageable);
 }
