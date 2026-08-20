@@ -15,7 +15,9 @@ import java.time.OffsetDateTime;
         },
         indexes = {
                 @Index(name = "idx_product_reviews_product_created", columnList = "product_id, created_at DESC, id DESC"),
-                @Index(name = "idx_product_reviews_product_rating_created", columnList = "product_id, rating, created_at DESC, id DESC")
+                @Index(name = "idx_product_reviews_product_rating_created", columnList = "product_id, rating, created_at DESC, id DESC"),
+                @Index(name = "idx_product_reviews_created_at", columnList = "created_at DESC, id DESC"),
+                @Index(name = "idx_product_reviews_rating_created", columnList = "rating, created_at DESC, id DESC")
         })
 @Getter
 @Setter

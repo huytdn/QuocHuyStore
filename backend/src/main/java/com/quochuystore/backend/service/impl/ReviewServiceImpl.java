@@ -85,6 +85,31 @@ public class ReviewServiceImpl implements ReviewService {
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public PageResponseDto<ReviewResponseDto> getAdminReviews(Integer rating, Long productId, Boolean hasImage, String search, int page, int size) {
+        if (rating != null && (rating < 1 || rating > 5)) {
+            throw new BadRequestException("Rating must be between 1 and 5");
+        }
+
+        int pageSize = Math.min(size, MAX_PAGE_SIZE);
+        String searchTrimmed = (search != null && !search.trim().isEmpty()) ? search.trim() : null;
+
+        Pageable pageable = PageRequest.of(page, pageSize,
+                Sort.by(Sort.Order.desc("createdAt"), Sort.Order.desc("id")));
+
+        Page<ReviewResponseDto> reviewPage = reviewRepository.findAdminReviews(rating, productId, hasImage, searchTrimmed, pageable);
+
+        return PageResponseDto.<ReviewResponseDto>builder()
+                .content(reviewPage.getContent())
+                .pageNo(reviewPage.getNumber())
+                .pageSize(reviewPage.getSize())
+                .totalElements(reviewPage.getTotalElements())
+                .totalPages(reviewPage.getTotalPages())
+                .last(reviewPage.isLast())
+                .build();
+    }
+
+    @Override
     @Transactional
     public ReviewResponseDto upsertReview(UUID userId, ReviewCreateRequestDto request, MultipartFile file) {
         validateFile(file);
