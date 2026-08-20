@@ -1,6 +1,6 @@
 import React from "react";
 import { FiHeart } from "react-icons/fi";
-import { FaHeart } from "react-icons/fa";
+import { FaHeart, FaStar } from "react-icons/fa";
 
 const ProductCard = ({
   id,
@@ -9,81 +9,90 @@ const ProductCard = ({
   price,
   slug,
   color,
+  averageStar,
+  reviewCount,
   isLiked = false,
   onToggleLike,
   onClick,
   layout = "home",
   className = "",
 }) => {
+  const displayRating =
+    averageStar !== undefined && averageStar !== null
+      ? Number(averageStar).toFixed(1)
+      : null;
+
   return (
     <div
       onClick={onClick}
       className={`group flex flex-col cursor-pointer select-none ${className}`}
     >
       {/* 2:3 Aspect Ratio Image Container */}
-      <div className="w-full aspect-[2/3] overflow-hidden bg-surface-container relative">
+      <div className="w-full aspect-[2/3] overflow-hidden bg-[#f2f0eb] relative">
         <img
           src={image}
           alt={name}
           className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
         />
-
-        {/* Floating Like / Wishlist Button */}
-        {onToggleLike && (
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              onToggleLike(e);
-            }}
-            aria-label={isLiked ? "Bỏ yêu thích" : "Yêu thích sản phẩm"}
-            className={`absolute top-3 right-3 w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300 backdrop-blur-md shadow-xs cursor-pointer ${
-              isLiked
-                ? "bg-white/90 text-red-600 opacity-100 scale-100"
-                : "bg-white/70 text-neutral-600 opacity-0 group-hover:opacity-100 hover:bg-white hover:text-black hover:scale-110 active:scale-95"
-            }`}
-          >
-            {isLiked ? (
-              <FaHeart size={14} className="text-red-600 animate-pulse-once" />
-            ) : (
-              <FiHeart size={14} />
-            )}
-          </button>
-        )}
       </div>
 
-      {/* Details Row */}
-      <div className="mt-4 flex flex-col gap-1">
-        {layout === "collection" ? (
-          // COLLECTION PAGE LAYOUT
-          <>
-            <div className="flex justify-between items-start gap-2">
-              <h3 className="body-md text-black font-normal leading-snug line-clamp-2">
-                {name}
-              </h3>
-            </div>
-            <span className="body-md text-black font-semibold mt-1 block">
-              {price}
-            </span>
-          </>
-        ) : (
-          // HOME PAGE LAYOUT
-          <>
-            <div className="flex justify-between items-baseline gap-4">
-              <h3 className="body-md text-black font-normal truncate max-w-[70%]">
-                {name}
-              </h3>
-              <span className="label-sm text-black font-semibold flex-shrink-0">
-                {price}
-              </span>
-            </div>
-            {color && (
-              <p className="label-sm text-outline font-medium tracking-widest text-[10px] uppercase">
-                {color}
-              </p>
-            )}
-          </>
+      {/* Details Section */}
+      <div className="mt-4 flex flex-col gap-1 text-left">
+        {/* Row 1: Title (Left) + Wishlist Heart Icon (Right) */}
+        <div className="flex items-start justify-between gap-3">
+          <h3 className="font-sans text-base md:text-lg text-black font-medium leading-snug line-clamp-1 group-hover:underline underline-offset-4 transition-all">
+            {name}
+          </h3>
+
+          {onToggleLike && (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onToggleLike(e);
+              }}
+              aria-label={isLiked ? "Bỏ yêu thích" : "Yêu thích sản phẩm"}
+              className="p-1 text-neutral-700 hover:text-black transition-colors cursor-pointer shrink-0 mt-0.5"
+            >
+              {isLiked ? (
+                <FaHeart size={18} className="text-red-600 animate-pulse-once" />
+              ) : (
+                <FiHeart size={18} className="stroke-[1.75]" />
+              )}
+            </button>
+          )}
+        </div>
+
+        {/* Color Badge (if provided) */}
+        {color && (
+          <p className="label-sm text-neutral-400 font-medium tracking-widest text-[10px] uppercase">
+            {color}
+          </p>
         )}
+
+        {/* Row 2: Price (Left) + Star Rating (Right) */}
+        <div className="flex items-center justify-between gap-2 mt-1">
+          {/* Price (Left) */}
+          <span className="font-sans text-sm md:text-base font-semibold text-neutral-800 tracking-wide">
+            {price}
+          </span>
+
+          {/* Rating Star Badge (Right) */}
+          {displayRating && (
+            <div
+              className="flex items-center gap-1 text-xs font-bold text-neutral-800 bg-[#FAF6EE] border border-[#EADFCB] px-2 py-0.5 rounded-xs select-none shrink-0"
+              title={`Đánh giá trung bình: ${displayRating} sao (${reviewCount || 0} nhận xét)`}
+            >
+              <FaStar size={12} className="text-[#E6A117]" />
+              <span>{displayRating}</span>
+              {reviewCount !== undefined && reviewCount > 0 && (
+                <span className="text-[10px] text-neutral-400 font-normal ml-0.5">
+                  ({reviewCount})
+                </span>
+              )}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

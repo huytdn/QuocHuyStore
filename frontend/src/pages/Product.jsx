@@ -54,6 +54,8 @@ const Product = () => {
     price: p.minPrice ? Number(p.minPrice).toLocaleString("vi-VN") + "đ" : "Liên hệ",
     image: p.thumbnailUrl,
     isLikedByMe: !!p.isLikedByMe,
+    averageStar: p.averageStar,
+    reviewCount: p.reviewCount,
   }));
 
   return (
@@ -148,6 +150,8 @@ const Product = () => {
                   price={product.price}
                   image={product.image}
                   slug={product.slug}
+                  averageStar={product.averageStar}
+                  reviewCount={product.reviewCount}
                   layout="collection"
                   isLiked={product.isLikedByMe}
                   onToggleLike={() => handleToggleLike(product.id, product.name)}
