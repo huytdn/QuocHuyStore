@@ -78,6 +78,9 @@ public class ChatServiceImpl implements ChatService {
             if (request.getReceiverId() != null) {
                 receiver = userRepository.findById(request.getReceiverId()).orElse(null);
             }
+            if (receiver == null) {
+                receiver = userRepository.findFirstByRole(UserRole.ADMIN).orElse(null);
+            }
         } else {
             // ADMIN: must specify target conversation ID
             if (request.getConversationId() == null) {

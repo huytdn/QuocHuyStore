@@ -6,6 +6,7 @@ import com.quochuystore.backend.dto.review.request.ReviewCreateRequestDto;
 import com.quochuystore.backend.dto.review.response.ReviewResponseDto;
 import com.quochuystore.backend.entity.OrderItem;
 import com.quochuystore.backend.entity.Product;
+import com.quochuystore.backend.entity.enums.OrderStatus;
 import com.quochuystore.backend.exception.BadRequestException;
 import com.quochuystore.backend.exception.ResourceNotFoundException;
 import com.quochuystore.backend.repository.ProductRepository;
@@ -88,7 +89,7 @@ public class ReviewServiceImpl implements ReviewService {
     public ReviewResponseDto upsertReview(UUID userId, ReviewCreateRequestDto request, MultipartFile file) {
         validateFile(file);
 
-        OrderItem orderItem = reviewRepository.findEligibleOrderItem(request.getOrderItemId(), userId)
+        OrderItem orderItem = reviewRepository.findEligibleOrderItem(request.getOrderItemId(), userId, OrderStatus.DELIVERED)
                 .orElseThrow(() -> new BadRequestException("Order item not found, not delivered, or not yours"));
 
         Long productId = orderItem.getProductVariation().getProductColor().getProduct().getId();
