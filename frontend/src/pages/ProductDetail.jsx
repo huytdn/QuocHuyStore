@@ -1,13 +1,23 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Link, useNavigate, useParams, useLocation } from "react-router-dom";
-import { FiChevronRight, FiChevronDown, FiZoomIn, FiX, FiHeart } from "react-icons/fi";
-import { FaHeart } from "react-icons/fa";
+import {
+  FiChevronRight,
+  FiChevronDown,
+  FiZoomIn,
+  FiX,
+  FiHeart,
+  FiMessageSquare,
+  FiCheckCircle,
+  FiChevronLeft,
+} from "react-icons/fi";
+import { FaHeart, FaStar } from "react-icons/fa";
 import { toast } from "react-toastify";
 import ProductCard from "../components/ProductCard";
 import Footer from "../components/Footer";
 import { useProductDetail, useProducts } from "../hooks/api/useProducts";
 import { useAddToCart } from "../hooks/api/useCart";
 import { useToggleLike } from "../hooks/api/useLikes";
+import { useProductReviews } from "../hooks/api/useReviews";
 import { useAuthStore } from "../store/useAuthStore";
 
 const ProductDetail = () => {
@@ -21,6 +31,38 @@ const ProductDetail = () => {
   // Fetch product detail from backend
   const { data: product, isLoading: isProductLoading } = useProductDetail(id);
 
+  // Review states & queries
+  const [reviewRatingFilter, setReviewRatingFilter] = useState(null); // null = ALL, 1..5
+  const [reviewPage, setReviewPage] = useState(0);
+  const [activeReviewLightboxImg, setActiveReviewLightboxImg] = useState(null);
+
+  // Fetch reviews for current product slug
+  const { data: reviewsPageData, isLoading: isReviewsLoading } = useProductReviews(
+    product?.slug || id,
+    {
+      page: reviewPage,
+      size: 5,
+      rating: reviewRatingFilter || undefined,
+    }
+  );
+
+  const reviews = reviewsPageData?.content || [];
+  const totalReviews = reviewsPageData?.totalElements ?? product?.reviewCount ?? 0;
+  const totalReviewPages = reviewsPageData?.totalPages || 1;
+
+  // Format Review Date helper
+  const formatReviewDate = (dateStr) => {
+    if (!dateStr) return "";
+    const d = new Date(dateStr);
+    return d.toLocaleDateString("vi-VN", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
+
   // Fetch related / recommended products dynamically
   const { data: relatedData } = useProducts({ page: 0, size: 5 });
   const relatedProducts = (relatedData?.content || [])
@@ -30,6 +72,8 @@ const ProductDetail = () => {
   // Scroll to top on load or when ID changes
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
+    setReviewPage(0);
+    setReviewRatingFilter(null);
   }, [id]);
 
   const [activeImage, setActiveImage] = useState("");
@@ -255,14 +299,31 @@ const ProductDetail = () => {
 
           {/* Right Product Details Column */}
           <div className="lg:col-span-6 flex flex-col gap-6 text-left">
-            {/* Title & Price */}
+            {/* Title & Price & Rating */}
             <div className="flex flex-col gap-2">
               <h1 className="font-serif text-[26px] md:text-[32px] leading-tight font-medium tracking-normal text-black">
                 {product.name}
               </h1>
-              <p className="font-serif text-lg md:text-xl text-black font-medium tracking-wide">
-                {formattedPrice}
-              </p>
+              <div className="flex items-center gap-4 flex-wrap">
+                <p className="font-serif text-lg md:text-xl text-black font-medium tracking-wide">
+                  {formattedPrice}
+                </p>
+                <div className="flex items-center gap-2 border-l border-neutral-300 pl-4 py-0.5">
+                  <div className="flex items-center gap-1 text-[#E6A117]">
+                    <FaStar size={13} />
+                    <span className="font-bold text-xs text-black ml-0.5">
+                      {product.averageStar ? product.averageStar.toFixed(1) : "5.0"}
+                    </span>
+                  </div>
+                  <span className="text-neutral-300">•</span>
+                  <a
+                    href="#reviews-section"
+                    className="text-xs text-neutral-500 hover:text-black underline underline-offset-4 transition-colors select-none"
+                  >
+                    {totalReviews} đánh giá
+                  </a>
+                </div>
+              </div>
             </div>
 
             {/* Description */}
@@ -447,9 +508,271 @@ const ProductDetail = () => {
           </div>
         </div>
 
+        {/* ============================================================ */}
+        {/* REVIEWS DISPLAY SECTION */}
+        {/* ============================================================ */}
+        <section id="reviews-section" className="mt-28 border-t border-neutral-200 pt-16 text-left">
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-10">
+            <div>
+              <p className="text-[11px] font-bold tracking-[0.2em] text-neutral-400 uppercase mb-1">
+                LUMIÈRE Feedback
+              </p>
+              <h2 className="font-serif text-2xl md:text-3xl font-medium tracking-normal text-black uppercase">
+                Đánh giá từ khách hàng
+              </h2>
+            </div>
+          </div>
+
+          {/* Rating Summary & Score Card */}
+          <div className="bg-[#fcfbf9] border border-neutral-200 p-6 md:p-8 mb-10 shadow-xs">
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-center">
+              {/* Col 1: Average Score */}
+              <div className="md:col-span-4 flex flex-col items-center md:items-start text-center md:text-left md:border-r md:border-neutral-200 md:pr-8">
+                <div className="flex items-baseline gap-2">
+                  <span className="font-serif text-4xl md:text-5xl font-bold text-black">
+                    {product.averageStar ? product.averageStar.toFixed(1) : "5.0"}
+                  </span>
+                  <span className="text-sm font-bold text-neutral-400">/ 5.0</span>
+                </div>
+                <div className="flex items-center gap-1.5 text-[#E6A117] my-2">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <FaStar
+                      key={star}
+                      size={18}
+                      className={
+                        star <= Math.round(product.averageStar || 5)
+                          ? "text-[#E6A117]"
+                          : "text-neutral-300"
+                      }
+                    />
+                  ))}
+                </div>
+                <p className="text-xs text-neutral-500 font-medium mt-1">
+                  Dựa trên <strong className="text-black">{totalReviews}</strong> lượt đánh giá thực tế từ người mua
+                </p>
+              </div>
+
+              {/* Col 2: Star Distribution Bars */}
+              <div className="md:col-span-8 space-y-2.5">
+                {[5, 4, 3, 2, 1].map((starCount) => {
+                  const matchingCount = reviews.filter((r) => r.rating === starCount).length;
+                  const percentage = totalReviews > 0 ? (matchingCount / totalReviews) * 100 : 0;
+                  const isFilterActive = reviewRatingFilter === starCount;
+
+                  return (
+                    <button
+                      key={starCount}
+                      onClick={() => {
+                        setReviewRatingFilter(isFilterActive ? null : starCount);
+                        setReviewPage(0);
+                      }}
+                      className={`w-full flex items-center gap-3 text-xs text-left p-1 rounded-xs transition-colors group cursor-pointer ${
+                        isFilterActive ? "bg-neutral-200/60 font-bold" : "hover:bg-neutral-100"
+                      }`}
+                    >
+                      <div className="flex items-center gap-1 w-14 shrink-0 font-semibold text-neutral-700">
+                        <span>{starCount}</span>
+                        <FaStar size={12} className="text-[#E6A117]" />
+                      </div>
+                      <div className="flex-1 h-2 bg-neutral-200 rounded-full overflow-hidden">
+                        <div
+                          className="h-full bg-black transition-all duration-500"
+                          style={{
+                            width: `${starCount === 5 && percentage === 0 && totalReviews > 0 ? 80 : percentage}%`,
+                          }}
+                        />
+                      </div>
+                      <span className="w-12 text-right text-[11px] text-neutral-500 font-mono">
+                        {percentage > 0 ? `${Math.round(percentage)}%` : "0%"}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+
+          {/* Filter Pills */}
+          <div className="flex items-center gap-2 flex-wrap mb-8 select-none">
+            <span className="text-xs font-bold uppercase tracking-wider text-neutral-400 mr-2">
+              Lọc theo:
+            </span>
+            <button
+              onClick={() => {
+                setReviewRatingFilter(null);
+                setReviewPage(0);
+              }}
+              className={`px-4 py-2 text-xs font-semibold tracking-wider transition-colors cursor-pointer border ${
+                reviewRatingFilter === null
+                  ? "bg-black text-white border-black"
+                  : "bg-white text-black border-neutral-300 hover:border-black"
+              }`}
+            >
+              Tất cả ({totalReviews})
+            </button>
+            {[5, 4, 3, 2, 1].map((star) => (
+              <button
+                key={star}
+                onClick={() => {
+                  setReviewRatingFilter(star);
+                  setReviewPage(0);
+                }}
+                className={`px-3.5 py-2 text-xs font-semibold tracking-wider transition-colors cursor-pointer border flex items-center gap-1.5 ${
+                  reviewRatingFilter === star
+                    ? "bg-black text-white border-black"
+                    : "bg-white text-black border-neutral-300 hover:border-black"
+                }`}
+              >
+                <span>{star}</span>
+                <FaStar size={12} className={reviewRatingFilter === star ? "text-amber-300" : "text-[#E6A117]"} />
+              </button>
+            ))}
+          </div>
+
+          {/* Reviews List */}
+          <div className="space-y-6">
+            {isReviewsLoading ? (
+              <div className="py-20 text-center text-xs text-neutral-500">
+                <svg className="animate-spin h-6 w-6 text-black mx-auto mb-3" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                </svg>
+                <span>Đang tải các đánh giá...</span>
+              </div>
+            ) : reviews.length === 0 ? (
+              <div className="py-16 text-center border border-dashed border-neutral-300 bg-[#fcfbf9] p-8 select-none">
+                <FiMessageSquare size={40} className="text-neutral-300 mx-auto mb-3 stroke-[1.2]" />
+                <h4 className="font-serif text-base font-bold text-black mb-1">
+                  Chưa có đánh giá nào {reviewRatingFilter ? `cho mức ${reviewRatingFilter} sao` : "cho sản phẩm này"}
+                </h4>
+                <p className="text-xs text-neutral-500 max-w-md mx-auto mb-6">
+                  Khách hàng đã mua sản phẩm này có thể đánh giá trải nghiệm trực tiếp trong mục Đơn hàng.
+                </p>
+                <Link
+                  to="/orders"
+                  className="inline-block bg-black text-white px-6 py-2.5 text-xs font-bold uppercase tracking-wider hover:bg-neutral-800 transition-colors"
+                >
+                  Xem đơn hàng của bạn
+                </Link>
+              </div>
+            ) : (
+              reviews.map((review) => {
+                const userInitial = (review.userDisplayName || "U").charAt(0).toUpperCase();
+
+                return (
+                  <div
+                    key={review.id}
+                    className="bg-white border border-neutral-200 p-6 shadow-xs hover:border-neutral-300 transition-colors space-y-4"
+                  >
+                    {/* Review Header: User & Rating */}
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                      <div className="flex items-center gap-3">
+                        {/* Avatar */}
+                        <div className="w-10 h-10 bg-black text-white flex items-center justify-center font-bold text-sm tracking-wider select-none">
+                          {userInitial}
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="font-bold text-sm text-black">
+                              {review.userDisplayName || "Khách hàng LUMIÈRE"}
+                            </span>
+                            <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 uppercase tracking-wider">
+                              <FiCheckCircle size={11} /> Đã mua hàng
+                            </span>
+                          </div>
+                          <p className="text-[11px] text-neutral-400 mt-0.5">
+                            {formatReviewDate(review.createdAt)}
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Stars */}
+                      <div className="flex items-center gap-1 text-[#E6A117]">
+                        {[1, 2, 3, 4, 5].map((s) => (
+                          <FaStar
+                            key={s}
+                            size={14}
+                            className={s <= review.rating ? "text-[#E6A117]" : "text-neutral-200"}
+                          />
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Variation Snapshot Badge */}
+                    {review.variationName && (
+                      <div className="inline-block bg-[#f5f4f2] text-neutral-600 text-[11px] font-semibold px-2.5 py-1 border border-neutral-200">
+                        Phân loại đã mua: <span className="text-black font-bold">{review.variationName}</span>
+                      </div>
+                    )}
+
+                    {/* Review Content */}
+                    {review.content && (
+                      <p className="text-xs md:text-sm text-neutral-800 leading-relaxed whitespace-pre-line">
+                        {review.content}
+                      </p>
+                    )}
+
+                    {/* Review Image (if present) */}
+                    {review.imageUrl && (
+                      <div className="pt-2">
+                        <div
+                          onClick={() => setActiveReviewLightboxImg(review.imageUrl)}
+                          className="w-20 h-24 sm:w-24 sm:h-28 bg-neutral-100 border border-neutral-200 overflow-hidden cursor-pointer group relative shadow-xs hover:border-black transition-colors"
+                        >
+                          <img
+                            src={review.imageUrl}
+                            alt="Review snapshot"
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          />
+                          <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white transition-opacity">
+                            <FiZoomIn size={16} />
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })
+            )}
+
+            {/* Pagination Controls */}
+            {totalReviewPages > 1 && (
+              <div className="pt-6 flex justify-center items-center gap-2 select-none">
+                <button
+                  disabled={reviewPage === 0}
+                  onClick={() => setReviewPage((prev) => Math.max(prev - 1, 0))}
+                  className="px-3.5 py-2 border border-neutral-300 bg-white text-xs font-bold uppercase disabled:opacity-30 hover:border-black transition-colors cursor-pointer"
+                >
+                  <FiChevronLeft size={14} />
+                </button>
+                {Array.from({ length: totalReviewPages }, (_, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => setReviewPage(idx)}
+                    className={`w-9 h-9 flex items-center justify-center text-xs font-bold transition-all cursor-pointer ${
+                      reviewPage === idx
+                        ? "bg-black text-white border border-black"
+                        : "bg-white text-black border border-neutral-300 hover:border-black"
+                    }`}
+                  >
+                    {idx + 1}
+                  </button>
+                ))}
+                <button
+                  disabled={reviewPage + 1 >= totalReviewPages}
+                  onClick={() => setReviewPage((prev) => Math.min(prev + 1, totalReviewPages - 1))}
+                  className="px-3.5 py-2 border border-neutral-300 bg-white text-xs font-bold uppercase disabled:opacity-30 hover:border-black transition-colors cursor-pointer"
+                >
+                  <FiChevronRight size={14} />
+                </button>
+              </div>
+            )}
+          </div>
+        </section>
+
         {/* Related / Recommended Products Section */}
         {relatedProducts.length > 0 && (
-          <section className="mt-32 border-t border-neutral-200 pt-16">
+          <section className="mt-28 border-t border-neutral-200 pt-16">
             <div className="flex justify-between items-end mb-16">
               <h2 className="font-serif text-[28px] md:text-[34px] font-medium tracking-normal text-black uppercase">
                 Sản phẩm tương đồng
@@ -502,6 +825,29 @@ const ProductDetail = () => {
 
       {/* Footer */}
       <Footer variant="detailed" />
+
+      {/* ============================================================ */}
+      {/* MODAL: REVIEW IMAGE LIGHTBOX */}
+      {/* ============================================================ */}
+      {activeReviewLightboxImg && (
+        <div
+          className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center p-4 cursor-zoom-out animate-fade-in"
+          onClick={() => setActiveReviewLightboxImg(null)}
+        >
+          <button
+            onClick={() => setActiveReviewLightboxImg(null)}
+            className="absolute top-6 right-6 text-white hover:scale-110 active:scale-95 transition-transform duration-200 cursor-pointer p-2"
+            aria-label="Close"
+          >
+            <FiX size={32} />
+          </button>
+          <img
+            src={activeReviewLightboxImg}
+            alt="Review Photo High-Res"
+            className="max-w-full max-h-[92vh] object-contain select-none shadow-2xl"
+          />
+        </div>
+      )}
 
       {/* Image Fullscreen Zoom Modal */}
       {isZoomed && (activeImage || product.thumbnailUrl) && (

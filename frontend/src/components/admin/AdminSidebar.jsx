@@ -19,6 +19,7 @@ const AdminSidebar = ({ activeTab = "products" }) => {
     { key: "dashboard", label: "Dashboard", icon: "dashboard", href: "/admin/dashboard" },
     { key: "products", label: "Products", icon: "inventory_2", href: "/admin/products" },
     { key: "categories", label: "Categories", icon: "category", href: "/admin/categories" },
+    { key: "vouchers", label: "Vouchers", icon: "confirmation_number", href: "/admin/vouchers" },
     { key: "orders", label: "Orders", icon: "shopping_bag", href: "/admin/orders" },
     { key: "customers", label: "Customers", icon: "group", href: "/admin/customers" },
     { key: "analytics", label: "Analytics", icon: "analytics", href: "/admin/analytics" },

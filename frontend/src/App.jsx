@@ -22,6 +22,7 @@ import AdminOrders from "./pages/admin/AdminOrders";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminAnalytics from "./pages/admin/AdminAnalytics";
 import AdminCustomers from "./pages/admin/AdminCustomers";
+import AdminVouchers from "./pages/admin/AdminVouchers";
 import AdminRoute from "./components/admin/AdminRoute";
 import AdminLogin from "./pages/admin/AdminLogin";
 import { ToastContainer } from "react-toastify";
@@ -187,6 +188,14 @@ const App = () => {
           element={
             <AdminRoute>
               <AdminCustomers />
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="/admin/vouchers"
+          element={
+            <AdminRoute>
+              <AdminVouchers />
             </AdminRoute>
           }
         />

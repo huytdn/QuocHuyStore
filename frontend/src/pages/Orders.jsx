@@ -10,11 +10,16 @@ import {
   FiAlertCircle,
   FiCreditCard,
   FiEye,
+  FiTag,
+  FiCamera,
+  FiStar,
 } from "react-icons/fi";
+import { FaStar } from "react-icons/fa";
 import { toast } from "react-toastify";
 import Footer from "../components/Footer";
 import { useAuthStore } from "../store/useAuthStore";
 import { useUserOrders, useCancelOrder } from "../hooks/api/useOrders";
+import { useCreateReview } from "../hooks/api/useReviews";
 
 const STATUS_TABS = [
   { key: "ALL", label: "Tất cả" },
@@ -36,6 +41,16 @@ const Orders = () => {
   const [activePage, setActivePage] = useState(1);
   const [selectedOrder, setSelectedOrder] = useState(null); // Detail Modal
   const [cancelingOrderId, setCancelingOrderId] = useState(null);
+
+  // Review Modal States
+  const [reviewingItem, setReviewingItem] = useState(null);
+  const [reviewFormRating, setReviewFormRating] = useState(5);
+  const [reviewFormHoverRating, setReviewFormHoverRating] = useState(0);
+  const [reviewFormContent, setReviewFormContent] = useState("");
+  const [reviewFormFile, setReviewFormFile] = useState(null);
+  const [reviewFormFilePreview, setReviewFormFilePreview] = useState(null);
+
+  const createReviewMutation = useCreateReview();
 
   // API Call
   const { data: orderPage, isLoading, refetch } = useUserOrders({
@@ -67,6 +82,87 @@ const Orders = () => {
           setCancelingOrderId(null);
         },
       });
+    }
+  };
+
+  const handleOpenReviewModal = (item, order) => {
+    setReviewingItem({
+      ...item,
+      orderId: order.orderId,
+    });
+    setReviewFormRating(5);
+    setReviewFormHoverRating(0);
+    setReviewFormContent("");
+    setReviewFormFile(null);
+    setReviewFormFilePreview(null);
+  };
+
+  const handleReviewImageChange = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      toast.error("Vui lòng chỉ chọn tệp hình ảnh (JPEG, PNG, WebP, v.v.)");
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("Dung lượng ảnh tối đa là 5MB!");
+      return;
+    }
+    setReviewFormFile(file);
+    setReviewFormFilePreview(URL.createObjectURL(file));
+  };
+
+  const handleSubmitReview = (e) => {
+    e.preventDefault();
+    const targetItemId = reviewingItem?.orderItemId || reviewingItem?.id;
+    if (!targetItemId) {
+      toast.error("Không tìm thấy mã định danh dòng đơn hàng hợp lệ!");
+      return;
+    }
+    if (!reviewFormRating || reviewFormRating < 1 || reviewFormRating > 5) {
+      toast.warn("Vui lòng chọn số sao đánh giá từ 1 đến 5 sao!");
+      return;
+    }
+
+    createReviewMutation.mutate(
+      {
+        orderItemId: targetItemId,
+        rating: reviewFormRating,
+        content: reviewFormContent,
+        file: reviewFormFile,
+      },
+      {
+        onSuccess: () => {
+          toast.success("Cảm ơn bạn đã gửi đánh giá cho sản phẩm!");
+          setReviewingItem(null);
+          setReviewFormFile(null);
+          setReviewFormFilePreview(null);
+          refetch();
+        },
+        onError: (err) => {
+          toast.error(
+            err.response?.data?.message ||
+              "Không thể gửi đánh giá. Vui lòng kiểm tra lại quyền đánh giá của đơn hàng!"
+          );
+        },
+      }
+    );
+  };
+
+  const getRatingLabel = (star) => {
+    switch (star) {
+      case 5:
+        return "Tuyệt vời - Rất hài lòng";
+      case 4:
+        return "Hài lòng - Chất lượng tốt";
+      case 3:
+        return "Bình thường - Đúng mô tả";
+      case 2:
+        return "Không hài lòng - Chưa ưng ý";
+      case 1:
+        return "Rất không hài lòng - Kém chất lượng";
+      default:
+        return "";
     }
   };
 
@@ -350,11 +446,20 @@ const Orders = () => {
                                       </p>
                                     </div>
 
-                                    {/* Line Total */}
-                                    <div className="text-right shrink-0">
+                                    {/* Line Total & Review Action */}
+                                    <div className="text-right shrink-0 flex flex-col items-end gap-1.5">
                                       <p className="font-bold text-black text-sm">
                                         {formatPrice(Number(itemPrice) * item.quantity)}
                                       </p>
+                                      {order.status === "DELIVERED" && (
+                                        <button
+                                          onClick={() => handleOpenReviewModal(item, order)}
+                                          className="px-2.5 py-1 bg-black text-white hover:bg-neutral-800 text-[10px] font-bold uppercase tracking-wider transition-all flex items-center gap-1 cursor-pointer shadow-2xs hover:scale-105 active:scale-95"
+                                        >
+                                          <FaStar size={10} className="text-[#E6A117]" />
+                                          Đánh giá
+                                        </button>
+                                      )}
                                     </div>
                                   </div>
                                 );
@@ -630,7 +735,18 @@ const Orders = () => {
                                 {formatPrice(itemPrice)}
                               </td>
                               <td className="py-3 px-4 text-right font-bold font-mono">
-                                {formatPrice(lineTotal)}
+                                <div className="flex flex-col items-end gap-1.5">
+                                  <span>{formatPrice(lineTotal)}</span>
+                                  {selectedOrder.status === "DELIVERED" && (
+                                    <button
+                                      onClick={() => handleOpenReviewModal(item, selectedOrder)}
+                                      className="px-2.5 py-1 bg-black text-white hover:bg-neutral-800 text-[10px] font-bold uppercase tracking-wider transition-all flex items-center gap-1 cursor-pointer shadow-2xs hover:scale-105 active:scale-95"
+                                    >
+                                      <FaStar size={10} className="text-[#E6A117]" />
+                                      Đánh giá
+                                    </button>
+                                  )}
+                                </div>
                               </td>
                             </tr>
                           );
@@ -670,6 +786,193 @@ const Orders = () => {
                 </div>
               )}
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* ============================================================ */}
+      {/* MODAL: WRITE PRODUCT REVIEW */}
+      {/* ============================================================ */}
+      {reviewingItem && (
+        <div
+          className="fixed inset-0 z-50 bg-black/75 backdrop-blur-xs flex items-center justify-center p-4 md:p-6 animate-fade-in"
+          onClick={() => setReviewingItem(null)}
+        >
+          <div
+            className="bg-white max-w-xl w-full p-6 md:p-8 relative shadow-2xl overflow-y-auto max-h-[92vh] flex flex-col border border-neutral-200 text-left"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <div className="flex items-center justify-between border-b border-neutral-200 pb-4 mb-5">
+              <div>
+                <h3 className="font-serif text-xl font-bold uppercase text-black">
+                  Đánh giá sản phẩm
+                </h3>
+                <p className="text-xs text-neutral-500 mt-0.5">
+                  Đơn hàng #{reviewingItem.orderId}
+                </p>
+              </div>
+              <button
+                onClick={() => setReviewingItem(null)}
+                className="text-neutral-400 hover:text-black p-2 transition-colors cursor-pointer rounded-full hover:bg-neutral-100"
+              >
+                <FiX size={20} />
+              </button>
+            </div>
+
+            {/* Product Summary Header */}
+            <div className="bg-[#fcfbf9] border border-neutral-200 p-3.5 mb-5 flex items-center gap-3.5">
+              <div className="w-14 h-16 bg-neutral-100 border border-neutral-200 overflow-hidden shrink-0 flex items-center justify-center">
+                {reviewingItem.imageUrl || reviewingItem.image || reviewingItem.thumbnailUrl ? (
+                  <img
+                    src={reviewingItem.imageUrl || reviewingItem.image || reviewingItem.thumbnailUrl}
+                    alt={reviewingItem.productName}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <span className="text-[9px] font-serif text-neutral-400 font-bold tracking-widest uppercase">
+                    LMR
+                  </span>
+                )}
+              </div>
+              <div className="flex-1 min-w-0">
+                <h4 className="font-semibold text-black text-sm truncate">
+                  {reviewingItem.productName || reviewingItem.name}
+                </h4>
+                <p className="text-[11px] text-neutral-500 mt-0.5">
+                  Phân loại:{" "}
+                  <span className="font-bold text-neutral-800">
+                    {reviewingItem.colorName && `Màu ${reviewingItem.colorName}`}
+                    {reviewingItem.sizeName && ` / Size ${reviewingItem.sizeName}`}
+                  </span>
+                </p>
+              </div>
+            </div>
+
+            {/* Form */}
+            <form onSubmit={handleSubmitReview} className="space-y-5 text-xs">
+              {/* Star Rating Picker */}
+              <div className="text-center py-4 bg-[#FAF8F5] border border-[#EBE3D5] rounded-xs">
+                <p className="text-xs font-bold text-black uppercase tracking-wider mb-2.5">
+                  Chất lượng sản phẩm <span className="text-red-500">*</span>
+                </p>
+                <div className="flex items-center justify-center gap-2">
+                  {[1, 2, 3, 4, 5].map((star) => {
+                    const isFilled = star <= (reviewFormHoverRating || reviewFormRating);
+                    return (
+                      <button
+                        key={star}
+                        type="button"
+                        onClick={() => setReviewFormRating(star)}
+                        onMouseEnter={() => setReviewFormHoverRating(star)}
+                        onMouseLeave={() => setReviewFormHoverRating(0)}
+                        className="cursor-pointer p-1 transition-transform hover:scale-125 active:scale-95"
+                      >
+                        <FaStar
+                          size={30}
+                          className={isFilled ? "text-[#E6A117]" : "text-neutral-300"}
+                        />
+                      </button>
+                    );
+                  })}
+                </div>
+                <p className="text-[11px] font-bold text-neutral-700 mt-2">
+                  {getRatingLabel(reviewFormHoverRating || reviewFormRating)}
+                </p>
+              </div>
+
+              {/* Review Content */}
+              <div>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="block text-black font-bold uppercase tracking-wider">
+                    Nhận xét chi tiết
+                  </label>
+                  <span className="text-[11px] text-neutral-400 font-mono">
+                    {reviewFormContent.length} / 2000
+                  </span>
+                </div>
+                <textarea
+                  rows={4}
+                  maxLength={2000}
+                  placeholder="Hãy chia sẻ cảm nhận của bạn về độ vừa vặn, chất liệu vải, đường chỉ may và trải nghiệm sử dụng thực tế..."
+                  value={reviewFormContent}
+                  onChange={(e) => setReviewFormContent(e.target.value)}
+                  className="w-full bg-[#fbf9f9] border border-neutral-300 focus:border-black p-3 text-xs text-black outline-none transition-colors leading-relaxed"
+                />
+              </div>
+
+              {/* Image Upload */}
+              <div>
+                <label className="block text-black font-bold uppercase tracking-wider mb-1.5">
+                  Hình ảnh thực tế (Tùy chọn)
+                </label>
+                
+                {reviewFormFilePreview ? (
+                  <div className="relative inline-block border border-neutral-300 p-1 bg-white">
+                    <img
+                      src={reviewFormFilePreview}
+                      alt="Preview"
+                      className="w-24 h-28 object-cover"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setReviewFormFile(null);
+                        setReviewFormFilePreview(null);
+                      }}
+                      className="absolute -top-2 -right-2 bg-red-600 text-white rounded-full p-1 shadow-md hover:bg-red-700 transition-colors cursor-pointer"
+                      title="Xóa ảnh"
+                    >
+                      <FiX size={14} />
+                    </button>
+                  </div>
+                ) : (
+                  <label className="border-2 border-dashed border-neutral-300 hover:border-black bg-[#fbf9f9] p-6 flex flex-col items-center justify-center gap-2 cursor-pointer transition-colors">
+                    <FiCamera size={24} className="text-neutral-400" />
+                    <span className="text-xs font-semibold text-neutral-600">
+                      Tải lên hình ảnh sản phẩm (Tối đa 5MB)
+                    </span>
+                    <span className="text-[10px] text-neutral-400">
+                      Định dạng hỗ trợ: JPEG, PNG, WebP
+                    </span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleReviewImageChange}
+                      className="hidden"
+                    />
+                  </label>
+                )}
+              </div>
+
+              {/* Modal Actions */}
+              <div className="border-t border-neutral-200 pt-4 flex items-center justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={() => setReviewingItem(null)}
+                  className="px-6 py-2.5 border border-neutral-300 text-neutral-700 font-bold uppercase text-[11px] hover:bg-neutral-100 transition-colors cursor-pointer"
+                >
+                  Hủy bỏ
+                </button>
+                <button
+                  type="submit"
+                  disabled={createReviewMutation.isPending}
+                  className="px-8 py-2.5 bg-black text-white font-bold uppercase text-[11px] tracking-wider hover:bg-neutral-800 transition-colors cursor-pointer disabled:opacity-50 flex items-center gap-2"
+                >
+                  {createReviewMutation.isPending ? (
+                    <>
+                      <svg className="animate-spin h-3.5 w-3.5 text-white" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                      </svg>
+                      <span>Đang gửi...</span>
+                    </>
+                  ) : (
+                    "Gửi đánh giá"
+                  )}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
