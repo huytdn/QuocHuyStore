@@ -62,3 +62,19 @@ export const useCreateReview = () => {
     },
   });
 };
+
+/**
+ * Lấy danh sách đánh giá dành cho Admin Console (ROLE_ADMIN)
+ * Endpoint: GET /admin/reviews
+ * Params: { page, size, rating, productId, hasImage, search }
+ */
+export const useAdminReviews = (params = {}) => {
+  return useQuery({
+    queryKey: ["admin-reviews", params],
+    queryFn: async () => {
+      const response = await axiosClient.get("/admin/reviews", { params });
+      return response.data; // PageResponseDto<ReviewResponseDto>
+    },
+  });
+};
+

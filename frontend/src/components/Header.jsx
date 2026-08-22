@@ -1,9 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { FiSearch, FiShoppingBag, FiUser, FiMenu, FiX } from "react-icons/fi";
+import { FiSearch, FiShoppingBag, FiUser, FiMenu, FiX, FiMessageSquare } from "react-icons/fi";
+import { toast } from "react-toastify";
+import { useQueryClient } from "@tanstack/react-query";
 import { useAuthStore } from "../store/useAuthStore";
+import { useChatStore } from "../store/useChatStore";
 import { useLogout } from "../hooks/api/useAuth";
 import { useCart } from "../hooks/api/useCart";
+import { useMyConversation, initStompClient } from "../hooks/api/useChat";
 
 const Header = () => {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -23,6 +27,52 @@ const Header = () => {
   const cartCount = isUserLoggedIn && Array.isArray(cartItems)
     ? cartItems.reduce((sum, item) => sum + (item.quantity || 1), 0)
     : 0;
+
+  // Unread chat messages state
+  const userUnreadCount = useChatStore((state) => state.userUnreadCount);
+  const setUserUnreadCount = useChatStore((state) => state.setUserUnreadCount);
+  const incrementUserUnread = useChatStore((state) => state.incrementUserUnread);
+
+  const { data: myConv } = useMyConversation(isUserLoggedIn && user?.role === "USER");
+  const conversationId = myConv?.id;
+
+  // Sync initial unread count when myConv loads
+  useEffect(() => {
+    if (myConv && typeof myConv.unreadCount === "number") {
+      setUserUnreadCount(myConv.unreadCount);
+    }
+  }, [myConv, setUserUnreadCount]);
+
+  const queryClient = useQueryClient();
+
+  // Realtime STOMP listener for Customer Header Notification
+  useEffect(() => {
+    if (!isUserLoggedIn || !conversationId || user?.role !== "USER") return;
+
+    const client = initStompClient({
+      onConnect: (stomp) => {
+        stomp.subscribe(`/topic/chat/${conversationId}`, (messageFrame) => {
+          try {
+            const body = JSON.parse(messageFrame.body);
+            if (body.type !== "TYPING" && body.type !== "READ_RECEIPT") {
+              if (body.senderRole === "ADMIN") {
+                queryClient.invalidateQueries({ queryKey: ["my-conversation"] });
+                if (location.pathname !== "/support") {
+                  incrementUserUnread();
+                }
+              }
+            }
+          } catch (e) {
+            console.error("Header WS parse error", e);
+          }
+        });
+      },
+    });
+
+    return () => {
+      if (client) client.deactivate();
+    };
+  }, [isUserLoggedIn, conversationId, user?.role, location.pathname, incrementUserUnread, queryClient]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -95,6 +145,13 @@ const Header = () => {
                 VỀ CHÚNG TÔI
                 <span className="absolute bottom-0 left-0 w-0 h-[1px] bg-current transition-all duration-350 group-hover:w-full"></span>
               </Link>
+              <Link
+                to="/support"
+                className={`label-sm ${navLinkColor} transition-colors relative group py-1`}
+              >
+                HỖ TRỢ
+                <span className="absolute bottom-0 left-0 w-0 h-[1px] bg-current transition-all duration-350 group-hover:w-full"></span>
+              </Link>
             </nav>
 
             {/* Mobile Hamburger (left-aligned on home mobile) */}
@@ -120,6 +177,18 @@ const Header = () => {
 
             {/* Right Icons */}
             <div className="flex items-center justify-end gap-5 md:gap-7">
+              <Link
+                to="/support"
+                className={`relative cursor-pointer ${iconColor} hover:scale-105 transition-transform`}
+                title="Hỗ trợ & Tư vấn trực tuyến (Concierge)"
+              >
+                <FiMessageSquare size={18} />
+                {userUnreadCount > 0 && (
+                  <span className="absolute -top-1.5 -right-1.5 bg-red-600 text-white text-[9px] w-4 h-4 rounded-full flex items-center justify-center border border-white font-sans font-bold animate-bounce shadow-xs">
+                    {userUnreadCount > 99 ? "99+" : userUnreadCount}
+                  </span>
+                )}
+              </Link>
               <Link
                 to="/cart"
                 className={`relative cursor-pointer ${iconColor} hover:scale-105 transition-transform`}
@@ -210,10 +279,29 @@ const Header = () => {
                 Về Chúng Tôi
                 <span className="absolute bottom-0 left-0 w-0 h-[1px] bg-black transition-all duration-350 group-hover:w-full"></span>
               </Link>
+              <Link
+                to="/support"
+                className="label-sm text-neutral-600 hover:text-black transition-colors relative group py-1"
+              >
+                Hỗ Trợ
+                <span className="absolute bottom-0 left-0 w-0 h-[1px] bg-black transition-all duration-350 group-hover:w-full"></span>
+              </Link>
             </nav>
 
             {/* Right Icons */}
             <div className="flex items-center gap-6">
+              <Link
+                to="/support"
+                className="relative cursor-pointer text-black hover:scale-105 transition-transform"
+                title="Hỗ trợ & Tư vấn trực tuyến (Concierge)"
+              >
+                <FiMessageSquare size={20} />
+                {userUnreadCount > 0 && (
+                  <span className="absolute -top-1.5 -right-1.5 bg-red-600 text-white text-[9px] w-4 h-4 rounded-full flex items-center justify-center border border-white font-sans font-bold animate-bounce shadow-xs">
+                    {userUnreadCount > 99 ? "99+" : userUnreadCount}
+                  </span>
+                )}
+              </Link>
               <Link
                 to="/cart"
                 className="relative cursor-pointer text-black hover:scale-105 transition-transform"
@@ -324,6 +412,13 @@ const Header = () => {
             className="font-serif text-3xl font-semibold tracking-wider hover:text-secondary transition-colors"
           >
             VỀ CHÚNG TÔI / ABOUT US
+          </Link>
+          <Link
+            to="/support"
+            onClick={toggleMenu}
+            className="font-serif text-3xl font-semibold tracking-wider hover:text-secondary transition-colors"
+          >
+            HỖ TRỢ / SUPPORT
           </Link>
           {user ? (
             <>
