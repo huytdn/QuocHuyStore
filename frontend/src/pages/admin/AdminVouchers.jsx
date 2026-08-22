@@ -755,7 +755,7 @@ const AdminVouchers = () => {
 
                 <div>
                   <label className="block text-black font-bold uppercase tracking-wider mb-1.5">
-                    Tên Voucher <span className="text-red-500">*</span>
+                    Mô tả <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
