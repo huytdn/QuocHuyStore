@@ -19,6 +19,8 @@ public interface MessageRepository extends JpaRepository<Message, Long> {
            countQuery = "SELECT COUNT(m) FROM Message m WHERE m.conversation.id = :conversationId")
     Page<Message> findByConversationIdWithSenderOrderByCreatedAtDesc(@Param("conversationId") Long conversationId, Pageable pageable);
 
+    long countByConversationId(Long conversationId);
+
     @Query("SELECT COUNT(m) FROM Message m WHERE m.conversation.id = :conversationId AND m.isRead = false AND m.receiver.id = :receiverId")
     long countUnreadByConversationAndReceiver(@Param("conversationId") Long conversationId, @Param("receiverId") UUID receiverId);
 

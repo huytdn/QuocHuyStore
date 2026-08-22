@@ -168,7 +168,7 @@ public class ChatServiceImpl implements ChatService {
         if (page == 0 && size <= CacheKeyConstants.CHAT_ROOM_BUFFER_SIZE) {
             List<MessageResponseDto> cachedMessages = getMessagesFromRedisBuffer(targetConversationId, size);
             if (cachedMessages != null && !cachedMessages.isEmpty()) {
-                long totalElements = messageRepository.count();
+                long totalElements = messageRepository.countByConversationId(targetConversationId);
                 int totalPages = (int) Math.ceil((double) totalElements / size);
                 return PageResponseDto.<MessageResponseDto>builder()
                         .content(cachedMessages)
@@ -187,6 +187,11 @@ public class ChatServiceImpl implements ChatService {
         List<MessageResponseDto> content = messagePage.getContent().stream()
                 .map(MessageMapper::toMessageResponseDto)
                 .collect(Collectors.toList());
+
+        // Warm up Redis cache on page 0 when cache miss occurred and data exists
+        if (page == 0 && !content.isEmpty()) {
+            populateRedisBuffer(targetConversationId, content);
+        }
 
         return PageResponseDto.<MessageResponseDto>builder()
                 .content(content)
@@ -329,6 +334,21 @@ public class ChatServiceImpl implements ChatService {
             redisTemplate.expire(cacheKey, Duration.ofHours(CacheKeyConstants.CHAT_ROOM_TTL_HOURS));
         } catch (Exception ex) {
             log.warn("Redis buffer push failed for key: {}. Error: {}", cacheKey, ex.getMessage());
+        }
+    }
+
+    private void populateRedisBuffer(Long conversationId, List<MessageResponseDto> dtos) {
+        if (dtos == null || dtos.isEmpty()) {
+            return;
+        }
+        String cacheKey = CacheKeyConstants.CHAT_ROOM_PREFIX + conversationId;
+        try {
+            redisTemplate.delete(cacheKey);
+            redisTemplate.opsForList().rightPushAll(cacheKey, dtos.toArray());
+            redisTemplate.opsForList().trim(cacheKey, 0, CacheKeyConstants.CHAT_ROOM_BUFFER_SIZE - 1);
+            redisTemplate.expire(cacheKey, Duration.ofHours(CacheKeyConstants.CHAT_ROOM_TTL_HOURS));
+        } catch (Exception ex) {
+            log.warn("Redis buffer populate failed for key: {}. Error: {}", cacheKey, ex.getMessage());
         }
     }
 
