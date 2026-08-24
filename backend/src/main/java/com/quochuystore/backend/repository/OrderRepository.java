@@ -124,4 +124,22 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
             "WHERE o.created_at >= :from AND o.created_at < :to " +
             "GROUP BY o.status", nativeQuery = true)
     List<OrderStatusStatProjection> getOrderStatusStatsBetween(@Param("from") OffsetDateTime from, @Param("to") OffsetDateTime to);
+
+    interface CustomerOrderStatsProjection {
+        Long getPayingCustomersCount();
+        Long getRepeatCustomersCount();
+        java.math.BigDecimal getTotalRevenue();
+    }
+
+    @Query(value = "SELECT " +
+            "COUNT(DISTINCT o.user_id) AS payingCustomersCount, " +
+            "COUNT(DISTINCT CASE WHEN o.order_count >= 2 THEN o.user_id END) AS repeatCustomersCount, " +
+            "COALESCE(SUM(o.user_revenue), 0) AS totalRevenue " +
+            "FROM (" +
+            "    SELECT user_id, COUNT(id) AS order_count, SUM(total_price) AS user_revenue " +
+            "    FROM orders " +
+            "    WHERE status = 'DELIVERED' AND user_id IS NOT NULL " +
+            "    GROUP BY user_id " +
+            ") o", nativeQuery = true)
+    CustomerOrderStatsProjection getOverallCustomerOrderStats();
 }

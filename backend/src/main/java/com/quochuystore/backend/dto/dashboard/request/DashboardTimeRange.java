@@ -2,8 +2,9 @@ package com.quochuystore.backend.dto.dashboard.request;
 
 public enum DashboardTimeRange {
     TODAY,
-    LAST_7_DAYS,
+    THIS_WEEK,
     THIS_MONTH,
+    THIS_QUARTER,
     THIS_YEAR,
     CUSTOM
 }

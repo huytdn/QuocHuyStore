@@ -38,4 +38,7 @@ public final class CacheKeyConstants {
 
     public static final String DASHBOARD_LOW_STOCK_PREFIX = "qhs:admin:dashboard:low_stock:";
     public static final long DASHBOARD_LOW_STOCK_TTL_MINUTES = 2;
+
+    public static final String USER_ANALYTICS_SUMMARY_PREFIX = "qhs:admin:users:summary:";
+    public static final long USER_ANALYTICS_SUMMARY_TTL_MINUTES = 5;
 }

@@ -24,6 +24,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.DayOfWeek;
 import java.time.Duration;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
@@ -455,14 +456,20 @@ public class AdminDashboardServiceImpl implements AdminDashboardService {
                 prevFrom = currentFrom.minusDays(1);
                 prevTo = currentFrom;
             }
-            case LAST_7_DAYS -> {
-                currentFrom = now.minusDays(7);
-                prevFrom = currentFrom.minusDays(7);
+            case THIS_WEEK -> {
+                currentFrom = now.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY)).truncatedTo(ChronoUnit.DAYS);
+                prevFrom = currentFrom.minusWeeks(1);
                 prevTo = currentFrom;
             }
             case THIS_MONTH -> {
                 currentFrom = now.with(TemporalAdjusters.firstDayOfMonth()).truncatedTo(ChronoUnit.DAYS);
                 prevFrom = currentFrom.minusMonths(1);
+                prevTo = currentFrom;
+            }
+            case THIS_QUARTER -> {
+                int firstMonthOfQuarter = ((now.getMonthValue() - 1) / 3) * 3 + 1;
+                currentFrom = now.withMonth(firstMonthOfQuarter).with(TemporalAdjusters.firstDayOfMonth()).truncatedTo(ChronoUnit.DAYS);
+                prevFrom = currentFrom.minusMonths(3);
                 prevTo = currentFrom;
             }
             case THIS_YEAR -> {
@@ -490,7 +497,7 @@ public class AdminDashboardServiceImpl implements AdminDashboardService {
     private String resolveBucketUnit(DashboardTimeRange range) {
         return switch (range) {
             case TODAY -> "hour";
-            case THIS_YEAR -> "month";
+            case THIS_QUARTER, THIS_YEAR -> "month";
             default -> "day";
         };
     }
