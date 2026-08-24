@@ -9,6 +9,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -27,4 +28,7 @@ public interface UserRepository extends JpaRepository<User, UUID> {
     @Modifying
     @Query(value = "UPDATE users u SET total_spent = COALESCE((SELECT SUM(o.total_price) FROM orders o WHERE o.user_id = u.id AND o.status = 'DELIVERED'), 0)", nativeQuery = true)
     int recalculateAllUsersTotalSpent();
+
+    @Query("SELECT u FROM User u WHERE u.role = :role AND u.isActive = true AND u.totalSpent >= :minTotalSpent ORDER BY u.totalSpent DESC")
+    List<User> findTargetUsersForBroadcast(@Param("role") UserRole role, @Param("minTotalSpent") BigDecimal minTotalSpent);
 }

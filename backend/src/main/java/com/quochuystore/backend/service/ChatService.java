@@ -1,8 +1,10 @@
 package com.quochuystore.backend.service;
 
 import com.quochuystore.backend.dto.PageResponseDto;
+import com.quochuystore.backend.dto.message.request.BulkMessageRequestDto;
 import com.quochuystore.backend.dto.message.request.ChatTypingDto;
 import com.quochuystore.backend.dto.message.request.MessageRequestDto;
+import com.quochuystore.backend.dto.message.response.BulkMessageResponseDto;
 import com.quochuystore.backend.dto.message.response.ConversationResponseDto;
 import com.quochuystore.backend.dto.message.response.MessageResponseDto;
 import com.quochuystore.backend.security.UserPrincipal;
@@ -20,4 +22,6 @@ public interface ChatService {
     void markConversationAsRead(UserPrincipal principal, Long conversationId);
 
     void broadcastTyping(UserPrincipal principal, ChatTypingDto typingDto);
+
+    BulkMessageResponseDto sendBulkMessage(UserPrincipal principal, BulkMessageRequestDto request);
 }

@@ -27,17 +27,22 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import com.quochuystore.backend.dto.message.request.BulkMessageRequestDto;
+import com.quochuystore.backend.dto.message.response.BulkMessageResponseDto;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Service
@@ -393,5 +398,98 @@ public class ChatServiceImpl implements ChatService {
         } catch (Exception ex) {
             log.error("Failed to broadcast message via WebSocket", ex);
         }
+    }
+
+    @Override
+    @Transactional
+    public BulkMessageResponseDto sendBulkMessage(UserPrincipal principal, BulkMessageRequestDto request) {
+        if (principal == null || principal.getRole() != UserRole.ADMIN) {
+            throw new UnauthorizedException("Only ADMIN can send bulk broadcast messages");
+        }
+
+        if (request == null || !StringUtils.hasText(request.getContent())) {
+            throw new BadRequestException("Message content cannot be blank");
+        }
+
+        BigDecimal minTotalSpent = request.getMinTotalSpent() != null ? request.getMinTotalSpent() : BigDecimal.ZERO;
+        log.info("Admin {} broadcasting bulk message to users with minTotalSpent: {}", principal.getUsername(), minTotalSpent);
+
+        User sender = userRepository.findById(principal.getId())
+                .orElseThrow(() -> new ResourceNotFoundException("Sender admin not found"));
+
+        // 1. Query target users
+        List<User> targetUsers = userRepository.findTargetUsersForBroadcast(UserRole.USER, minTotalSpent);
+        if (targetUsers.isEmpty()) {
+            log.info("No active users found matching criteria (role=USER, totalSpent >= {})", minTotalSpent);
+            return BulkMessageResponseDto.builder()
+                    .totalSent(0)
+                    .minTotalSpent(minTotalSpent)
+                    .content(request.getContent().trim())
+                    .sentAt(OffsetDateTime.now())
+                    .build();
+        }
+
+        List<UUID> userIds = targetUsers.stream().map(User::getId).toList();
+
+        // 2. Fetch existing conversations for these users to avoid N+1 queries
+        List<Conversation> existingConversations = conversationRepository.findByUserIds(userIds);
+        Map<UUID, Conversation> conversationMap = existingConversations.stream()
+                .collect(Collectors.toMap(c -> c.getUser().getId(), Function.identity()));
+
+        OffsetDateTime now = OffsetDateTime.now();
+        String messageContent = request.getContent().trim();
+
+        List<Conversation> conversationsToSave = new ArrayList<>();
+        List<Message> messagesToSave = new ArrayList<>();
+
+        for (User receiver : targetUsers) {
+            Conversation conv = conversationMap.get(receiver.getId());
+            if (conv == null) {
+                conv = Conversation.builder()
+                        .user(receiver)
+                        .lastMessage(messageContent)
+                        .adminLastSeenAt(now)
+                        .build();
+            } else {
+                conv.setLastMessage(messageContent);
+                conv.setAdminLastSeenAt(now);
+            }
+            conversationsToSave.add(conv);
+        }
+
+        // Save/update conversations first to get IDs for new conversations
+        conversationsToSave = conversationRepository.saveAll(conversationsToSave);
+
+        // Map back by receiver ID and build messages
+        for (Conversation conv : conversationsToSave) {
+            User receiver = conv.getUser();
+            Message msg = Message.builder()
+                    .conversation(conv)
+                    .sender(sender)
+                    .receiver(receiver)
+                    .content(messageContent)
+                    .isRead(false)
+                    .build();
+            messagesToSave.add(msg);
+        }
+
+        List<Message> savedMessages = messageRepository.saveAll(messagesToSave);
+
+        // 3. Realtime notifications: Push to Redis buffer & WebSocket for each conversation
+        for (Message savedMsg : savedMessages) {
+            Conversation conv = savedMsg.getConversation();
+            MessageResponseDto responseDto = MessageMapper.toMessageResponseDto(savedMsg);
+            pushMessageToRedisBuffer(conv.getId(), responseDto);
+            broadcastMessageViaWebSocket(conv, responseDto, UserRole.ADMIN);
+        }
+
+        log.info("Successfully broadcast bulk message to {} users", savedMessages.size());
+
+        return BulkMessageResponseDto.builder()
+                .totalSent(savedMessages.size())
+                .minTotalSpent(minTotalSpent)
+                .content(messageContent)
+                .sentAt(now)
+                .build();
     }
 }
