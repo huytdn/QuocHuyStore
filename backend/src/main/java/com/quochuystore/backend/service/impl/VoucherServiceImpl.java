@@ -1,5 +1,8 @@
 package com.quochuystore.backend.service.impl;
 
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.ObjectMapper;
+import com.quochuystore.backend.config.CacheKeyConstants;
 import com.quochuystore.backend.dto.PageResponseDto;
 import com.quochuystore.backend.dto.mapper.VoucherMapper;
 import com.quochuystore.backend.dto.voucher.request.VoucherRequestDto;
@@ -21,6 +24,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,6 +32,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.OffsetDateTime;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @Service
@@ -38,6 +43,8 @@ public class VoucherServiceImpl implements VoucherService {
     private final VoucherRepository voucherRepository;
     private final UserVoucherRepository userVoucherRepository;
     private final UserRepository userRepository;
+    private final StringRedisTemplate redisTemplate;
+    private final ObjectMapper objectMapper;
 
     @Override
     @Transactional(readOnly = true)
@@ -100,6 +107,7 @@ public class VoucherServiceImpl implements VoucherService {
 
         Voucher savedVoucher = voucherRepository.save(voucher);
         log.info("Successfully created voucher with id: {}", savedVoucher.getId());
+        evictPublicVouchersCache();
         return VoucherMapper.toVoucherResponseDto(savedVoucher);
     }
 
@@ -135,6 +143,7 @@ public class VoucherServiceImpl implements VoucherService {
 
         Voucher updatedVoucher = voucherRepository.save(voucher);
         log.info("Successfully updated voucher with id: {}", updatedVoucher.getId());
+        evictPublicVouchersCache();
         return VoucherMapper.toVoucherResponseDto(updatedVoucher);
     }
 
@@ -147,36 +156,126 @@ public class VoucherServiceImpl implements VoucherService {
         voucher.setIsActive(false);
         voucherRepository.save(voucher);
         log.info("Successfully soft deleted voucher id: {}", id);
+        evictPublicVouchersCache();
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<VoucherResponseDto> getPublicVouchers(UUID userId) {
         log.info("Fetching public active vouchers for user: {}", userId);
-        OffsetDateTime now = OffsetDateTime.now();
-        List<Voucher> activeVouchers = voucherRepository.findActivePublicVouchers(now);
+        List<VoucherResponseDto> basePublicVouchers = null;
 
-        if (activeVouchers.isEmpty()) {
+        // 1. Try fetching from Redis Cache
+        try {
+            String cachedJson = redisTemplate.opsForValue().get(CacheKeyConstants.VOUCHER_PUBLIC_KEY);
+            if (cachedJson != null) {
+                log.info("Cache Hit for public vouchers key: {}", CacheKeyConstants.VOUCHER_PUBLIC_KEY);
+                basePublicVouchers = objectMapper.readValue(cachedJson, new TypeReference<List<VoucherResponseDto>>() {
+                });
+            }
+        } catch (Exception e) {
+            log.error("Failed to read public vouchers from Redis cache", e);
+        }
+
+        // 2. Cache Miss: Query Database and populate Redis with short TTL (5 mins)
+        if (basePublicVouchers == null) {
+            log.info("Cache Miss for public vouchers key: {}. Loading from database.", CacheKeyConstants.VOUCHER_PUBLIC_KEY);
+            OffsetDateTime now = OffsetDateTime.now();
+            List<Voucher> activeVouchers = voucherRepository.findActivePublicVouchers(now);
+
+            if (activeVouchers.isEmpty()) {
+                basePublicVouchers = Collections.emptyList();
+            } else {
+                basePublicVouchers = activeVouchers.stream()
+                        .map(VoucherMapper::toVoucherResponseDto)
+                        .toList();
+            }
+
+            try {
+                String jsonToCache = objectMapper.writeValueAsString(basePublicVouchers);
+                redisTemplate.opsForValue().set(
+                        CacheKeyConstants.VOUCHER_PUBLIC_KEY,
+                        jsonToCache,
+                        CacheKeyConstants.VOUCHER_PUBLIC_TTL_MINUTES,
+                        TimeUnit.MINUTES
+                );
+                log.info("Successfully populated public vouchers cache key: {} with TTL of {} minutes",
+                        CacheKeyConstants.VOUCHER_PUBLIC_KEY,
+                        CacheKeyConstants.VOUCHER_PUBLIC_TTL_MINUTES);
+            } catch (Exception e) {
+                log.error("Failed to write public vouchers to Redis cache", e);
+            }
+        }
+
+        if (basePublicVouchers.isEmpty()) {
             return Collections.emptyList();
         }
 
-        Map<UUID, Integer> userUsageMap = Collections.emptyMap();
-        if (userId != null) {
-            List<UUID> voucherIds = activeVouchers.stream().map(Voucher::getId).toList();
-            List<UserVoucher> userVouchers = userVoucherRepository.findByUserIdAndVoucherIdIn(userId, voucherIds);
-            userUsageMap = userVouchers.stream()
-                    .collect(Collectors.toMap(uv -> uv.getVoucher().getId(), UserVoucher::getUsageCount));
+        // 3. User-specific usage mapping
+        if (userId == null) {
+            return basePublicVouchers.stream()
+                    .map(v -> {
+                        int remaining = v.getUsageLimitPerUser() != null ? v.getUsageLimitPerUser() : 1;
+                        return VoucherResponseDto.builder()
+                                .id(v.getId())
+                                .code(v.getCode())
+                                .name(v.getName())
+                                .discountPercent(v.getDiscountPercent())
+                                .maxDiscountAmount(v.getMaxDiscountAmount())
+                                .minOrderAmount(v.getMinOrderAmount())
+                                .usageLimitPerUser(v.getUsageLimitPerUser())
+                                .remainingUsage(remaining)
+                                .canUse(true)
+                                .startAt(v.getStartAt())
+                                .endAt(v.getEndAt())
+                                .isActive(v.getIsActive())
+                                .isHidden(v.getIsHidden())
+                                .createdAt(v.getCreatedAt())
+                                .updatedAt(v.getUpdatedAt())
+                                .build();
+                    })
+                    .toList();
         }
 
-        Map<UUID, Integer> finalUsageMap = userUsageMap;
-        return activeVouchers.stream()
+        List<UUID> voucherIds = basePublicVouchers.stream().map(VoucherResponseDto::getId).filter(Objects::nonNull).toList();
+        List<UserVoucher> userVouchers = userVoucherRepository.findByUserIdAndVoucherIdIn(userId, voucherIds);
+        Map<UUID, Integer> userUsageMap = userVouchers.stream()
+                .collect(Collectors.toMap(uv -> uv.getVoucher().getId(), UserVoucher::getUsageCount));
+
+        return basePublicVouchers.stream()
                 .map(v -> {
-                    int usage = finalUsageMap.getOrDefault(v.getId(), 0);
-                    int remaining = Math.max(0, v.getUsageLimitPerUser() - usage);
-                    boolean canUse = (userId == null) || (remaining > 0);
-                    return VoucherMapper.toVoucherResponseDto(v, userId != null ? remaining : v.getUsageLimitPerUser(), canUse);
+                    int usage = userUsageMap.getOrDefault(v.getId(), 0);
+                    int limit = v.getUsageLimitPerUser() != null ? v.getUsageLimitPerUser() : 1;
+                    int remaining = Math.max(0, limit - usage);
+                    boolean canUse = remaining > 0;
+                    return VoucherResponseDto.builder()
+                            .id(v.getId())
+                            .code(v.getCode())
+                            .name(v.getName())
+                            .discountPercent(v.getDiscountPercent())
+                            .maxDiscountAmount(v.getMaxDiscountAmount())
+                            .minOrderAmount(v.getMinOrderAmount())
+                            .usageLimitPerUser(v.getUsageLimitPerUser())
+                            .remainingUsage(remaining)
+                            .canUse(canUse)
+                            .startAt(v.getStartAt())
+                            .endAt(v.getEndAt())
+                            .isActive(v.getIsActive())
+                            .isHidden(v.getIsHidden())
+                            .createdAt(v.getCreatedAt())
+                            .updatedAt(v.getUpdatedAt())
+                            .build();
                 })
                 .toList();
+    }
+
+    private void evictPublicVouchersCache() {
+        try {
+            redisTemplate.delete(CacheKeyConstants.VOUCHER_PUBLIC_KEY);
+            log.info("Successfully evicted public vouchers cache key: {}", CacheKeyConstants.VOUCHER_PUBLIC_KEY);
+        } catch (Exception e) {
+            log.error("Failed to evict public vouchers cache key: {}", CacheKeyConstants.VOUCHER_PUBLIC_KEY, e);
+        }
     }
 
     @Override

@@ -20,6 +20,7 @@ import com.quochuystore.backend.repository.ConversationRepository;
 import com.quochuystore.backend.repository.MessageRepository;
 import com.quochuystore.backend.repository.UserRepository;
 import com.quochuystore.backend.security.UserPrincipal;
+import com.quochuystore.backend.service.ChatBotService;
 import com.quochuystore.backend.service.ChatService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -50,6 +51,7 @@ public class ChatServiceImpl implements ChatService {
     private final SimpMessagingTemplate messagingTemplate;
     private final RedisTemplate<String, Object> redisTemplate;
     private final ObjectMapper objectMapper;
+    private final ChatBotService chatBotService;
 
     @Override
     @Transactional
@@ -123,6 +125,11 @@ public class ChatServiceImpl implements ChatService {
 
         // 5. Broadcast to WebSocket topics
         broadcastMessageViaWebSocket(conversation, responseDto, principal.getRole());
+
+        // 6. Trigger Rule-based ChatBot Auto-Reply for User messages
+        if (principal.getRole() == UserRole.USER) {
+            chatBotService.processAutoReply(conversation, sender, savedMessage.getContent());
+        }
 
         return responseDto;
     }
