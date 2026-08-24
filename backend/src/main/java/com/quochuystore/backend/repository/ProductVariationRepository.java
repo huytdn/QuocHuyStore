@@ -56,4 +56,21 @@ public interface ProductVariationRepository extends JpaRepository<ProductVariati
     @Query("UPDATE ProductVariation pv SET pv.stockQuantity = pv.stockQuantity + :qty " +
             "WHERE pv.id = :id")
     int restoreStock(@Param("id") Long id, @Param("qty") Integer qty);
+
+    // ==========================================
+    // DASHBOARD ANALYTICS QUERIES
+    // ==========================================
+
+    @Query("SELECT COUNT(pv.id) FROM ProductVariation pv WHERE pv.stockQuantity <= :threshold AND pv.isActive = true")
+    long countLowStockVariations(@Param("threshold") int threshold);
+
+    @Query(value = "SELECT pv FROM ProductVariation pv " +
+            "JOIN FETCH pv.productColor pc " +
+            "JOIN FETCH pc.product p " +
+            "WHERE pv.stockQuantity <= :threshold AND pv.isActive = true " +
+            "ORDER BY pv.stockQuantity ASC, pv.id DESC",
+            countQuery = "SELECT COUNT(pv.id) FROM ProductVariation pv WHERE pv.stockQuantity <= :threshold AND pv.isActive = true")
+    org.springframework.data.domain.Page<ProductVariation> findLowStockVariationsWithDetails(
+            @Param("threshold") int threshold,
+            org.springframework.data.domain.Pageable pageable);
 }
