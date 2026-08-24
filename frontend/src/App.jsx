@@ -16,6 +16,7 @@ import OrderDetail from "./pages/OrderDetail";
 import Profile from "./pages/Profile";
 import Wishlist from "./pages/Wishlist";
 import About from "./pages/About";
+import Support from "./pages/Support";
 import AdminProducts from "./pages/admin/AdminProducts";
 import AdminCategories from "./pages/admin/AdminCategories";
 import AdminOrders from "./pages/admin/AdminOrders";
@@ -23,6 +24,8 @@ import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminAnalytics from "./pages/admin/AdminAnalytics";
 import AdminCustomers from "./pages/admin/AdminCustomers";
 import AdminVouchers from "./pages/admin/AdminVouchers";
+import AdminMessages from "./pages/admin/AdminMessages";
+import AdminReviews from "./pages/admin/AdminReviews";
 import AdminRoute from "./components/admin/AdminRoute";
 import AdminLogin from "./pages/admin/AdminLogin";
 import { ToastContainer } from "react-toastify";
@@ -199,7 +202,24 @@ const App = () => {
             </AdminRoute>
           }
         />
+        <Route
+          path="/admin/messages"
+          element={
+            <AdminRoute>
+              <AdminMessages />
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="/admin/reviews"
+          element={
+            <AdminRoute>
+              <AdminReviews />
+            </AdminRoute>
+          }
+        />
         <Route path="/about" element={<About />} />
+        <Route path="/support" element={<Support />} />
       </Routes>
       <ToastContainer
         position="top-right"

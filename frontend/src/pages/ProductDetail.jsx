@@ -36,7 +36,16 @@ const ProductDetail = () => {
   const [reviewPage, setReviewPage] = useState(0);
   const [activeReviewLightboxImg, setActiveReviewLightboxImg] = useState(null);
 
-  // Fetch reviews for current product slug
+  // Fetch ALL reviews (unfiltered) for overall product summary and star breakdown
+  const { data: allReviewsPageData } = useProductReviews(
+    product?.slug || id,
+    {
+      page: 0,
+      size: 1000,
+    }
+  );
+
+  // Fetch reviews for current product slug with active rating filter
   const { data: reviewsPageData, isLoading: isReviewsLoading } = useProductReviews(
     product?.slug || id,
     {
@@ -47,8 +56,20 @@ const ProductDetail = () => {
   );
 
   const reviews = reviewsPageData?.content || [];
-  const totalReviews = reviewsPageData?.totalElements ?? product?.reviewCount ?? 0;
+  const totalProductReviews = allReviewsPageData?.totalElements ?? product?.reviewCount ?? 0;
   const totalReviewPages = reviewsPageData?.totalPages || 1;
+
+  // Compute star distribution counts across ALL product reviews
+  const starCounts = useMemo(() => {
+    const counts = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
+    const list = allReviewsPageData?.content || [];
+    list.forEach((r) => {
+      if (r.rating >= 1 && r.rating <= 5) {
+        counts[r.rating] = (counts[r.rating] || 0) + 1;
+      }
+    });
+    return counts;
+  }, [allReviewsPageData]);
 
   // Format Review Date helper
   const formatReviewDate = (dateStr) => {
@@ -320,7 +341,7 @@ const ProductDetail = () => {
                     href="#reviews-section"
                     className="text-xs text-neutral-500 hover:text-black underline underline-offset-4 transition-colors select-none"
                   >
-                    {totalReviews} đánh giá
+                    {totalProductReviews} đánh giá
                   </a>
                 </div>
               </div>
@@ -548,15 +569,15 @@ const ProductDetail = () => {
                   ))}
                 </div>
                 <p className="text-xs text-neutral-500 font-medium mt-1">
-                  Dựa trên <strong className="text-black">{totalReviews}</strong> lượt đánh giá thực tế từ người mua
+                  Dựa trên <strong className="text-black">{totalProductReviews}</strong> lượt đánh giá thực tế từ người mua
                 </p>
               </div>
 
               {/* Col 2: Star Distribution Bars */}
               <div className="md:col-span-8 space-y-2.5">
                 {[5, 4, 3, 2, 1].map((starCount) => {
-                  const matchingCount = reviews.filter((r) => r.rating === starCount).length;
-                  const percentage = totalReviews > 0 ? (matchingCount / totalReviews) * 100 : 0;
+                  const matchingCount = starCounts[starCount] || 0;
+                  const percentage = totalProductReviews > 0 ? (matchingCount / totalProductReviews) * 100 : 0;
                   const isFilterActive = reviewRatingFilter === starCount;
 
                   return (
@@ -578,7 +599,7 @@ const ProductDetail = () => {
                         <div
                           className="h-full bg-black transition-all duration-500"
                           style={{
-                            width: `${starCount === 5 && percentage === 0 && totalReviews > 0 ? 80 : percentage}%`,
+                            width: `${percentage}%`,
                           }}
                         />
                       </div>
@@ -608,7 +629,7 @@ const ProductDetail = () => {
                   : "bg-white text-black border-neutral-300 hover:border-black"
               }`}
             >
-              Tất cả ({totalReviews})
+              Tất cả ({totalProductReviews})
             </button>
             {[5, 4, 3, 2, 1].map((star) => (
               <button
@@ -625,6 +646,7 @@ const ProductDetail = () => {
               >
                 <span>{star}</span>
                 <FaStar size={12} className={reviewRatingFilter === star ? "text-amber-300" : "text-[#E6A117]"} />
+                <span className="text-[11px] opacity-80">({starCounts[star] || 0})</span>
               </button>
             ))}
           </div>
