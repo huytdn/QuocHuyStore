@@ -67,4 +67,13 @@ public class UserServiceImpl implements UserService {
         refreshTokenRepository.deleteByUserId(userId);
         log.info("User id: {} has been deactivated and refresh tokens revoked.", userId);
     }
+
+    @Override
+    @Transactional
+    public int recalculateAllUsersTotalSpent() {
+        log.info("Recalculating total spent for all users...");
+        int updatedCount = userRepository.recalculateAllUsersTotalSpent();
+        log.info("Successfully recalculated total spent for all users. Affected rows: {}", updatedCount);
+        return updatedCount;
+    }
 }

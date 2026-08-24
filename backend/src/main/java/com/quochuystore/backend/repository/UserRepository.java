@@ -3,8 +3,12 @@ package com.quochuystore.backend.repository;
 import com.quochuystore.backend.entity.User;
 import com.quochuystore.backend.entity.enums.UserRole;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.math.BigDecimal;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -15,4 +19,12 @@ public interface UserRepository extends JpaRepository<User, UUID> {
     boolean existsByUsername(String username);
 
     Optional<User> findFirstByRole(UserRole role);
+
+    @Modifying
+    @Query("UPDATE User u SET u.totalSpent = u.totalSpent + :amount WHERE u.id = :userId")
+    int increaseTotalSpent(@Param("userId") UUID userId, @Param("amount") BigDecimal amount);
+
+    @Modifying
+    @Query(value = "UPDATE users u SET total_spent = COALESCE((SELECT SUM(o.total_price) FROM orders o WHERE o.user_id = u.id AND o.status = 'DELIVERED'), 0)", nativeQuery = true)
+    int recalculateAllUsersTotalSpent();
 }

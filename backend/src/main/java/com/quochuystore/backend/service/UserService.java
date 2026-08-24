@@ -12,4 +12,6 @@ public interface UserService {
     UserResponseDto updateProfile(UUID userId, UserUpdateRequestDto request);
 
     void softDelete(UUID userId);
+
+    int recalculateAllUsersTotalSpent();
 }

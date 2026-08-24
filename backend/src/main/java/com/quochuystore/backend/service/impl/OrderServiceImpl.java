@@ -330,6 +330,9 @@ public class OrderServiceImpl implements OrderService {
                 if (order.getVoucherCode() != null && order.getUser() != null) {
                     voucherService.restoreVoucherUsage(order.getUser().getId(), order.getVoucherCode());
                 }
+            } else if (status == OrderStatus.DELIVERED && order.getUser() != null) {
+                userRepository.increaseTotalSpent(order.getUser().getId(), order.getTotalPrice());
+                log.info("Increased totalSpent by {} for user {}", order.getTotalPrice(), order.getUser().getId());
             }
         }
 
