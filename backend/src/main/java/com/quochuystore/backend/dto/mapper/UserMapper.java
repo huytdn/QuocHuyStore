@@ -19,6 +19,7 @@ public final class UserMapper {
                 .displayName(user.getDisplayName())
                 .phone(user.getPhone())
                 .role(user.getRole())
+                .totalSpent(user.getTotalSpent())
                 .isActive(user.getIsActive())
                 .build();
     }
@@ -34,6 +35,7 @@ public final class UserMapper {
                 .displayName(user.getDisplayName())
                 .phone(user.getPhone())
                 .role(user.getRole())
+                .totalSpent(user.getTotalSpent())
                 .isActive(user.getIsActive())
                 .createdAt(user.getCreatedAt())
                 .addresses(addressDtos)

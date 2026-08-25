@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
+import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 import org.hibernate.annotations.JdbcTypeCode;
@@ -40,6 +41,10 @@ public class User {
     @Column(name = "role", nullable = false, columnDefinition = "user_role_enum")
     @JdbcTypeCode(SqlTypes.NAMED_ENUM)
     private UserRole role;
+
+    @Column(name = "total_spent", nullable = false, precision = 15, scale = 2)
+    @Builder.Default
+    private BigDecimal totalSpent = BigDecimal.ZERO;
 
     @Column(name = "is_active", nullable = false)
     @Builder.Default

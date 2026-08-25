@@ -3,6 +3,7 @@ package com.quochuystore.backend.dto.user.response;
 import com.quochuystore.backend.entity.enums.UserRole;
 import lombok.*;
 
+import java.math.BigDecimal;
 import java.util.UUID;
 
 @Getter
@@ -16,5 +17,6 @@ public class UserResponseDto {
     private String displayName;
     private String phone;
     private UserRole role;
+    private BigDecimal totalSpent;
     private Boolean isActive;
 }

@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -29,4 +30,7 @@ public interface ConversationRepository extends JpaRepository<Conversation, Long
     Page<Conversation> searchConversations(@Param("search") String search, Pageable pageable);
 
     boolean existsByUserId(UUID userId);
+
+    @Query("SELECT c FROM Conversation c JOIN FETCH c.user WHERE c.user.id IN :userIds")
+    List<Conversation> findByUserIds(@Param("userIds") List<UUID> userIds);
 }
