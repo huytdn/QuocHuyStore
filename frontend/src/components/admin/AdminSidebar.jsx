@@ -53,15 +53,14 @@ const AdminSidebar = ({ activeTab = "products" }) => {
   }, [adminUser, queryClient]);
 
   const navItems = [
-    { key: "dashboard", label: "Dashboard", icon: "dashboard", href: "/admin/dashboard" },
-    { key: "products", label: "Products", icon: "inventory_2", href: "/admin/products" },
-    { key: "categories", label: "Categories", icon: "category", href: "/admin/categories" },
-    { key: "vouchers", label: "Vouchers", icon: "confirmation_number", href: "/admin/vouchers" },
-    { key: "orders", label: "Orders", icon: "shopping_bag", href: "/admin/orders" },
-    { key: "reviews", label: "Reviews", icon: "rate_review", href: "/admin/reviews" },
-    { key: "customers", label: "Customers", icon: "group", href: "/admin/customers" },
-    { key: "messages", label: "Messages", icon: "forum", href: "/admin/messages" },
-    { key: "analytics", label: "Analytics", icon: "analytics", href: "/admin/analytics" },
+    { key: "dashboard", label: "Tổng quan & Thống kê", icon: "dashboard", href: "/admin/dashboard" },
+    { key: "products", label: "Sản phẩm", icon: "inventory_2", href: "/admin/products" },
+    { key: "categories", label: "Danh mục", icon: "category", href: "/admin/categories" },
+    { key: "vouchers", label: "Mã giảm giá", icon: "confirmation_number", href: "/admin/vouchers" },
+    { key: "orders", label: "Đơn hàng", icon: "shopping_bag", href: "/admin/orders" },
+    { key: "reviews", label: "Đánh giá", icon: "rate_review", href: "/admin/reviews" },
+    { key: "customers", label: "Khách hàng", icon: "group", href: "/admin/customers" },
+    { key: "messages", label: "Tin nhắn", icon: "forum", href: "/admin/messages" },
   ];
 
   return (
@@ -71,7 +70,7 @@ const AdminSidebar = ({ activeTab = "products" }) => {
           LUMIÈRE
         </h1>
         <p className="text-[10px] text-neutral-400 uppercase tracking-wider mt-0.5">
-          Admin Console
+          Quản trị hệ thống
         </p>
       </div>
 
@@ -120,7 +119,7 @@ const AdminSidebar = ({ activeTab = "products" }) => {
                 {adminUser?.displayName || "Julian S."}
               </p>
               <p className="text-[9px] text-neutral-500 uppercase tracking-tighter">
-                Store Manager
+                Quản trị viên
               </p>
             </div>
           </div>

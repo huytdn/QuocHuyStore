@@ -176,16 +176,6 @@ const AdminOrders = () => {
     });
   };
 
-  // Calculate revenue of current page (excluding CANCELED & DELIVERY_FAILED)
-  const pageRevenue = orders.reduce(
-    (sum, o) =>
-      sum +
-      (o.status !== "CANCELED" && o.status !== "DELIVERY_FAILED"
-        ? Number(o.totalPrice || 0)
-        : 0),
-    0
-  );
-
   return (
     <div className="flex bg-[#fbf9f9] min-h-screen text-black font-sans select-none text-left">
       {/* Admin Sidebar */}
@@ -594,56 +584,6 @@ const AdminOrders = () => {
                 </div>
               </div>
             )}
-          </div>
-
-          {/* Insights Section (Asymmetric Metric Layout) */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 mt-12">
-            <div className="lg:col-span-8 bg-[#f5f3f3] p-8 md:p-10 border border-neutral-300 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
-              <div>
-                <span className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest block mb-1">
-                  BÁO CÁO DOANH THU
-                </span>
-                <h3 className="font-serif text-2xl md:text-3xl font-medium text-black mb-2">
-                  Tổng Doanh Thu Thực Tế (Trang này)
-                </h3>
-                <p className="text-xs text-neutral-600 max-w-md leading-relaxed">
-                  Tổng giá trị các đơn hàng hiện có trên danh sách hiển thị (Đã trừ các đơn bị hủy hoặc giao hàng thất bại).
-                </p>
-                <div className="mt-4 font-serif text-3xl font-bold text-black">
-                  {pageRevenue.toLocaleString("vi-VN")}₫
-                </div>
-              </div>
-              <div className="w-32 h-32 relative overflow-hidden bg-white border border-neutral-200 flex items-center justify-center shrink-0">
-                <span className="material-symbols-outlined text-6xl text-neutral-300">
-                  monitoring
-                </span>
-              </div>
-            </div>
-
-            <div className="lg:col-span-4 bg-black p-8 md:p-10 text-white flex flex-col justify-between">
-              <div>
-                <h3 className="text-[10px] uppercase tracking-[0.2em] mb-4 opacity-60 font-bold">
-                  MỤC TIÊU DOANH THU
-                </h3>
-                <p className="font-serif text-4xl md:text-5xl font-bold leading-tight">
-                  84.2M ₫
-                </p>
-                <p className="text-[10px] uppercase tracking-wider mt-1 text-neutral-400 font-bold">
-                  Quý Hiện Tại
-                </p>
-              </div>
-              <div className="mt-8 border-t border-white/20 pt-4">
-                <div className="flex justify-between items-center text-[10px] font-bold tracking-wider uppercase">
-                  <span>82% ĐẠT MỤC TIÊU</span>
-                  <span className="material-symbols-outlined text-base">
-                    trending_up
-                  </span>
-                </div>
-                <div className="w-full h-[3px] bg-white/20 mt-2">
-                  <div className="h-full bg-white w-[82%]"></div>
-                </div>
-              </div>
-            </div>
           </div>
         </main>
       </div>

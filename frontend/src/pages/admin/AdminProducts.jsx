@@ -667,10 +667,10 @@ const ProductTableRow = ({
   const displayStock = hasDetailLoaded ? realStock : product.stock;
   const status =
     displayStock === 0
-      ? "Out of Stock"
+      ? "Hết hàng"
       : displayStock <= 5
-      ? "Low Stock"
-      : "Active";
+      ? "Sắp hết"
+      : "Đang bán";
 
   const displayPrice = detail?.minPrice || product.minPrice;
 
@@ -715,9 +715,9 @@ const ProductTableRow = ({
       <td className="px-4 py-3">
         <span
           className={`px-2.5 py-0.5 text-[8px] font-bold uppercase tracking-widest ${
-            status === "Active"
+            status === "Đang bán"
               ? "bg-[#ece1ce] text-[#696253]"
-              : status === "Low Stock"
+              : status === "Sắp hết"
               ? "bg-[#ffdad6] text-[#93000a]"
               : "bg-[#e4e2e2] text-neutral-500"
           }`}

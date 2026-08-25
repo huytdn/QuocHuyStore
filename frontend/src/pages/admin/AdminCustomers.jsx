@@ -1,135 +1,145 @@
 import React, { useState } from "react";
+import { toast } from "react-toastify";
 import AdminSidebar from "../../components/admin/AdminSidebar";
 import AdminHeader from "../../components/admin/AdminHeader";
 import {
+  useAdminUsersSummary,
+  useAdminUserList,
+  useRecalculateAllSpent,
+  useBroadcastMessage,
+} from "../../hooks/api/useAdminUsers";
+import {
   FiSearch,
-  FiFilter,
+  FiUsers,
   FiTrendingUp,
-  FiStar,
-  FiMoreHorizontal,
-  FiDownload,
-  FiPlus,
+  FiSend,
+  FiRefreshCw,
   FiChevronLeft,
   FiChevronRight,
   FiX,
-  FiMail,
-  FiPhone,
-  FiMapPin,
-  FiCheck,
+  FiUserCheck,
+  FiDollarSign,
+  FiAward,
+  FiFilter,
 } from "react-icons/fi";
 
+const formatCurrency = (amount) => {
+  return new Intl.NumberFormat("vi-VN", {
+    style: "currency",
+    currency: "VND",
+  }).format(amount || 0);
+};
+
+const getMemberTier = (totalSpent = 0) => {
+  const spent = Number(totalSpent) || 0;
+  if (spent >= 10000000) {
+    return {
+      name: "Kim Cương (VIP)",
+      badgeClass: "bg-gradient-to-r from-purple-700 via-indigo-600 to-pink-600 text-white font-extrabold shadow-sm border border-purple-400",
+      tierTag: "DIAMOND",
+      icon: "💎",
+    };
+  }
+  if (spent >= 5000000) {
+    return {
+      name: "Hạng Vàng",
+      badgeClass: "bg-amber-400 text-amber-950 font-bold border border-amber-500 shadow-2xs",
+      tierTag: "GOLD",
+      icon: "🥇",
+    };
+  }
+  if (spent >= 2000000) {
+    return {
+      name: "Hạng Bạc",
+      badgeClass: "bg-slate-200 text-slate-800 font-bold border border-slate-300",
+      tierTag: "SILVER",
+      icon: "🥈",
+    };
+  }
+  return {
+    name: "Hạng Đồng",
+    badgeClass: "bg-amber-900/10 text-amber-900 font-semibold border border-amber-700/30",
+    tierTag: "BRONZE",
+    icon: "🥉",
+  };
+};
+
 const AdminCustomers = () => {
-  const [activeTab, setActiveTab] = useState("ALL");
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedCustomers, setSelectedCustomers] = useState([]);
-  const [selectedCustomerDetail, setSelectedCustomerDetail] = useState(null);
-  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [toastMessage, setToastMessage] = useState("");
-
-  const customersData = [
-    {
-      id: 1,
-      name: "Adriana Laurent",
-      email: "adriana.l@vogue-paris.com",
-      phone: "+33 6 12 34 56 78",
-      address: "21 Rue du Faubourg Saint-Honoré, Paris",
-      initials: "AL",
-      avatarBg: "bg-[#e9dfcb] text-[#696253]",
-      tier: "Platinum",
-      tierBadge: "bg-black text-white",
-      totalOrders: 18,
-      totalSpend: "311.250.000₫",
-      lastPurchase: "2 ngày trước",
-    },
-    {
-      id: 2,
-      name: "Marcus Thorne",
-      email: "m.thorne@london-studios.co.uk",
-      phone: "+44 20 7946 0912",
-      address: "14 Mayfair Square, London",
-      avatarImg:
-        "https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=200&auto=format&fit=crop",
-      tier: "Gold",
-      tierBadge: "border border-black text-black",
-      totalOrders: 12,
-      totalSpend: "223.000.000₫",
-      lastPurchase: "1 tuần trước",
-    },
-    {
-      id: 3,
-      name: "Julianne Wei",
-      email: "j.wei@shanghai-global.cn",
-      phone: "+86 21 6123 4567",
-      address: "88 Nanjing West Road, Shanghai",
-      initials: "JW",
-      avatarBg: "bg-[#c6c6c7] text-black",
-      tier: "Platinum",
-      tierBadge: "bg-black text-white",
-      totalOrders: 34,
-      totalSpend: "602.750.000₫",
-      lastPurchase: "Hôm qua",
-    },
-    {
-      id: 4,
-      name: "Sebastian Berg",
-      email: "s.berg@berlin-design.de",
-      phone: "+49 30 1234 5678",
-      address: "5 Friedrichstraße, Berlin",
-      initials: "SB",
-      avatarBg: "bg-neutral-200 text-neutral-600",
-      tier: "Silver",
-      tierBadge: "border border-neutral-300 text-neutral-500",
-      totalOrders: 5,
-      totalSpend: "52.500.000₫",
-      lastPurchase: "3 tuần trước",
-    },
-    {
-      id: 5,
-      name: "Olivia Chen",
-      email: "olivia.chen@nyc-arts.org",
-      phone: "+1 212 555 0199",
-      address: "740 Park Avenue, New York",
-      initials: "OC",
-      avatarBg: "bg-[#ece1ce] text-[#201b0f]",
-      tier: "Gold",
-      tierBadge: "border border-black text-black",
-      totalOrders: 21,
-      totalSpend: "393.750.000₫",
-      lastPurchase: "4 ngày trước",
-    },
-  ];
-
-  const filteredCustomers = customersData.filter((cust) => {
-    const matchesSearch =
-      cust.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      cust.email.toLowerCase().includes(searchQuery.toLowerCase());
-
-    if (activeTab === "ALL") return matchesSearch;
-    if (activeTab === "PLATINUM") return matchesSearch && cust.tier === "Platinum";
-    if (activeTab === "GOLD") return matchesSearch && cust.tier === "Gold";
-    if (activeTab === "SILVER") return matchesSearch && cust.tier === "Silver";
-    return matchesSearch;
+  const [activePage, setActivePage] = useState(0);
+  const [selectedTierFilter, setSelectedTierFilter] = useState("ALL");
+  const [isBroadcastModalOpen, setIsBroadcastModalOpen] = useState(false);
+  const [broadcastForm, setBroadcastForm] = useState({
+    content: "",
+    minTotalSpent: 0,
   });
 
-  const handleSelectAll = (e) => {
-    if (e.target.checked) {
-      setSelectedCustomers(filteredCustomers.map((c) => c.id));
-    } else {
-      setSelectedCustomers([]);
-    }
+  // API Queries
+  const { data: summary, isLoading: isSummaryLoading } = useAdminUsersSummary();
+  const { data: userPage, isLoading: isUsersLoading, refetch } = useAdminUserList({
+    search: searchQuery || undefined,
+    page: activePage,
+    size: 10,
+    sortBy: "totalSpent",
+    sortDirection: "DESC",
+  });
+
+  const recalculateMutation = useRecalculateAllSpent();
+  const broadcastMutation = useBroadcastMessage();
+
+  const rawUsers = userPage?.content || [];
+  const totalElements = userPage?.totalElements || 0;
+  const totalPages = userPage?.totalPages || 1;
+
+  // Filter users by client-side Tier selection if specified
+  const filteredUsers = rawUsers.filter((u) => {
+    if (selectedTierFilter === "ALL") return true;
+    const tierTag = getMemberTier(u.totalSpent).tierTag;
+    return tierTag === selectedTierFilter;
+  });
+
+  // Handle Recalculate All Spent
+  const handleRecalculateAll = () => {
+    toast.info("Đang đối soát lại tổng chi tiêu cho toàn bộ người dùng...");
+    recalculateMutation.mutate(null, {
+      onSuccess: (res) => {
+        toast.success(res.message || `Đã cập nhật chi tiêu cho ${res.affectedUsers || 0} tài khoản!`);
+        refetch();
+      },
+      onError: (err) => {
+        toast.error(err.response?.data?.message || "Đối soát thất bại!");
+      },
+    });
   };
 
-  const handleSelectOne = (id) => {
-    if (selectedCustomers.includes(id)) {
-      setSelectedCustomers(selectedCustomers.filter((item) => item !== id));
-    } else {
-      setSelectedCustomers([...selectedCustomers, id]);
+  // Handle Broadcast Submission
+  const handleSendBroadcast = (e) => {
+    e.preventDefault();
+    if (!broadcastForm.content.trim()) {
+      toast.warn("Vui lòng nhập nội dung tin nhắn gửi hàng loạt!");
+      return;
     }
-  };
 
-  const showToast = (msg) => {
-    setToastMessage(msg);
-    setTimeout(() => setToastMessage(""), 3500);
+    broadcastMutation.mutate(
+      {
+        content: broadcastForm.content.trim(),
+        minTotalSpent: Number(broadcastForm.minTotalSpent) || 0,
+      },
+      {
+        onSuccess: (res) => {
+          toast.success(
+            `Đã gửi thành công tin nhắn hàng loạt tới ${res.totalSent || 0} khách hàng!`
+          );
+          setIsBroadcastModalOpen(false);
+          setBroadcastForm({ content: "", minTotalSpent: 0 });
+        },
+        onError: (err) => {
+          toast.error(
+            err.response?.data?.message || "Gửi tin nhắn hàng loạt thất bại!"
+          );
+        },
+      }
+    );
   };
 
   return (
@@ -141,492 +151,405 @@ const AdminCustomers = () => {
       <div className="ml-56 flex-1 min-h-screen flex flex-col">
         <AdminHeader />
 
-        <main className="p-8 md:p-12 max-w-[1440px] w-full mx-auto flex-1">
-          {/* Toast Notification */}
-          {toastMessage && (
-            <div className="fixed top-16 right-8 z-50 bg-black text-white px-6 py-3.5 shadow-2xl text-xs font-bold uppercase tracking-wider flex items-center gap-3 animate-fade-in border border-neutral-700">
-              <FiCheck className="text-emerald-400 text-lg" />
-              <span>{toastMessage}</span>
-            </div>
-          )}
-
-          {/* Breadcrumb & Header */}
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 mb-12">
+        <main className="p-8 md:p-12 max-w-[1440px] w-full mx-auto flex-1 space-y-8">
+          
+          {/* Header & Page Title */}
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 bg-white p-6 border border-neutral-200 shadow-2xs">
             <div>
-              <nav className="flex mb-3 space-x-2 text-[10px] text-neutral-400 uppercase font-bold tracking-widest">
-                <span>Admin</span>
-                <span>/</span>
-                <span className="text-black">Customers</span>
-              </nav>
-              <h2 className="font-serif text-3xl md:text-5xl font-bold uppercase tracking-tight text-black">
-                Relationship Management
+              <span className="text-[10px] font-bold text-neutral-400 uppercase tracking-[0.25em] block mb-1">
+                LUMIÈRE MANAGEMENT
+              </span>
+              <h2 className="font-serif text-2xl md:text-3xl font-bold uppercase tracking-tight text-black">
+                Quản Lý Khách Hàng & Phân Hạng Thành Viên
               </h2>
-              <p className="text-xs md:text-sm text-neutral-500 font-light mt-2 max-w-2xl">
-                Quản lý phân hạng & hồ sơ khách hàng VIP toàn cầu. Theo dõi lịch sử mua hàng, hạn mức chi tiêu và đặc quyền hạng thành viên Lumière.
+              <p className="text-xs text-neutral-500 font-light mt-1">
+                Theo dõi chi tiêu, đối soát tổng chi tiêu tích lũy và gửi thông điệp chăm sóc khách hàng hàng loạt.
               </p>
             </div>
 
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 flex-wrap">
               <button
-                onClick={() => {
-                  const csvContent =
-                    "data:text/csv;charset=utf-8," +
-                    ["ID,Name,Email,Tier,Total Orders,Total Spend,Last Purchase"]
-                      .concat(
-                        customersData.map(
-                          (c) =>
-                            `${c.id},"${c.name}","${c.email}",${c.tier},${c.totalOrders},"${c.totalSpend}","${c.lastPurchase}"`
-                        )
-                      )
-                      .join("\n");
-                  const encodedUri = encodeURI(csvContent);
-                  const link = document.createElement("a");
-                  link.setAttribute("href", encodedUri);
-                  link.setAttribute("download", "lumiere_customers.csv");
-                  document.body.appendChild(link);
-                  link.click();
-                  document.body.removeChild(link);
-                }}
-                className="px-6 py-3 bg-white border border-black text-black text-xs font-bold tracking-widest uppercase transition-all duration-200 hover:bg-black hover:text-white cursor-pointer active:scale-95 shadow-xs"
+                onClick={handleRecalculateAll}
+                disabled={recalculateMutation.isPending}
+                className="px-4 py-2.5 bg-white border border-neutral-300 hover:border-black text-black text-xs font-bold tracking-wider uppercase transition-all flex items-center gap-2 cursor-pointer active:scale-95 disabled:opacity-50 shadow-2xs"
+                title="Tính toán và đồng bộ lại tổng số tiền đã tiêu từ các đơn giao thành công"
               >
-                Export CSV
+                <FiRefreshCw className={recalculateMutation.isPending ? "animate-spin" : ""} size={14} />
+                Đối soát chi tiêu toàn bộ
               </button>
+
               <button
-                onClick={() => setIsAddModalOpen(true)}
-                className="px-6 py-3 bg-black text-white text-xs font-bold tracking-widest uppercase transition-all duration-200 hover:bg-neutral-800 cursor-pointer active:scale-95 shadow-xs flex items-center gap-2"
+                onClick={() => setIsBroadcastModalOpen(true)}
+                className="px-5 py-2.5 bg-black text-white hover:bg-neutral-800 text-xs font-bold tracking-widest uppercase transition-all flex items-center gap-2 cursor-pointer active:scale-95 shadow-xs"
               >
-                <FiPlus size={14} />
-                Thêm Khách Hàng
+                <FiSend size={14} />
+                Gửi tin nhắn hàng loạt
               </button>
             </div>
           </div>
 
-          {/* Stats Overview */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
-            <div className="bg-white p-6 border border-neutral-200 shadow-xs">
-              <p className="text-[10px] font-bold uppercase tracking-wider text-neutral-400 mb-2">
-                TOTAL CUSTOMERS
-              </p>
-              <p className="font-serif text-3xl font-bold text-black">12.842</p>
-              <p className="text-xs text-emerald-600 font-bold mt-2 flex items-center gap-1">
-                <FiTrendingUp size={14} /> +12% tháng này
+          {/* KPI Analytics Summary Cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {/* Total Customers */}
+            <div className="bg-white p-6 border border-neutral-200 shadow-2xs">
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-neutral-500">
+                  Tổng Số Khách Hàng
+                </span>
+                <div className="p-2 bg-neutral-100 rounded-full text-black">
+                  <FiUsers size={16} />
+                </div>
+              </div>
+              <div className="font-serif text-2xl font-bold text-black mb-1">
+                {isSummaryLoading ? "..." : `${summary?.totalCustomers || 0} tài khoản`}
+              </div>
+              <p className="text-[11px] text-neutral-400">Tài khoản hoạt động chính thức</p>
+            </div>
+
+            {/* New Customers */}
+            <div className="bg-white p-6 border border-neutral-200 shadow-2xs">
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-neutral-500">
+                  Khách Hàng Mới
+                </span>
+                <div className="p-2 bg-emerald-50 text-emerald-700 rounded-full">
+                  <FiTrendingUp size={16} />
+                </div>
+              </div>
+              <div className="font-serif text-2xl font-bold text-black mb-1">
+                {isSummaryLoading ? "..." : `${summary?.newCustomers || 0} khách`}
+              </div>
+              <p className="text-[11px] text-emerald-600 font-semibold">
+                {summary?.newCustomersGrowthRate ? `+${summary.newCustomersGrowthRate}% tăng trưởng` : "Đăng ký trong kỳ"}
               </p>
             </div>
 
-            <div className="bg-white p-6 border border-neutral-200 shadow-xs">
-              <p className="text-[10px] font-bold uppercase tracking-wider text-neutral-400 mb-2">
-                ACTIVE THIS WEEK
-              </p>
-              <p className="font-serif text-3xl font-bold text-black">3.104</p>
-              <p className="text-xs text-neutral-500 font-light mt-2">
-                Tỷ lệ tương tác 24%
-              </p>
-            </div>
-
-            <div className="bg-white p-6 border border-neutral-200 shadow-xs">
-              <p className="text-[10px] font-bold uppercase tracking-wider text-neutral-400 mb-2">
-                AVERAGE LTV
-              </p>
-              <p className="font-serif text-3xl font-bold text-black">
-                107.000.000₫
-              </p>
-              <p className="text-xs text-neutral-500 font-light mt-2">
-                Trung bình Hạng 1
+            {/* Paying & Conversion */}
+            <div className="bg-white p-6 border border-neutral-200 shadow-2xs">
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-neutral-500">
+                  Tỷ Lệ Mua Hàng
+                </span>
+                <div className="p-2 bg-blue-50 text-blue-700 rounded-full">
+                  <FiUserCheck size={16} />
+                </div>
+              </div>
+              <div className="font-serif text-2xl font-bold text-black mb-1">
+                {isSummaryLoading ? "..." : `${summary?.buyerConversionRate || 0}%`}
+              </div>
+              <p className="text-[11px] text-neutral-500">
+                {summary?.payingCustomersCount || 0} / {summary?.totalCustomers || 0} khách có đơn
               </p>
             </div>
 
-            <div className="bg-white p-6 border border-neutral-200 shadow-xs">
-              <p className="text-[10px] font-bold uppercase tracking-wider text-neutral-400 mb-2">
-                RETENTION RATE
-              </p>
-              <p className="font-serif text-3xl font-bold text-black">88.2%</p>
-              <p className="text-xs text-amber-600 font-bold mt-2 flex items-center gap-1">
-                <FiStar size={14} /> Khách hàng thân thiết
+            {/* ARPU */}
+            <div className="bg-white p-6 border border-neutral-200 shadow-2xs">
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-neutral-500">
+                  Doanh Thu / Khách (ARPU)
+                </span>
+                <div className="p-2 bg-purple-50 text-purple-700 rounded-full">
+                  <FiDollarSign size={16} />
+                </div>
+              </div>
+              <div className="font-serif text-xl font-bold text-black mb-1">
+                {isSummaryLoading ? "..." : formatCurrency(summary?.arpu)}
+              </div>
+              <p className="text-[11px] text-neutral-500">
+                Lặp lại: <strong className="text-black">{summary?.repeatCustomerRate || 0}%</strong> ({summary?.repeatCustomersCount || 0} khách mua &ge; 2 lần)
               </p>
             </div>
           </div>
 
-          {/* Filters & Search Row */}
-          <div className="flex flex-col md:flex-row justify-between items-stretch md:items-center gap-4 mb-6 pb-4 border-b border-neutral-300">
-            {/* Filter Tabs */}
-            <div className="flex items-center gap-6 overflow-x-auto">
-              <button
-                onClick={() => setActiveTab("ALL")}
-                className={`text-xs font-bold uppercase tracking-widest pb-3 border-b-2 transition-all cursor-pointer whitespace-nowrap ${
-                  activeTab === "ALL"
-                    ? "border-black text-black"
-                    : "border-transparent text-neutral-400 hover:text-black"
-                }`}
-              >
-                TẤT CẢ KHÁCH HÀNG ({customersData.length})
-              </button>
-              <button
-                onClick={() => setActiveTab("PLATINUM")}
-                className={`text-xs font-bold uppercase tracking-widest pb-3 border-b-2 transition-all cursor-pointer whitespace-nowrap ${
-                  activeTab === "PLATINUM"
-                    ? "border-black text-black"
-                    : "border-transparent text-neutral-400 hover:text-black"
-                }`}
-              >
-                PLATINUM TIER
-              </button>
-              <button
-                onClick={() => setActiveTab("GOLD")}
-                className={`text-xs font-bold uppercase tracking-widest pb-3 border-b-2 transition-all cursor-pointer whitespace-nowrap ${
-                  activeTab === "GOLD"
-                    ? "border-black text-black"
-                    : "border-transparent text-neutral-400 hover:text-black"
-                }`}
-              >
-                GOLD TIER
-              </button>
-              <button
-                onClick={() => setActiveTab("SILVER")}
-                className={`text-xs font-bold uppercase tracking-widest pb-3 border-b-2 transition-all cursor-pointer whitespace-nowrap ${
-                  activeTab === "SILVER"
-                    ? "border-black text-black"
-                    : "border-transparent text-neutral-400 hover:text-black"
-                }`}
-              >
-                SILVER TIER
-              </button>
-            </div>
-
-            {/* Search Box */}
-            <div className="relative flex items-center w-full md:w-72 border-b border-neutral-300 pb-1">
+          {/* Filters & Search Toolbar */}
+          <div className="bg-white p-6 border border-neutral-200 shadow-2xs flex flex-col md:flex-row justify-between items-stretch md:items-center gap-4">
+            
+            {/* Search Input */}
+            <div className="relative flex-1 max-w-md">
+              <FiSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 text-neutral-400" size={16} />
               <input
                 type="text"
-                placeholder="Tìm Tên, Email khách hàng..."
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-transparent outline-none text-xs text-black placeholder-neutral-400 pr-6 py-1"
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  setActivePage(0);
+                }}
+                placeholder="Tìm tên tài khoản, tên hiển thị hoặc SĐT..."
+                className="w-full bg-[#fbf9f9] border border-neutral-300 pl-10 pr-4 py-2.5 text-xs text-black outline-none focus:border-black transition-colors"
               />
-              <FiSearch
-                size={14}
-                className="absolute right-0 text-neutral-400 pointer-events-none"
-              />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery("")}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-black"
+                >
+                  <FiX size={14} />
+                </button>
+              )}
+            </div>
+
+            {/* Tier Quick Filter Tabs */}
+            <div className="flex items-center gap-2 overflow-x-auto">
+              <span className="text-xs font-semibold text-neutral-500 mr-1 flex items-center gap-1">
+                <FiFilter size={14} /> Hạng:
+              </span>
+              {[
+                { key: "ALL", label: "Tất cả" },
+                { key: "DIAMOND", label: "💎 Kim Cương (&ge;10M)" },
+                { key: "GOLD", label: "🥇 Vàng (&ge;5M)" },
+                { key: "SILVER", label: "🥈 Bạc (&ge;2M)" },
+                { key: "BRONZE", label: "🥉 Đồng (<2M)" },
+              ].map((tier) => (
+                <button
+                  key={tier.key}
+                  onClick={() => setSelectedTierFilter(tier.key)}
+                  className={`px-3 py-1.5 text-xs font-bold tracking-wider uppercase transition-all whitespace-nowrap cursor-pointer ${
+                    selectedTierFilter === tier.key
+                      ? "bg-black text-white"
+                      : "bg-[#f8f7f5] text-neutral-600 hover:bg-neutral-200"
+                  }`}
+                >
+                  {tier.label}
+                </button>
+              ))}
             </div>
           </div>
 
-          {/* Customer Table */}
-          <div className="bg-white border border-neutral-200 overflow-hidden shadow-xs mb-10">
+          {/* User List Table */}
+          <div className="bg-white border border-neutral-200 shadow-2xs overflow-hidden">
+            <div className="p-4 border-b border-neutral-200 bg-[#fbf9f9] flex justify-between items-center">
+              <span className="text-xs font-bold uppercase tracking-wider text-neutral-600">
+                Danh sách khách hàng ({totalElements} kết quả)
+              </span>
+              <span className="text-[11px] text-neutral-400 italic">
+                * Tự động sắp xếp theo Tổng chi tiêu tích lũy cao nhất
+              </span>
+            </div>
+
             <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse">
+              <table className="w-full text-left border-collapse text-xs">
                 <thead>
-                  <tr className="bg-[#f5f4f2] border-b border-neutral-200">
-                    <th className="py-4 px-4 w-12 text-center">
-                      <input
-                        type="checkbox"
-                        onChange={handleSelectAll}
-                        checked={
-                          selectedCustomers.length === filteredCustomers.length &&
-                          filteredCustomers.length > 0
-                        }
-                        className="rounded-none border-neutral-300 text-black focus:ring-0 cursor-pointer"
-                      />
-                    </th>
-                    <th className="py-4 px-4 font-bold text-[10px] uppercase text-neutral-500 tracking-widest">
-                      Khách hàng
-                    </th>
-                    <th className="py-4 px-4 font-bold text-[10px] uppercase text-neutral-500 tracking-widest">
-                      Phân hạng
-                    </th>
-                    <th className="py-4 px-4 font-bold text-[10px] uppercase text-neutral-500 tracking-widest text-right">
-                      Tổng đơn
-                    </th>
-                    <th className="py-4 px-4 font-bold text-[10px] uppercase text-neutral-500 tracking-widest text-right">
-                      Tổng chi tiêu
-                    </th>
-                    <th className="py-4 px-4 font-bold text-[10px] uppercase text-neutral-500 tracking-widest text-right">
-                      Mua gần nhất
-                    </th>
-                    <th className="py-4 px-4 w-12"></th>
+                  <tr className="bg-[#f5f4f2] border-b border-neutral-200 text-neutral-500 font-bold uppercase text-[10px] tracking-wider">
+                    <th className="py-3.5 px-4">Tài khoản / Người dùng</th>
+                    <th className="py-3.5 px-4">Số điện thoại</th>
+                    <th className="py-3.5 px-4 text-center">Hạng Thành Viên</th>
+                    <th className="py-3.5 px-4 text-right">Tổng Chi Tiêu (`totalSpent`)</th>
+                    <th className="py-3.5 px-4 text-center">Trạng thái</th>
+                    <th className="py-3.5 px-4 text-right">Ngày tham gia</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-neutral-200 text-xs font-sans">
-                  {filteredCustomers.map((cust) => {
-                    const isSelected = selectedCustomers.includes(cust.id);
-                    return (
-                      <tr
-                        key={cust.id}
-                        className={`group hover:bg-neutral-50 transition-colors ${
-                          isSelected ? "bg-neutral-50" : ""
-                        }`}
-                      >
-                        <td className="py-5 px-4 text-center">
-                          <input
-                            type="checkbox"
-                            checked={isSelected}
-                            onChange={() => handleSelectOne(cust.id)}
-                            className="rounded-none border-neutral-300 text-black focus:ring-0 cursor-pointer"
-                          />
-                        </td>
-                        <td className="py-5 px-4">
-                          <div className="flex items-center">
-                            {cust.avatarImg ? (
-                              <div className="w-10 h-10 overflow-hidden border border-neutral-200 mr-4 shrink-0">
-                                <img
-                                  src={cust.avatarImg}
-                                  alt={cust.name}
-                                  className="w-full h-full object-cover"
-                                />
+                <tbody className="divide-y divide-neutral-200">
+                  {isUsersLoading ? (
+                    <tr>
+                      <td colSpan={6} className="py-12 text-center text-neutral-400">
+                        Đang tải danh sách khách hàng...
+                      </td>
+                    </tr>
+                  ) : filteredUsers.length === 0 ? (
+                    <tr>
+                      <td colSpan={6} className="py-12 text-center text-neutral-400 italic">
+                        Không tìm thấy khách hàng phù hợp với điều kiện tìm kiếm.
+                      </td>
+                    </tr>
+                  ) : (
+                    filteredUsers.map((user) => {
+                      const tier = getMemberTier(user.totalSpent);
+
+                      return (
+                        <tr key={user.id} className="hover:bg-[#fcfbf9] transition-colors">
+                          {/* User info */}
+                          <td className="py-4 px-4">
+                            <div className="flex items-center gap-3">
+                              <div className="w-9 h-9 bg-neutral-900 text-white rounded-full flex items-center justify-center font-bold text-xs shrink-0 select-none">
+                                {user.displayName ? user.displayName.charAt(0).toUpperCase() : user.username?.charAt(0).toUpperCase() || "U"}
                               </div>
-                            ) : (
-                              <div
-                                className={`w-10 h-10 flex items-center justify-center font-bold text-xs mr-4 shrink-0 ${cust.avatarBg}`}
-                              >
-                                {cust.initials}
+                              <div>
+                                <div className="font-bold text-black text-sm">{user.displayName || user.username}</div>
+                                <div className="text-[11px] text-neutral-400 font-mono">@{user.username}</div>
                               </div>
-                            )}
-                            <div>
-                              <p className="font-bold text-black text-sm">
-                                {cust.name}
-                              </p>
-                              <p className="text-[11px] text-neutral-400 lowercase">
-                                {cust.email}
-                              </p>
                             </div>
-                          </div>
-                        </td>
-                        <td className="py-5 px-4">
-                          <span
-                            className={`px-3 py-1 text-[10px] font-bold uppercase tracking-widest inline-block ${cust.tierBadge}`}
-                          >
-                            {cust.tier}
-                          </span>
-                        </td>
-                        <td className="py-5 px-4 text-right font-semibold text-black">
-                          {cust.totalOrders}
-                        </td>
-                        <td className="py-5 px-4 text-right font-bold text-black">
-                          {cust.totalSpend}
-                        </td>
-                        <td className="py-5 px-4 text-right text-neutral-500">
-                          {cust.lastPurchase}
-                        </td>
-                        <td className="py-5 px-4 text-right">
-                          <button
-                            onClick={() => setSelectedCustomerDetail(cust)}
-                            className="p-2 text-neutral-400 hover:text-black transition-colors cursor-pointer"
-                            title="Xem chi tiết"
-                          >
-                            <FiMoreHorizontal size={18} />
-                          </button>
-                        </td>
-                      </tr>
-                    );
-                  })}
+                          </td>
+
+                          {/* Phone */}
+                          <td className="py-4 px-4 font-mono font-medium text-neutral-700">
+                            {user.phone || "Chưa cập nhật"}
+                          </td>
+
+                          {/* Member Tier Badge */}
+                          <td className="py-4 px-4 text-center">
+                            <span className={`inline-flex items-center gap-1.5 px-3 py-1 text-[11px] rounded-full ${tier.badgeClass}`}>
+                              <span>{tier.icon}</span>
+                              <span>{tier.name}</span>
+                            </span>
+                          </td>
+
+                          {/* Total Spent */}
+                          <td className="py-4 px-4 text-right">
+                            <div className="font-serif font-bold text-base text-black">
+                              {formatCurrency(user.totalSpent)}
+                            </div>
+                          </td>
+
+                          {/* Is Active */}
+                          <td className="py-4 px-4 text-center">
+                            {user.isActive ? (
+                              <span className="px-2.5 py-0.5 bg-emerald-50 text-emerald-800 text-[10px] font-bold uppercase border border-emerald-200 rounded-full">
+                                Hoạt động
+                              </span>
+                            ) : (
+                              <span className="px-2.5 py-0.5 bg-rose-50 text-rose-800 text-[10px] font-bold uppercase border border-rose-200 rounded-full">
+                                Đã khóa
+                              </span>
+                            )}
+                          </td>
+
+                          {/* Created date */}
+                          <td className="py-4 px-4 text-right text-neutral-500 font-mono text-[11px]">
+                            {user.createdAt ? new Date(user.createdAt).toLocaleDateString("vi-VN") : "N/A"}
+                          </td>
+                        </tr>
+                      );
+                    })
+                  )}
                 </tbody>
               </table>
             </div>
 
-            {/* Pagination Footer */}
-            <div className="px-6 py-4 bg-[#f5f4f2] border-t border-neutral-200 flex flex-col sm:flex-row justify-between items-center gap-4">
-              <p className="text-[11px] font-semibold text-neutral-500 uppercase tracking-wider">
-                Hiển thị 1 đến {filteredCustomers.length} của {customersData.length} khách hàng
-              </p>
-              <div className="flex items-center space-x-1.5">
-                <button
-                  disabled
-                  className="w-8 h-8 flex items-center justify-center border border-neutral-300 bg-white text-black opacity-30 cursor-not-allowed"
-                >
-                  <FiChevronLeft size={16} />
-                </button>
-                <button className="w-8 h-8 flex items-center justify-center bg-black text-white border border-black text-xs font-bold">
-                  1
-                </button>
-                <button
-                  disabled
-                  className="w-8 h-8 flex items-center justify-center border border-neutral-300 bg-white text-black opacity-30 cursor-not-allowed"
-                >
-                  <FiChevronRight size={16} />
-                </button>
+            {/* Pagination Controls */}
+            {totalPages > 1 && (
+              <div className="p-4 border-t border-neutral-200 flex justify-between items-center bg-[#fbf9f9]">
+                <span className="text-xs text-neutral-500">
+                  Trang <strong className="text-black">{activePage + 1}</strong> / {totalPages}
+                </span>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    disabled={activePage === 0}
+                    onClick={() => setActivePage((prev) => Math.max(0, prev - 1))}
+                    className="p-2 border border-neutral-300 hover:border-black disabled:opacity-30 cursor-pointer"
+                  >
+                    <FiChevronLeft size={16} />
+                  </button>
+                  <button
+                    disabled={activePage >= totalPages - 1}
+                    onClick={() => setActivePage((prev) => prev + 1)}
+                    className="p-2 border border-neutral-300 hover:border-black disabled:opacity-30 cursor-pointer"
+                  >
+                    <FiChevronRight size={16} />
+                  </button>
+                </div>
               </div>
-            </div>
+            )}
           </div>
+
         </main>
       </div>
 
-      {/* Customer Detail Drawer Modal */}
-      {selectedCustomerDetail && (
-        <div
-          className="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4 md:p-6 animate-fade-in"
-          onClick={() => setSelectedCustomerDetail(null)}
-        >
-          <div
-            className="bg-white max-w-xl w-full p-6 md:p-8 relative shadow-2xl overflow-y-auto max-h-[90vh] flex flex-col border border-neutral-200 text-left"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex items-center justify-between border-b border-neutral-200 pb-4 mb-6">
-              <div>
-                <span className="text-[10px] font-bold uppercase tracking-widest text-neutral-400 block mb-1">
-                  HỒ SƠ KHÁCH HÀNG VIP
-                </span>
-                <h3 className="font-serif text-2xl font-bold uppercase text-black">
-                  {selectedCustomerDetail.name}
-                </h3>
-              </div>
-              <button
-                onClick={() => setSelectedCustomerDetail(null)}
-                className="text-neutral-500 hover:text-black p-2 transition-colors cursor-pointer rounded-full hover:bg-neutral-100"
-              >
-                <FiX size={24} />
-              </button>
-            </div>
-
-            <div className="space-y-6 text-xs">
-              <div className="bg-[#f5f4f2] p-4 border border-neutral-200 flex items-center justify-between">
-                <div>
-                  <span className="text-neutral-500 font-bold block mb-1">HẠNG THÀNH VIÊN</span>
-                  <span
-                    className={`inline-block px-3 py-1 text-[10px] font-bold uppercase ${selectedCustomerDetail.tierBadge}`}
-                  >
-                    {selectedCustomerDetail.tier} Member
-                  </span>
-                </div>
-                <div className="text-right">
-                  <span className="text-neutral-500 font-bold block mb-1">TỔNG TÍCH LŨY</span>
-                  <span className="font-bold text-sm text-black">
-                    {selectedCustomerDetail.totalSpend}
-                  </span>
-                </div>
-              </div>
-
-              <div className="space-y-3 border-b border-neutral-200 pb-4">
-                <div className="flex items-center gap-3">
-                  <FiMail className="text-neutral-400" size={16} />
-                  <span className="text-neutral-700">{selectedCustomerDetail.email}</span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <FiPhone className="text-neutral-400" size={16} />
-                  <span className="text-neutral-700">{selectedCustomerDetail.phone}</span>
-                </div>
-                <div className="flex items-start gap-3">
-                  <FiMapPin className="text-neutral-400 shrink-0 mt-0.5" size={16} />
-                  <span className="text-neutral-700">{selectedCustomerDetail.address}</span>
-                </div>
-              </div>
-
-              <div>
-                <h4 className="font-bold uppercase tracking-wider text-black mb-3">
-                  Thống kê mua sắm
-                </h4>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="p-3 border border-neutral-200">
-                    <span className="text-neutral-500 block mb-1">Tổng số đơn hàng</span>
-                    <span className="font-bold text-base text-black">
-                      {selectedCustomerDetail.totalOrders} đơn
-                    </span>
-                  </div>
-                  <div className="p-3 border border-neutral-200">
-                    <span className="text-neutral-500 block mb-1">Lần mua gần nhất</span>
-                    <span className="font-bold text-base text-black">
-                      {selectedCustomerDetail.lastPurchase}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Add New Customer Modal */}
-      {isAddModalOpen && (
-        <div
-          className="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4 md:p-6 animate-fade-in"
-          onClick={() => setIsAddModalOpen(false)}
-        >
-          <div
-            className="bg-white max-w-md w-full p-6 md:p-8 relative shadow-2xl border border-neutral-200 text-left"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex items-center justify-between border-b border-neutral-200 pb-4 mb-6">
-              <h3 className="font-serif text-xl font-bold uppercase text-black">
-                Thêm Khách Hàng Mới
-              </h3>
-              <button
-                onClick={() => setIsAddModalOpen(false)}
-                className="text-neutral-500 hover:text-black p-1 transition-colors cursor-pointer"
-              >
-                <FiX size={20} />
-              </button>
-            </div>
-
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                setIsAddModalOpen(false);
-                showToast("Đã thêm hồ sơ khách hàng mới thành công!");
-              }}
-              className="space-y-4 text-xs font-sans"
+      {/* Broadcast Message Modal */}
+      {isBroadcastModalOpen && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+          <div className="bg-white border border-neutral-300 max-w-lg w-full p-6 md:p-8 shadow-2xl animate-fade-in relative text-left">
+            <button
+              onClick={() => setIsBroadcastModalOpen(false)}
+              className="absolute right-4 top-4 text-neutral-400 hover:text-black cursor-pointer"
             >
+              <FiX size={20} />
+            </button>
+
+            <div className="mb-6">
+              <span className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest block mb-1">
+                LUMIÈRE BROADCAST CONCIERGE
+              </span>
+              <h3 className="font-serif text-xl font-bold uppercase text-black">
+                Gửi Tin Nhắn Hàng Loạt
+              </h3>
+              <p className="text-xs text-neutral-500 font-light mt-1">
+                Phát thông điệp quảng bá hoặc chương trình ưu đãi VIP trực tiếp vào cuộc trò chuyện của khách hàng.
+              </p>
+            </div>
+
+            <form onSubmit={handleSendBroadcast} className="space-y-5">
+              {/* Message Content */}
               <div>
-                <label className="block font-bold text-neutral-700 uppercase tracking-wider mb-1">
-                  Họ và tên *
+                <label className="block text-xs font-bold uppercase tracking-wider text-neutral-700 mb-2">
+                  Nội dung tin nhắn <span className="text-rose-600">*</span>
                 </label>
-                <input
-                  type="text"
+                <textarea
+                  rows={4}
                   required
-                  placeholder="Ví dụ: Hoàng Anh Tuấn"
-                  className="w-full border border-neutral-300 p-2.5 outline-none focus:border-black"
+                  maxLength={2000}
+                  value={broadcastForm.content}
+                  onChange={(e) => setBroadcastForm({ ...broadcastForm, content: e.target.value })}
+                  placeholder="Nhập nội dung thông điệp gửi tới khách hàng tại đây..."
+                  className="w-full bg-[#fbf9f9] border border-neutral-300 p-3 text-xs md:text-sm text-black outline-none focus:border-black resize-none"
                 />
               </div>
 
+              {/* Min Total Spent Threshold */}
               <div>
-                <label className="block font-bold text-neutral-700 uppercase tracking-wider mb-1">
-                  Email *
+                <label className="block text-xs font-bold uppercase tracking-wider text-neutral-700 mb-1">
+                  Điều kiện chi tiêu tối thiểu (`minTotalSpent`)
                 </label>
-                <input
-                  type="email"
-                  required
-                  placeholder="name@example.com"
-                  className="w-full border border-neutral-300 p-2.5 outline-none focus:border-black"
-                />
+                <p className="text-[11px] text-neutral-400 italic mb-2">
+                  Nhập `0` để gửi cho toàn bộ khách hàng, hoặc chọn mốc chi tiêu để tri ân VIP:
+                </p>
+
+                <div className="grid grid-cols-4 gap-2 mb-3">
+                  {[
+                    { label: "Tất cả (0₫)", val: 0 },
+                    { label: "&ge; 2 Trđ (Bạc)", val: 2000000 },
+                    { label: "&ge; 5 Trđ (Vàng)", val: 5000000 },
+                    { label: "&ge; 10 Trđ (Diamond)", val: 10000000 },
+                  ].map((preset) => (
+                    <button
+                      key={preset.val}
+                      type="button"
+                      onClick={() => setBroadcastForm({ ...broadcastForm, minTotalSpent: preset.val })}
+                      className={`py-1.5 px-2 text-[10px] font-bold uppercase border transition-colors cursor-pointer ${
+                        Number(broadcastForm.minTotalSpent) === preset.val
+                          ? "bg-black text-white border-black"
+                          : "bg-neutral-50 text-neutral-700 border-neutral-300 hover:bg-neutral-200"
+                      }`}
+                    >
+                      {preset.label}
+                    </button>
+                  ))}
+                </div>
+
+                <div className="relative">
+                  <input
+                    type="number"
+                    min="0"
+                    step="100000"
+                    value={broadcastForm.minTotalSpent}
+                    onChange={(e) => setBroadcastForm({ ...broadcastForm, minTotalSpent: e.target.value })}
+                    className="w-full bg-[#fbf9f9] border border-neutral-300 px-3 py-2 text-xs font-mono font-bold text-black outline-none focus:border-black"
+                  />
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-neutral-400">VND</span>
+                </div>
               </div>
 
-              <div>
-                <label className="block font-bold text-neutral-700 uppercase tracking-wider mb-1">
-                  Số điện thoại *
-                </label>
-                <input
-                  type="tel"
-                  required
-                  placeholder="0912 345 678"
-                  className="w-full border border-neutral-300 p-2.5 outline-none focus:border-black"
-                />
-              </div>
-
-              <div>
-                <label className="block font-bold text-neutral-700 uppercase tracking-wider mb-1">
-                  Phân hạng ban đầu
-                </label>
-                <select className="w-full border border-neutral-300 p-2.5 outline-none focus:border-black bg-white">
-                  <option value="Silver">Silver Tier</option>
-                  <option value="Gold">Gold Tier</option>
-                  <option value="Platinum">Platinum Tier</option>
-                </select>
-              </div>
-
-              <div className="pt-4 flex justify-end gap-3">
+              {/* Submit Buttons */}
+              <div className="pt-4 border-t border-neutral-200 flex justify-end gap-3">
                 <button
                   type="button"
-                  onClick={() => setIsAddModalOpen(false)}
-                  className="px-5 py-2.5 border border-neutral-300 hover:border-black text-black font-bold uppercase text-[10px] cursor-pointer"
+                  onClick={() => setIsBroadcastModalOpen(false)}
+                  className="px-5 py-2.5 border border-neutral-300 text-xs font-bold uppercase tracking-wider text-neutral-600 hover:text-black cursor-pointer"
                 >
-                  Hủy
+                  Hủy bỏ
                 </button>
                 <button
                   type="submit"
-                  className="px-6 py-2.5 bg-black text-white hover:bg-neutral-800 font-bold uppercase text-[10px] cursor-pointer"
+                  disabled={broadcastMutation.isPending}
+                  className="px-6 py-2.5 bg-black text-white hover:bg-neutral-800 text-xs font-bold uppercase tracking-widest flex items-center gap-2 cursor-pointer disabled:opacity-40 shadow-xs"
                 >
-                  Lưu Khách Hàng
+                  {broadcastMutation.isPending ? "Đang phát tin nhắn..." : "Xác nhận phát tin nhắn"}
                 </button>
               </div>
             </form>
           </div>
         </div>
       )}
+
     </div>
   );
 };

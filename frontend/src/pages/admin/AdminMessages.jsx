@@ -19,7 +19,7 @@ const AdminMessages = () => {
   const [isOpponentTyping, setIsOpponentTyping] = useState(false);
 
   const stompClientRef = useRef(null);
-  const messagesEndRef = useRef(null);
+  const chatBodyRef = useRef(null);
   const activeConvIdRef = useRef(activeConvId);
 
   useEffect(() => {
@@ -128,7 +128,12 @@ const AdminMessages = () => {
 
   // Scroll to bottom
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (chatBodyRef.current) {
+      chatBodyRef.current.scrollTo({
+        top: chatBodyRef.current.scrollHeight,
+        behavior: "smooth",
+      });
+    }
   };
 
   useEffect(() => {
@@ -307,7 +312,7 @@ const AdminMessages = () => {
                 </div>
 
                 {/* Chat Messages Body */}
-                <div className="flex-1 overflow-y-auto p-8 space-y-6 bg-[#fbf9f9]">
+                <div ref={chatBodyRef} className="flex-1 overflow-y-auto p-8 space-y-6 bg-[#fbf9f9]">
                   {isHistoryLoading ? (
                     <div className="py-12 text-center text-xs text-neutral-400">
                       Đang tải tin nhắn...
@@ -352,8 +357,6 @@ const AdminMessages = () => {
                       Khách hàng đang gõ tin nhắn...
                     </div>
                   )}
-
-                  <div ref={messagesEndRef} />
                 </div>
 
                 {/* Message Reply Input */}
