@@ -32,15 +32,16 @@ const Support = () => {
   const [liveSocketMessages, setLiveSocketMessages] = useState([]);
 
   const stompClientRef = useRef(null);
-  const messagesEndRef = useRef(null);
+  const chatBodyRef = useRef(null);
 
   // Backend API Queries
-  const { data: myConv, isLoading: isConvLoading } = useMyConversation(isUserLoggedIn);
+  const { data: myConv, isLoading: isConvLoading } =
+    useMyConversation(isUserLoggedIn);
   const conversationId = myConv?.id;
 
   const { data: historyPage, isLoading: isHistoryLoading } = useChatMessages(
     { conversationId, page: 0, size: 50 },
-    isUserLoggedIn && !!conversationId
+    isUserLoggedIn && !!conversationId,
   );
 
   const sendMessageMutation = useSendMessage();
@@ -116,7 +117,12 @@ const Support = () => {
 
   // Scroll to bottom
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (chatBodyRef.current) {
+      chatBodyRef.current.scrollTo({
+        top: chatBodyRef.current.scrollHeight,
+        behavior: "smooth",
+      });
+    }
   };
 
   useEffect(() => {
@@ -128,7 +134,11 @@ const Support = () => {
     const text = e.target.value;
     setInputMessage(text);
 
-    if (stompClientRef.current && stompClientRef.current.connected && conversationId) {
+    if (
+      stompClientRef.current &&
+      stompClientRef.current.connected &&
+      conversationId
+    ) {
       stompClientRef.current.publish({
         destination: "/app/chat.typing",
         body: JSON.stringify({
@@ -201,17 +211,21 @@ const Support = () => {
   };
 
   const quickTopics = [
-    { label: "Kiểm tra đơn hàng", query: "Tôi muốn kiểm tra trạng thái đơn hàng của mình" },
+    {
+      label: "Kiểm tra đơn hàng",
+      query: "Tôi muốn kiểm tra trạng thái đơn hàng của mình",
+    },
     { label: "Tư vấn chọn Size", query: "Tư vấn cho tôi cách chọn size chuẩn" },
-    { label: "Chính sách Đổi trả", query: "Cho tôi hỏi về chính sách đổi trả sản phẩm" },
-    { label: "Mã giảm giá Voucher", query: "Cho tôi hỏi về các mã giảm giá Voucher đang có" },
+    {
+      label: "Mã giảm giá Voucher",
+      query: "Cho tôi hỏi về các mã giảm giá Voucher đang có",
+    },
   ];
 
   return (
     <div className="bg-[#fbf9f9] text-black min-h-screen flex flex-col font-dmsans pt-20">
       {/* Main Content Container */}
       <main className="flex-grow w-full max-w-[1280px] mx-auto px-6 md:px-10 py-10 flex flex-col items-center justify-center">
-        
         {/* Page Header */}
         <header className="w-full text-center mb-8">
           <span className="label-sm text-neutral-500 tracking-[0.25em] text-[10px] md:text-xs font-semibold uppercase mb-2 block">
@@ -221,13 +235,14 @@ const Support = () => {
             LUMIÈRE Concierge
           </h1>
           <p className="body-md text-neutral-600 max-w-2xl mx-auto text-xs md:text-sm font-light leading-relaxed">
-            Dịch vụ tư vấn thời trang cao cấp & hỗ trợ trực tuyến 24/7. Kết nối trực tiếp với đội ngũ chuyên gia và bộ phận Chăm sóc Khách hàng của LUMIÈRE.
+            Dịch vụ tư vấn thời trang cao cấp & hỗ trợ trực tuyến 24/7. Kết nối
+            trực tiếp với đội ngũ chuyên gia và bộ phận Chăm sóc Khách hàng của
+            LUMIÈRE.
           </p>
         </header>
 
         {/* Chat Container Window */}
         <div className="w-full max-w-5xl bg-white border border-neutral-200 shadow-sm flex flex-col md:flex-row h-[72vh] min-h-[600px] overflow-hidden text-left">
-          
           {/* Left Sidebar: Conversations & Specialist Info */}
           <aside className="w-full md:w-80 border-b md:border-b-0 md:border-r border-neutral-200 bg-[#f8f7f5] p-6 flex flex-col justify-between shrink-0">
             <div>
@@ -265,7 +280,10 @@ const Support = () => {
                 ) : (
                   <p className="text-neutral-500 italic text-[11px]">
                     Khách vãng lai (Vui lòng{" "}
-                    <Link to="/login" className="text-black font-bold underline">
+                    <Link
+                      to="/login"
+                      className="text-black font-bold underline"
+                    >
                       đăng nhập
                     </Link>{" "}
                     để đồng bộ lịch sử đơn)
@@ -285,7 +303,10 @@ const Support = () => {
                     className="w-full text-left text-xs bg-white hover:bg-neutral-100 border border-neutral-200 p-2.5 flex items-center justify-between text-neutral-800 font-medium transition-colors cursor-pointer group"
                   >
                     <span>{topic.label}</span>
-                    <FiChevronRight size={14} className="text-neutral-400 group-hover:translate-x-0.5 transition-transform" />
+                    <FiChevronRight
+                      size={14}
+                      className="text-neutral-400 group-hover:translate-x-0.5 transition-transform"
+                    />
                   </button>
                 ))}
               </div>
@@ -305,7 +326,6 @@ const Support = () => {
 
           {/* Right Main Chat Area */}
           <section className="flex-1 flex flex-col bg-white relative">
-            
             {/* Chat Room Header */}
             <div className="p-4 md:p-6 border-b border-neutral-200 flex items-center justify-between bg-[#FAF8F5]/80 backdrop-blur-xs z-10">
               <div className="flex items-center gap-3">
@@ -336,8 +356,10 @@ const Support = () => {
             </div>
 
             {/* Chat Messages Body */}
-            <div className="flex-1 p-6 overflow-y-auto flex flex-col gap-5 bg-[#fbf9f9]">
-              
+            <div
+              ref={chatBodyRef}
+              className="flex-1 p-6 overflow-y-auto flex flex-col gap-5 bg-[#fbf9f9]"
+            >
               {/* Today Time Divider */}
               <div className="text-center w-full my-2">
                 <span className="label-sm text-[10px] text-neutral-400 uppercase tracking-widest bg-white border border-neutral-200 px-3 py-1 font-mono">
@@ -346,15 +368,20 @@ const Support = () => {
               </div>
 
               {/* Initial Welcome Banner if history is empty */}
-              {isUserLoggedIn && !isHistoryLoading && displayMessages.length === 0 && (
-                <div className="bg-[#f5f3f3] border border-neutral-200 p-4 rounded-md text-xs text-neutral-700 leading-relaxed max-w-md self-start">
-                  Xin chào <strong>{user?.displayName}</strong>! Cảm ơn bạn đã liên hệ với LUMIÈRE Concierge. Hãy gửi câu hỏi hoặc thắc mắc của bạn bên dưới để bộ phận Hỗ trợ phục vụ bạn nhé!
-                </div>
-              )}
+              {isUserLoggedIn &&
+                !isHistoryLoading &&
+                displayMessages.length === 0 && (
+                  <div className="bg-[#f5f3f3] border border-neutral-200 p-4 rounded-md text-xs text-neutral-700 leading-relaxed max-w-md self-start">
+                    Xin chào <strong>{user?.displayName}</strong>! Cảm ơn bạn đã
+                    liên hệ với LUMIÈRE Concierge. Hãy gửi câu hỏi hoặc thắc mắc
+                    của bạn bên dưới để bộ phận Hỗ trợ phục vụ bạn nhé!
+                  </div>
+                )}
 
               {/* Render Messages */}
               {displayMessages.map((msg) => {
-                const isUser = msg.senderRole === "USER" || msg.senderId === user?.id;
+                const isUser =
+                  msg.senderRole === "USER" || msg.senderId === user?.id;
 
                 return (
                   <div
@@ -373,7 +400,9 @@ const Support = () => {
                       </div>
                     )}
 
-                    <div className={`flex flex-col ${isUser ? "items-end" : "items-start"}`}>
+                    <div
+                      className={`flex flex-col ${isUser ? "items-end" : "items-start"}`}
+                    >
                       <div
                         className={`px-3.5 py-2.5 text-xs md:text-sm leading-relaxed whitespace-pre-line shadow-2xs ${
                           isUser
@@ -411,8 +440,6 @@ const Support = () => {
                   <span>LUMIÈRE Concierge đang soạn phản hồi...</span>
                 </div>
               )}
-
-              <div ref={messagesEndRef} />
             </div>
 
             {/* Bottom Message Input Controls */}
@@ -426,7 +453,9 @@ const Support = () => {
               >
                 <button
                   type="button"
-                  onClick={() => alert("Tính năng đính kèm tệp sẽ khả dụng sớm!")}
+                  onClick={() =>
+                    alert("Tính năng đính kèm tệp sẽ khả dụng sớm!")
+                  }
                   className="p-2.5 text-neutral-400 hover:text-black transition-colors cursor-pointer rounded-full hover:bg-neutral-100"
                   title="Đính kèm tệp"
                 >
@@ -460,7 +489,6 @@ const Support = () => {
               </form>
             </div>
           </section>
-
         </div>
       </main>
 
