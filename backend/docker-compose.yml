@@ -13,6 +13,11 @@ services:
     volumes:
       - qhstore_postgres_data:/var/lib/postgresql/data
     restart: always
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d qhstore_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
   redis:
     image: redis:7-alpine
@@ -22,6 +27,11 @@ services:
     volumes:
       - qhstore_redis_data:/data
     restart: always
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
   redis-commander:
     image: rediscommander/redis-commander:latest
@@ -33,6 +43,27 @@ services:
     restart: always
     depends_on:
       - redis
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: qhstore-backend
+    env_file:
+      - .env
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+    ports:
+      - "8080:8080"
+    restart: always
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
 
 volumes:
   qhstore_postgres_data:
