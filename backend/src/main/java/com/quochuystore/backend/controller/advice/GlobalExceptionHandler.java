@@ -1,8 +1,10 @@
 package com.quochuystore.backend.controller.advice;
 
 import com.quochuystore.backend.exception.BadRequestException;
+import com.quochuystore.backend.exception.EmbeddingServiceException;
 import com.quochuystore.backend.exception.ImageUploadException;
 import com.quochuystore.backend.exception.ResourceNotFoundException;
+import com.quochuystore.backend.exception.TooManyRequestsException;
 import com.quochuystore.backend.exception.UnauthorizedException;
 import jakarta.validation.ConstraintViolationException;
 import lombok.Builder;
@@ -12,9 +14,12 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.DisabledException;
+import org.springframework.web.HttpMediaTypeNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.multipart.MultipartException;
+import org.springframework.web.multipart.support.MissingServletRequestPartException;
 
 import java.time.OffsetDateTime;
 import java.util.HashMap;
@@ -75,6 +80,23 @@ public class GlobalExceptionHandler {
         return buildResponse(HttpStatus.BAD_REQUEST, message);
     }
 
+    @ExceptionHandler(MissingServletRequestPartException.class)
+    public ResponseEntity<ErrorResponse> handleMissingServletRequestPartException(
+            MissingServletRequestPartException ex) {
+        return buildResponse(HttpStatus.BAD_REQUEST, "Required file part '" + ex.getRequestPartName() + "' is missing");
+    }
+
+    @ExceptionHandler(MultipartException.class)
+    public ResponseEntity<ErrorResponse> handleMultipartException(MultipartException ex) {
+        return buildResponse(HttpStatus.BAD_REQUEST, "Invalid or malformed multipart request");
+    }
+
+    @ExceptionHandler(HttpMediaTypeNotSupportedException.class)
+    public ResponseEntity<ErrorResponse> handleHttpMediaTypeNotSupportedException(
+            HttpMediaTypeNotSupportedException ex) {
+        return buildResponse(HttpStatus.BAD_REQUEST, "Request must be sent as multipart/form-data");
+    }
+
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<ErrorResponse> handleIllegalArgumentException(IllegalArgumentException ex) {
         return buildResponse(HttpStatus.BAD_REQUEST, ex.getMessage());
@@ -84,6 +106,26 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleImageUploadException(ImageUploadException ex) {
         log.error("Image upload failed", ex);
         return buildResponse(HttpStatus.INTERNAL_SERVER_ERROR, ex.getMessage());
+    }
+
+    @ExceptionHandler(TooManyRequestsException.class)
+    public ResponseEntity<ErrorResponse> handleTooManyRequestsException(TooManyRequestsException ex) {
+        return buildResponse(HttpStatus.TOO_MANY_REQUESTS, ex.getMessage());
+    }
+
+    @ExceptionHandler(EmbeddingServiceException.class)
+    public ResponseEntity<ErrorResponse> handleEmbeddingServiceException(EmbeddingServiceException ex) {
+        log.error("AI image search service call failed", ex);
+        return buildResponse(HttpStatus.SERVICE_UNAVAILABLE,
+                "Image search is temporarily unavailable. Please try again later.");
+    }
+
+    @ExceptionHandler(org.springframework.dao.DataIntegrityViolationException.class)
+    public ResponseEntity<ErrorResponse> handleDataIntegrityViolationException(
+            org.springframework.dao.DataIntegrityViolationException ex) {
+        log.warn("Database constraint/integrity violation: {}", ex.getMessage());
+        return buildResponse(HttpStatus.CONFLICT,
+                "Dữ liệu này đang được liên kết với các bản ghi khác trong hệ thống, không thể xóa hoặc chỉnh sửa.");
     }
 
     @ExceptionHandler(Exception.class)

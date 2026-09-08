@@ -56,6 +56,12 @@ app:
     refresh-expiration-ms: ${JWT_REFRESH_EXPIRATION_MS}
   security:
     pepper: ${APP_SECURITY_PEPPER}
+  image-search:
+    max-distance: ${IMAGE_SEARCH_MAX_DISTANCE:0.40}
+    default-top-k: ${IMAGE_SEARCH_DEFAULT_TOP_K:3}
+    max-top-k: ${IMAGE_SEARCH_MAX_TOP_K:10}
+    max-file-size-bytes: ${IMAGE_SEARCH_MAX_FILE_SIZE_BYTES:5242880}
+    rate-limit-per-minute: ${IMAGE_SEARCH_RATE_LIMIT_PER_MINUTE:10}
 
 logging:
   level:
@@ -88,3 +94,10 @@ payos:
   checksum-key: ${PAYOS_CHECKSUM_KEY}
   return-url: ${PAYOS_RETURN_URL}
   cancel-url: ${PAYOS_CANCEL_URL}
+
+# AI Image Search Service Configuration Matrix
+ai-service:
+  base-url: ${AI_SERVICE_BASE_URL}
+  api-key: ${AI_SERVICE_API_KEY}
+  connect-timeout-ms: ${AI_SERVICE_CONNECT_TIMEOUT_MS:5000}
+  read-timeout-ms: ${AI_SERVICE_READ_TIMEOUT_MS:60000}

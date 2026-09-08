@@ -48,10 +48,10 @@ public class VoucherServiceImpl implements VoucherService {
 
     @Override
     @Transactional(readOnly = true)
-    public PageResponseDto<VoucherResponseDto> getAdminVouchers(Boolean isActive, String search, int page, int size) {
-        log.info("Admin fetching vouchers. isActive: {}, search: {}, page: {}, size: {}", isActive, search, page, size);
+    public PageResponseDto<VoucherResponseDto> getAdminVouchers(Boolean isActive, Boolean isHidden, String search, int page, int size) {
+        log.info("Admin fetching vouchers. isActive: {}, isHidden: {}, search: {}, page: {}, size: {}", isActive, isHidden, search, page, size);
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
-        Page<Voucher> voucherPage = voucherRepository.findAdminVouchers(isActive, search != null ? search.trim() : null, pageable);
+        Page<Voucher> voucherPage = voucherRepository.findAdminVouchers(isActive, isHidden, search != null ? search.trim() : null, pageable);
 
         List<VoucherResponseDto> content = voucherPage.getContent().stream()
                 .map(VoucherMapper::toVoucherResponseDto)

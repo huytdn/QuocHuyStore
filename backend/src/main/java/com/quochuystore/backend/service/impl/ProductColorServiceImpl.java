@@ -12,6 +12,7 @@ import com.quochuystore.backend.exception.ResourceNotFoundException;
 import com.quochuystore.backend.repository.ProductColorRepository;
 import com.quochuystore.backend.repository.ProductRepository;
 import com.quochuystore.backend.repository.ProductVariationRepository;
+import com.quochuystore.backend.service.EmbeddingService;
 import com.quochuystore.backend.service.ImageService;
 import com.quochuystore.backend.service.ProductColorService;
 import lombok.RequiredArgsConstructor;
@@ -34,6 +35,7 @@ public class ProductColorServiceImpl implements ProductColorService {
     private final ProductVariationRepository productVariationRepository;
     private final ImageService imageService;
     private final StringRedisTemplate redisTemplate;
+    private final EmbeddingService embeddingService;
 
     @Override
     @Transactional
@@ -62,8 +64,10 @@ public class ProductColorServiceImpl implements ProductColorService {
                 .isActive(true)
                 .build();
 
-        ProductColor savedColor = productColorRepository.save(color);
+        ProductColor savedColor = productColorRepository.saveAndFlush(color);
         log.info("Successfully created color with id: {}", savedColor.getId());
+
+        tryEmbedAndPersist(savedColor, file);
 
         // Evict product cache
         evictProductCache(product.getSlug());
@@ -88,7 +92,9 @@ public class ProductColorServiceImpl implements ProductColorService {
             throw new BadRequestException("Color name already exists for this product");
         }
 
-        if (file != null && !file.isEmpty()) {
+        boolean hasNewImage = file != null && !file.isEmpty();
+
+        if (hasNewImage) {
             String oldPublicId = color.getImagePublicId();
             Map<String, String> uploadResult = imageService.uploadImage(file);
             color.setImageUrl(uploadResult.get("url"));
@@ -100,8 +106,12 @@ public class ProductColorServiceImpl implements ProductColorService {
         }
 
         color.setColorName(colorName.trim());
-        ProductColor updatedColor = productColorRepository.save(color);
+        ProductColor updatedColor = productColorRepository.saveAndFlush(color);
         log.info("Successfully updated color with id: {}", updatedColor.getId());
+
+        if (hasNewImage) {
+            tryEmbedAndPersist(updatedColor, file);
+        }
 
         // Evict product cache
         evictProductCache(product.getSlug());
@@ -130,6 +140,18 @@ public class ProductColorServiceImpl implements ProductColorService {
 
         // Evict product cache
         evictProductCache(color.getProduct().getSlug());
+    }
+
+    private void tryEmbedAndPersist(ProductColor color, MultipartFile file) {
+        try {
+            float[] embedding = embeddingService.embedImage(file.getBytes(), file.getOriginalFilename());
+            String vectorLiteral = embeddingService.toVectorLiteral(embedding);
+            productColorRepository.updateImageEmbedding(color.getId(), vectorLiteral);
+            log.info("Successfully generated and persisted image embedding for color id: {}", color.getId());
+        } catch (Exception e) {
+            log.warn("Failed to generate image embedding for color id: {}; leaving embedding unset until backfill",
+                    color.getId(), e);
+        }
     }
 
     private void evictProductCache(String slug) {

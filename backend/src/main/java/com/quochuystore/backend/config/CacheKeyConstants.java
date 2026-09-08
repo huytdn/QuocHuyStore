@@ -41,4 +41,9 @@ public final class CacheKeyConstants {
 
     public static final String USER_ANALYTICS_SUMMARY_PREFIX = "qhs:admin:users:summary:";
     public static final long USER_ANALYTICS_SUMMARY_TTL_MINUTES = 5;
+
+    public static final String IMAGE_SEARCH_PREFIX = "qhs:products:imagesearch:";
+    public static final long IMAGE_SEARCH_TTL_MINUTES = 30;
+
+    public static final String IMAGE_SEARCH_RATE_LIMIT_PREFIX = "qhs:ratelimit:imgsearch:";
 }
