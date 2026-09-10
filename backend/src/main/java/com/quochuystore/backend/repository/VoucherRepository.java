@@ -34,6 +34,11 @@ public interface VoucherRepository extends JpaRepository<Voucher, UUID>, JpaSpec
 
     @Query("SELECT v FROM Voucher v WHERE " +
             "(:isActive IS NULL OR v.isActive = :isActive) AND " +
+            "(:isHidden IS NULL OR v.isHidden = :isHidden) AND " +
             "(CAST(:search AS string) IS NULL OR :search = '' OR LOWER(v.code) LIKE CONCAT('%', LOWER(CAST(:search AS string)), '%') OR LOWER(v.name) LIKE CONCAT('%', LOWER(CAST(:search AS string)), '%'))")
-    Page<Voucher> findAdminVouchers(@Param("isActive") Boolean isActive, @Param("search") String search, Pageable pageable);
+    Page<Voucher> findAdminVouchers(
+            @Param("isActive") Boolean isActive,
+            @Param("isHidden") Boolean isHidden,
+            @Param("search") String search,
+            Pageable pageable);
 }

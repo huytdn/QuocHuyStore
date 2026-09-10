@@ -13,7 +13,7 @@ import java.util.UUID;
 public interface VoucherService {
 
     // Admin Operations
-    PageResponseDto<VoucherResponseDto> getAdminVouchers(Boolean isActive, String search, int page, int size);
+    PageResponseDto<VoucherResponseDto> getAdminVouchers(Boolean isActive, Boolean isHidden, String search, int page, int size);
 
     VoucherResponseDto getVoucherById(UUID id);
 

@@ -24,12 +24,13 @@ public class AdminVoucherController {
     @GetMapping
     public ResponseEntity<PageResponseDto<VoucherResponseDto>> getAdminVouchers(
             @RequestParam(required = false) Boolean isActive,
+            @RequestParam(required = false) Boolean isHidden,
             @RequestParam(required = false) String search,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
-        log.info("REST request by ADMIN to get vouchers. isActive: {}, search: {}, page: {}, size: {}",
-                isActive, search, page, size);
-        return ResponseEntity.ok(voucherService.getAdminVouchers(isActive, search, page, size));
+        log.info("REST request by ADMIN to get vouchers. isActive: {}, isHidden: {}, search: {}, page: {}, size: {}",
+                isActive, isHidden, search, page, size);
+        return ResponseEntity.ok(voucherService.getAdminVouchers(isActive, isHidden, search, page, size));
     }
 
     @GetMapping("/{id}")

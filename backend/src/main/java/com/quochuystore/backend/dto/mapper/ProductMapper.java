@@ -1,6 +1,7 @@
 package com.quochuystore.backend.dto.mapper;
 
 import com.quochuystore.backend.dto.product.response.CategoryResponseDto;
+import com.quochuystore.backend.dto.product.response.ImageSearchResultDto;
 import com.quochuystore.backend.dto.product.response.ProductColorResponseDto;
 import com.quochuystore.backend.dto.product.response.ProductDetailResponseDto;
 import com.quochuystore.backend.dto.product.response.ProductListResponseDto;
@@ -9,6 +10,7 @@ import com.quochuystore.backend.entity.Category;
 import com.quochuystore.backend.entity.Product;
 import com.quochuystore.backend.entity.ProductColor;
 import com.quochuystore.backend.entity.ProductVariation;
+import com.quochuystore.backend.repository.ProductColorRepository;
 
 import java.util.List;
 
@@ -77,6 +79,30 @@ public final class ProductMapper {
                 .feedbackCount(product.getFeedbackCount())
                 .colors(colors)
                 .isLikedByMe(isLikedByMe)
+                .build();
+    }
+
+    public static ImageSearchResultDto toImageSearchResultDto(ProductColorRepository.ImageSearchProjection projection,
+            boolean isLikedByMe) {
+        ProductListResponseDto product = ProductListResponseDto.builder()
+                .id(projection.getProductId())
+                .name(projection.getName())
+                .slug(projection.getSlug())
+                .thumbnailUrl(projection.getThumbnailUrl())
+                .thumbnailPublicId(projection.getThumbnailPublicId())
+                .minPrice(projection.getMinPrice())
+                .categoryName(projection.getCategoryName())
+                .averageStar(projection.getAverageStar() != null ? projection.getAverageStar().doubleValue() : 0.0)
+                .reviewCount(projection.getReviewCount())
+                .isLikedByMe(isLikedByMe)
+                .build();
+
+        return ImageSearchResultDto.builder()
+                .product(product)
+                .colorId(projection.getColorId())
+                .colorName(projection.getColorName())
+                .colorImageUrl(projection.getColorImageUrl())
+                .similarity(1.0 - projection.getDistance())
                 .build();
     }
 
