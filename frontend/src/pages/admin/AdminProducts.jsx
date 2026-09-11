@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import AdminSidebar from "../../components/admin/AdminSidebar";
 import AdminHeader from "../../components/admin/AdminHeader";
+import { FiZap } from "react-icons/fi";
 import {
   useAdminProducts,
   useDeleteProduct,
@@ -18,6 +19,7 @@ import {
   useUpdateStock,
   useDeleteVariation,
 } from "../../hooks/api/useProducts";
+import { useReindexEmbeddings } from "../../hooks/api/useImageSearch";
 
 const ManageColorsModal = ({ product, onClose }) => {
   const { data: productDetail, isLoading } = useAdminProductDetail(product?.id);
@@ -792,6 +794,53 @@ const AdminProducts = () => {
   const deleteProductMutation = useDeleteProduct();
   const createProductMutation = useCreateProduct();
   const updateProductMutation = useUpdateProduct();
+  const reindexMutation = useReindexEmbeddings();
+
+  // AI Vector Reindexing Auto-Loop State
+  const [isReindexing, setIsReindexing] = useState(false);
+  const [reindexStats, setReindexStats] = useState(null);
+
+  const handleStartAutoReindex = async () => {
+    if (isReindexing) return;
+    setIsReindexing(true);
+    let totalProcessed = 0;
+
+    try {
+      toast.info("Bắt đầu tiến trình đồng bộ chỉ mục AI Vector (Fashion-CLIP 512-dim)...");
+      while (true) {
+        const res = await reindexMutation.mutateAsync(20);
+        totalProcessed += res.processed;
+        setReindexStats({
+          processed: totalProcessed,
+          remaining: res.remaining,
+        });
+
+        if (res.remaining === 0) {
+          toast.success(
+            `Đã đồng bộ thành công toàn bộ chỉ mục vector! Tổng cộng: ${totalProcessed} màu sắc.`
+          );
+          break;
+        } else if (res.processed === 0) {
+          toast.warn(
+            `Còn ${res.remaining} màu sắc chưa thể đồng bộ (vui lòng kiểm tra trạng thái AI Service).`
+          );
+          break;
+        } else {
+          toast.info(
+            `Đã xử lý ${totalProcessed} màu, còn lại ${res.remaining} đang tiếp tục...`
+          );
+        }
+      }
+    } catch (err) {
+      toast.error(
+        err.response?.data?.message ||
+          "Lỗi trong quá trình kết nối hoặc đồng bộ vector!"
+      );
+    } finally {
+      setIsReindexing(false);
+      setReindexStats(null);
+    }
+  };
 
   const backendProducts = pageData?.content || [];
   const totalElements = pageData ? pageData.totalElements : 0;
@@ -1011,12 +1060,30 @@ const AdminProducts = () => {
                 Inventory
               </h2>
             </div>
-            <button
-              onClick={handleOpenAddProduct}
-              className="bg-black text-white text-[10px] font-bold px-5 py-2.5 uppercase tracking-widest hover:bg-neutral-800 transition-colors active:scale-95 cursor-pointer"
-            >
-              Add New Product
-            </button>
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={handleStartAutoReindex}
+                disabled={isReindexing}
+                className="flex items-center gap-2 border border-[#C5A880] bg-[#FAF6EE] text-[#8C6B38] hover:bg-[#F3ECE0] hover:border-[#8C6B38] disabled:opacity-60 text-[10px] font-bold px-4 py-2.5 rounded-full uppercase tracking-wider transition-all shadow-xs cursor-pointer active:scale-95"
+                title="Tự động đồng bộ và nạp vector đặc trưng Fashion-CLIP 512-dim cho tất cả màu sắc sản phẩm còn thiếu"
+              >
+                <FiZap className={isReindexing ? "animate-spin text-[#8C6B38]" : "text-[#8C6B38]"} size={13} />
+                <span>
+                  {isReindexing
+                    ? reindexStats
+                      ? `ĐANG ĐỒNG BỘ (${reindexStats.processed}/${reindexStats.processed + reindexStats.remaining})`
+                      : "ĐANG ĐỒNG BỘ VECTOR..."
+                    : "CHỈ MỤC AI VECTOR"}
+                </span>
+              </button>
+              <button
+                onClick={handleOpenAddProduct}
+                className="bg-black text-white text-[10px] font-bold px-5 py-2.5 uppercase tracking-widest hover:bg-neutral-800 transition-colors active:scale-95 cursor-pointer"
+              >
+                Add New Product
+              </button>
+            </div>
           </div>
 
           {/* Filter Bar */}

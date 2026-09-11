@@ -106,24 +106,30 @@ const ProductDetail = () => {
   const [careOpen, setCareOpen] = useState(false);
   const [addedToCart, setAddedToCart] = useState(false);
 
-  // Sync states when product data arrives
+  // Sync states when product data arrives (supporting color pre-selection from Visual Search)
   useEffect(() => {
     if (product) {
+      // Find pre-selected color if passed via navigation state (e.g. from SmartSearch)
+      const targetColor = location.state?.colorId
+        ? product.colors?.find((c) => c.colorId === location.state.colorId)
+        : null;
+
+      const defaultColor = targetColor || product.colors?.[0];
       const initialImage =
-        product.colors?.[0]?.imageUrl || product.thumbnailUrl || "";
+        defaultColor?.imageUrl || product.thumbnailUrl || "";
       setActiveImage(initialImage);
 
-      if (product.colors && product.colors.length > 0) {
-        setSelectedColor(product.colors[0].colorName);
+      if (defaultColor) {
+        setSelectedColor(defaultColor.colorName);
         if (
-          product.colors[0].variations &&
-          product.colors[0].variations.length > 0
+          defaultColor.variations &&
+          defaultColor.variations.length > 0
         ) {
-          setSelectedSize(product.colors[0].variations[0].size);
+          setSelectedSize(defaultColor.variations[0].size);
         }
       }
     }
-  }, [product]);
+  }, [product, location.state]);
 
   const colors = product?.colors || [];
   const activeColorObj =
