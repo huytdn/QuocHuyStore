@@ -16,7 +16,7 @@ const Footer = ({ variant = "detailed" }) => {
               LUMIÈRE
             </Link>
             <p className="body-md text-xs text-neutral-500 font-light leading-relaxed">
-              Crafting timeless elegance for the modern individual.
+              Nghệ thuật của sự tối giản và chất lượng vượt thời gian.
             </p>
           </div>
 
@@ -26,31 +26,31 @@ const Footer = ({ variant = "detailed" }) => {
               to="/privacy"
               className="body-md text-xs text-neutral-600 hover:text-black transition-colors"
             >
-              Privacy Policy
+              Chính Sách Bảo Mật
             </Link>
             <Link
               to="/terms"
               className="body-md text-xs text-neutral-600 hover:text-black transition-colors"
             >
-              Terms of Service
+              Điều Khoản Dịch Vụ
             </Link>
             <Link
               to="/shipping-returns"
               className="body-md text-xs text-neutral-600 hover:text-black transition-colors"
             >
-              Shipping & Returns
+              Giao Hàng & Đổi Trả
             </Link>
             <Link
               to="/contact"
               className="body-md text-xs text-neutral-600 hover:text-black transition-colors"
             >
-              Contact
+              Liên Hệ
             </Link>
           </div>
 
           {/* Right copyright */}
           <div className="body-md text-xs text-neutral-400 font-light tracking-wide lg:self-center">
-            © 2024 LUMIÈRE. All Rights Reserved.
+            © 2026 LUMIÈRE. TẤT CẢ QUYỀN ĐƯỢC BẢO LƯU.
           </div>
         </div>
       </footer>
@@ -89,7 +89,7 @@ const Footer = ({ variant = "detailed" }) => {
                 <ul className="flex flex-col gap-2.5">
                   <li>
                     <Link to="/privacy" className="body-md text-neutral-600 hover:text-black text-sm transition-colors">
-                      Chính sách Bảo Mật
+                      Chính Sách Bảo Mật
                     </Link>
                   </li>
                   <li>
@@ -108,12 +108,12 @@ const Footer = ({ variant = "detailed" }) => {
                 <ul className="flex flex-col gap-2.5">
                   <li>
                     <Link to="/shipping-returns" className="body-md text-neutral-600 hover:text-black text-sm transition-colors">
-                      Giao hàng & Đổi trả
+                      Giao Hàng & Đổi Trả
                     </Link>
                   </li>
                   <li>
                     <Link to="/contact" className="body-md text-neutral-600 hover:text-black text-sm transition-colors">
-                      Liên hệ
+                      Liên Hệ
                     </Link>
                   </li>
                 </ul>
@@ -126,7 +126,7 @@ const Footer = ({ variant = "detailed" }) => {
           {/* Bottom Copyright */}
           <div className="border-t border-[#e0e0e0] pt-6 text-left">
             <p className="body-md text-xs text-neutral-400 font-light">
-              © 2024 LUMIÈRE. All Rights Reserved.
+              © 2026 LUMIÈRE. TẤT CẢ QUYỀN ĐƯỢC BẢO LƯU.
             </p>
           </div>
 
@@ -239,10 +239,10 @@ const Footer = ({ variant = "detailed" }) => {
         {/* Bottom copyright */}
         <div className="border-t border-[#e0e0e0] pt-6 flex flex-col md:flex-row justify-between items-center gap-4">
           <span className="label-sm text-[10px] text-neutral-400">
-            © 2026 LUMIÈRE ARCHIVES. ALL RIGHTS RESERVED.
+            © 2026 LUMIÈRE ARCHIVES. TẤT CẢ QUYỀN ĐƯỢC BẢO LƯU.
           </span>
           <span className="label-sm text-[10px] text-neutral-400">
-            DESIGNED WITH UNDERSTATED LUXURY
+            THIẾT KẾ ĐẲNG CẤP VÀ TINH TẾ
           </span>
         </div>
       </div>

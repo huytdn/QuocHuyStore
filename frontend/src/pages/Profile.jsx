@@ -139,9 +139,8 @@ const Profile = () => {
           setIsEditModalOpen(false);
           toast.success("Cập nhật hồ sơ thành công!");
         },
-        onError: (err) => {
-          const errMsg = err.response?.data?.message || "Cập nhật hồ sơ thất bại, vui lòng thử lại!";
-          toast.error(errMsg);
+        onError: () => {
+          toast.error("Cập nhật hồ sơ thất bại, vui lòng thử lại sau!");
         },
       }
     );
@@ -169,8 +168,8 @@ const Profile = () => {
           setIsAddAddressOpen(false);
           toast.success("Thêm địa chỉ giao hàng thành công!");
         },
-        onError: (err) => {
-          toast.error(err.response?.data?.message || "Thêm địa chỉ thất bại!");
+        onError: () => {
+          toast.error("Thêm địa chỉ thất bại. Vui lòng thử lại sau!");
         },
       }
     );
@@ -201,8 +200,8 @@ const Profile = () => {
           setIsEditAddressOpen(false);
           toast.success("Cập nhật địa chỉ thành công!");
         },
-        onError: (err) => {
-          toast.error(err.response?.data?.message || "Cập nhật địa chỉ thất bại!");
+        onError: () => {
+          toast.error("Cập nhật địa chỉ thất bại. Vui lòng thử lại sau!");
         },
       }
     );
@@ -223,8 +222,8 @@ const Profile = () => {
         onSuccess: () => {
           toast.success("Đã đặt làm địa chỉ mặc định!");
         },
-        onError: (err) => {
-          toast.error(err.response?.data?.message || "Đặt địa chỉ mặc định thất bại!");
+        onError: () => {
+          toast.error("Đặt địa chỉ mặc định thất bại. Vui lòng thử lại sau!");
         },
       }
     );
@@ -236,8 +235,8 @@ const Profile = () => {
         onSuccess: () => {
           toast.success("Xóa địa chỉ thành công!");
         },
-        onError: (err) => {
-          toast.error(err.response?.data?.message || "Xóa địa chỉ thất bại!");
+        onError: () => {
+          toast.error("Xóa địa chỉ thất bại. Vui lòng thử lại sau!");
         },
       });
     }
@@ -250,8 +249,8 @@ const Profile = () => {
         toast.success("Tài khoản của bạn đã được vô hiệu hóa thành công.");
         navigate("/login");
       },
-      onError: (err) => {
-        toast.error(err.response?.data?.message || "Vô hiệu hóa tài khoản thất bại!");
+      onError: () => {
+        toast.error("Vô hiệu hóa tài khoản thất bại. Vui lòng thử lại sau!");
       },
     });
   };

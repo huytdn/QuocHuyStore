@@ -73,10 +73,11 @@ const AdminLogin = () => {
             }, 1200);
           }
         },
-        onError: (error) => {
-          const errorMsg =
-            error.response?.data?.message || "Tên đăng nhập hoặc mật khẩu không đúng!";
-          showAlert("error", errorMsg);
+        onError: () => {
+          showAlert(
+            "error",
+            "Tên đăng nhập hoặc mật khẩu quản trị không chính xác!",
+          );
         },
       }
     );
@@ -110,8 +111,8 @@ const AdminLogin = () => {
           <div className="bg-white border border-[#e0e0e0] p-12 shadow-sm transition-all duration-300">
             {/* Card Header */}
             <div className="mb-12 text-center">
-              <h1 className="font-serif text-[32px] font-semibold text-black mb-2">Sign In</h1>
-              <p className="text-[10px] text-neutral-400 font-bold uppercase tracking-widest">Access Admin Console</p>
+              <h1 className="font-serif text-[32px] font-semibold text-black mb-2">Đăng Nhập Quản Trị</h1>
+              <p className="text-[10px] text-neutral-400 font-bold uppercase tracking-widest">Hệ Thống Quản Trị Nội Bộ</p>
             </div>
 
             {/* Notification Alert */}
@@ -129,7 +130,7 @@ const AdminLogin = () => {
             <form onSubmit={handleSubmit} className="space-y-8" id="loginForm">
               {/* Email Field */}
               <div className="space-y-2">
-                <label className="text-[10px] font-bold text-black uppercase tracking-wider" htmlFor="email">Email or Username</label>
+                <label className="text-[10px] font-bold text-black uppercase tracking-wider" htmlFor="email">Tên Đăng Nhập / Email</label>
                 <div className="relative">
                   <input 
                     className="w-full bg-transparent border-t-0 border-x-0 border-b border-neutral-400 py-3 px-0 text-sm placeholder:text-neutral-400/60 transition-colors focus:border-black focus:ring-0 rounded-none" 
@@ -137,7 +138,7 @@ const AdminLogin = () => {
                     name="username" 
                     value={formData.username}
                     onChange={handleInputChange}
-                    placeholder="name@lumiere.com" 
+                    placeholder="admin@lumiere.com" 
                     required 
                     type="text"
                     disabled={isLoading}
@@ -148,7 +149,7 @@ const AdminLogin = () => {
               {/* Password Field */}
               <div className="space-y-2">
                 <div className="flex justify-between items-center">
-                  <label className="text-[10px] font-bold text-black uppercase tracking-wider" htmlFor="password">Password</label>
+                  <label className="text-[10px] font-bold text-black uppercase tracking-wider" htmlFor="password">Mật Khẩu</label>
                 </div>
                 <div className="relative">
                   <input 
@@ -166,6 +167,7 @@ const AdminLogin = () => {
                     className="absolute right-0 top-3 text-neutral-400 hover:text-black transition-colors" 
                     id="togglePassword" 
                     type="button"
+                    title={showPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
                     onClick={() => setShowPassword(prev => !prev)}
                   >
                     <span className="material-symbols-outlined text-[20px] select-none">
@@ -184,7 +186,7 @@ const AdminLogin = () => {
                     name="remember-me" 
                     type="checkbox"
                   />
-                  <label className="ml-2 block text-[10px] font-bold text-neutral-500 uppercase cursor-pointer select-none" htmlFor="remember-me">Remember me</label>
+                  <label className="ml-2 block text-[10px] font-bold text-neutral-500 uppercase cursor-pointer select-none" htmlFor="remember-me">Ghi nhớ đăng nhập</label>
                 </div>
                 <a 
                   href="#" 
@@ -194,7 +196,7 @@ const AdminLogin = () => {
                   }}
                   className="text-[10px] font-bold text-neutral-500 uppercase hover:text-black transition-colors underline underline-offset-4 decoration-neutral-300"
                 >
-                  Forgot password?
+                  Quên mật khẩu?
                 </a>
               </div>
 
@@ -205,7 +207,7 @@ const AdminLogin = () => {
                   type="submit"
                   disabled={isLoading}
                 >
-                  {isLoading ? "Verifying..." : "Enter Console"}
+                  {isLoading ? "Đang xác thực..." : "ĐĂNG NHẬP HỆ THỐNG"}
                 </button>
               </div>
             </form>
@@ -213,15 +215,15 @@ const AdminLogin = () => {
             {/* Security Badge */}
             <div className="mt-12 flex items-center justify-center gap-2 opacity-40">
               <span className="material-symbols-outlined text-[16px]">encrypted</span>
-              <span className="text-[10px] font-bold uppercase">End-to-End Secure Platform</span>
+              <span className="text-[10px] font-bold uppercase">Nền Tảng Bảo Mật Chuẩn Doanh Nghiệp</span>
             </div>
           </div>
 
           {/* Footer Links (Mobile/Contextual) */}
           <div className="mt-8 flex justify-center gap-6">
-            <a className="text-[10px] font-bold text-neutral-400 uppercase hover:text-black transition-colors" href="#">Contact Support</a>
+            <a className="text-[10px] font-bold text-neutral-400 uppercase hover:text-black transition-colors" href="#">Liên Hệ Hỗ Trợ</a>
             <span className="text-neutral-300">•</span>
-            <a className="text-[10px] font-bold text-neutral-400 uppercase hover:text-black transition-colors" href="#">Privacy</a>
+            <a className="text-[10px] font-bold text-neutral-400 uppercase hover:text-black transition-colors" href="#">Bảo Mật</a>
           </div>
         </div>
 
@@ -239,12 +241,12 @@ const AdminLogin = () => {
       <footer className="w-full bg-[#fbf9f9] border-t border-[#cfc4c5] transition-colors duration-200">
         <div className="flex flex-col md:flex-row justify-between items-center px-16 py-6 max-w-[1440px] mx-auto gap-4">
           <div className="text-[10px] font-bold uppercase text-neutral-400">
-            © 2026 LUMIÈRE MANAGEMENT PLATFORM. ALL RIGHTS RESERVED.
+            © 2026 LUMIÈRE MANAGEMENT PLATFORM. TẤT CẢ QUYỀN ĐƯỢC BẢO LƯU.
           </div>
           <div className="flex gap-6">
-            <a className="text-[10px] font-bold uppercase text-neutral-400 hover:text-black underline transition-all" href="#">Privacy Policy</a>
-            <a className="text-[10px] font-bold uppercase text-neutral-400 hover:text-black underline transition-all" href="#">Security Protocol</a>
-            <a className="text-[10px] font-bold uppercase text-neutral-400 hover:text-black underline transition-all" href="#">Terms of Service</a>
+            <a className="text-[10px] font-bold uppercase text-neutral-400 hover:text-black underline transition-all" href="#">Chính Sách Bảo Mật</a>
+            <a className="text-[10px] font-bold uppercase text-neutral-400 hover:text-black underline transition-all" href="#">Giao Thức An Toàn</a>
+            <a className="text-[10px] font-bold uppercase text-neutral-400 hover:text-black underline transition-all" href="#">Điều Khoản Dịch Vụ</a>
           </div>
         </div>
       </footer>

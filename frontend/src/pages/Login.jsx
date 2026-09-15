@@ -98,11 +98,11 @@ const Login = () => {
             navigate(from, { replace: true });
           }, 1500);
         },
-        onError: (error) => {
-          const errorMsg =
-            error.response?.data?.message ||
-            "Tên tài khoản hoặc mật khẩu không đúng!";
-          showAlert("error", errorMsg);
+        onError: () => {
+          showAlert(
+            "error",
+            "Tên tài khoản hoặc mật khẩu không chính xác. Vui lòng kiểm tra lại!",
+          );
         },
       },
     );

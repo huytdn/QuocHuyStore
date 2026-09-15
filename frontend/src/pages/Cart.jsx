@@ -88,8 +88,8 @@ const Cart = () => {
     const newQty = currentQty + delta;
     if (newQty < 1) return;
     updateCartItemMutation.mutate({ cartItemId, quantity: newQty }, {
-      onError: (err) => {
-        toast.error(err.response?.data?.message || "Cập nhật số lượng thất bại!");
+      onError: () => {
+        toast.error("Không thể cập nhật số lượng sản phẩm. Vui lòng thử lại sau!");
       }
     });
   };
@@ -101,8 +101,8 @@ const Cart = () => {
         onSuccess: () => {
           toast.success("Đã xóa sản phẩm khỏi giỏ hàng!");
         },
-        onError: (err) => {
-          toast.error(err.response?.data?.message || "Xóa sản phẩm thất bại!");
+        onError: () => {
+          toast.error("Xóa sản phẩm khỏi giỏ hàng thất bại. Vui lòng thử lại sau!");
         }
       });
     }
@@ -143,8 +143,8 @@ const Cart = () => {
           setIsVoucherModalOpen(false);
           toast.success(`Áp dụng mã ${validCode} thành công! Giảm ${formatPrice(res.discountAmount || 0)}`);
         },
-        onError: (err) => {
-          const msg = err.response?.data?.message || "Mã giảm giá không hợp lệ hoặc chưa đủ điều kiện!";
+        onError: () => {
+          const msg = "Mã giảm giá không hợp lệ, đã hết lượt dùng hoặc chưa đạt giá trị đơn hàng tối thiểu!";
           setDiscountError(msg);
           toast.error(msg);
         },
@@ -169,8 +169,8 @@ const Cart = () => {
           setIsVoucherModalOpen(false);
           toast.success(`Áp dụng mã ${validCode} thành công! Giảm ${formatPrice(res.discountAmount || 0)}`);
         },
-        onError: (err) => {
-          const msg = err.response?.data?.message || `Mã ${v.code} chưa đủ điều kiện đơn hàng tối thiểu!`;
+        onError: () => {
+          const msg = `Mã ${v.code} chưa đủ điều kiện áp dụng cho đơn hàng này!`;
           toast.error(msg);
         },
       }
@@ -204,8 +204,8 @@ const Cart = () => {
             setNewAddressOpen(false);
             toast.success("Thêm địa chỉ giao hàng thành công!");
           },
-          onError: (err) => {
-            toast.error(err.response?.data?.message || "Thêm địa chỉ thất bại!");
+          onError: () => {
+            toast.error("Thêm địa chỉ giao hàng thất bại. Vui lòng thử lại sau!");
           },
         }
       );
@@ -270,8 +270,8 @@ const Cart = () => {
             toast.success("Đặt hàng thành công!");
           }
         },
-        onError: (err) => {
-          toast.error(err.response?.data?.message || "Đặt hàng thất bại. Vui lòng thử lại!");
+        onError: () => {
+          toast.error("Đặt hàng thất bại. Vui lòng kiểm tra lại thông tin và thử lại!");
         },
       }
     );

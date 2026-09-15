@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import AdminSidebar from "../../components/admin/AdminSidebar";
 import AdminHeader from "../../components/admin/AdminHeader";
+import { FiZap } from "react-icons/fi";
 import {
   useAdminProducts,
   useDeleteProduct,
@@ -18,6 +19,7 @@ import {
   useUpdateStock,
   useDeleteVariation,
 } from "../../hooks/api/useProducts";
+import { useReindexEmbeddings } from "../../hooks/api/useImageSearch";
 
 const ManageColorsModal = ({ product, onClose }) => {
   const { data: productDetail, isLoading } = useAdminProductDetail(product?.id);
@@ -75,8 +77,8 @@ const ManageColorsModal = ({ product, onClose }) => {
           setColorError("");
           toast.success("Thêm màu sắc thành công!");
         },
-        onError: (err) => {
-          const msg = err.response?.data?.message || "Thêm màu sắc thất bại!";
+        onError: () => {
+          const msg = "Thêm màu sắc thất bại. Vui lòng kiểm tra lại tên màu hoặc tệp ảnh!";
           setColorError(msg);
           toast.error(msg);
         },
@@ -110,8 +112,8 @@ const ManageColorsModal = ({ product, onClose }) => {
           setEditColorFile(null);
           toast.success("Cập nhật màu sắc thành công!");
         },
-        onError: (err) => {
-          toast.error(err.response?.data?.message || "Cập nhật màu sắc thất bại!");
+        onError: () => {
+          toast.error("Cập nhật màu sắc thất bại. Vui lòng thử lại sau!");
         },
       }
     );
@@ -121,10 +123,9 @@ const ManageColorsModal = ({ product, onClose }) => {
     if (window.confirm(`Bạn có chắc muốn xóa màu sắc "${name}"?`)) {
       deleteColorMutation.mutate(colorId, {
         onSuccess: () => toast.success("Xóa màu thành công!"),
-        onError: (err) =>
+        onError: () =>
           toast.error(
-            err.response?.data?.message ||
-              "Xóa màu thất bại! (Có thể có biến thể đang hoạt động)"
+            "Xóa màu sắc thất bại! Vui lòng xóa các biến thể size liên quan trước."
           ),
       });
     }
@@ -154,8 +155,8 @@ const ManageColorsModal = ({ product, onClose }) => {
           setAddingVariationForColorId(null);
           toast.success("Thêm kích thước biến thể thành công!");
         },
-        onError: (err) => {
-          const msg = err.response?.data?.message || "Thêm biến thể thất bại!";
+        onError: () => {
+          const msg = "Thêm kích thước biến thể thất bại. Vui lòng kiểm tra lại thông tin!";
           setVarError(msg);
           toast.error(msg);
         },
@@ -189,8 +190,8 @@ const ManageColorsModal = ({ product, onClose }) => {
           setEditingVariationId(null);
           toast.success("Cập nhật biến thể thành công!");
         },
-        onError: (err) => {
-          toast.error(err.response?.data?.message || "Cập nhật biến thể thất bại!");
+        onError: () => {
+          toast.error("Cập nhật biến thể thất bại. Vui lòng thử lại sau!");
         },
       }
     );
@@ -212,8 +213,8 @@ const ManageColorsModal = ({ product, onClose }) => {
         { id: v.variationId, stockQuantity: newStock },
         {
           onSuccess: () => toast.success("Cập nhật tồn kho thành công!"),
-          onError: (err) =>
-            toast.error(err.response?.data?.message || "Cập nhật kho thất bại!"),
+          onError: () =>
+            toast.error("Cập nhật số lượng kho thất bại. Vui lòng thử lại sau!"),
         }
       );
     }
@@ -223,8 +224,8 @@ const ManageColorsModal = ({ product, onClose }) => {
     if (window.confirm(`Bạn có chắc muốn xóa size "${size}"?`)) {
       deleteVariationMutation.mutate(variationId, {
         onSuccess: () => toast.success("Xóa biến thể thành công!"),
-        onError: (err) =>
-          toast.error(err.response?.data?.message || "Xóa thất bại!"),
+        onError: () =>
+          toast.error("Xóa kích thước biến thể thất bại. Vui lòng thử lại sau!"),
       });
     }
   };
@@ -756,8 +757,8 @@ const AdminProducts = () => {
   const navigate = useNavigate();
 
   // States
-  const [selectedCategory, setSelectedCategory] = useState("All Collections");
-  const [selectedStatus, setSelectedStatus] = useState("All Status");
+  const [selectedCategory, setSelectedCategory] = useState("Tất Cả Danh Mục");
+  const [selectedStatus, setSelectedStatus] = useState("Tất Cả Trạng Thái");
   const [activePage, setActivePage] = useState(1);
   const [selectedProductIds, setSelectedProductIds] = useState(new Set());
 
@@ -792,6 +793,52 @@ const AdminProducts = () => {
   const deleteProductMutation = useDeleteProduct();
   const createProductMutation = useCreateProduct();
   const updateProductMutation = useUpdateProduct();
+  const reindexMutation = useReindexEmbeddings();
+
+  // AI Vector Reindexing Auto-Loop State
+  const [isReindexing, setIsReindexing] = useState(false);
+  const [reindexStats, setReindexStats] = useState(null);
+
+  const handleStartAutoReindex = async () => {
+    if (isReindexing) return;
+    setIsReindexing(true);
+    let totalProcessed = 0;
+
+    try {
+      toast.info("Bắt đầu tiến trình đồng bộ chỉ mục AI Vector (Fashion-CLIP 512-dim)...");
+      while (true) {
+        const res = await reindexMutation.mutateAsync(20);
+        totalProcessed += res.processed;
+        setReindexStats({
+          processed: totalProcessed,
+          remaining: res.remaining,
+        });
+
+        if (res.remaining === 0) {
+          toast.success(
+            `Đã đồng bộ thành công toàn bộ chỉ mục vector! Tổng cộng: ${totalProcessed} màu sắc.`
+          );
+          break;
+        } else if (res.processed === 0) {
+          toast.warn(
+            `Còn ${res.remaining} màu sắc chưa thể đồng bộ (vui lòng kiểm tra trạng thái AI Service).`
+          );
+          break;
+        } else {
+          toast.info(
+            `Đã xử lý ${totalProcessed} màu, còn lại ${res.remaining} đang tiếp tục...`
+          );
+        }
+      }
+    } catch (err) {
+      toast.error(
+        "Không thể kết nối hoặc đồng bộ vector. Vui lòng kiểm tra lại dịch vụ AI!",
+      );
+    } finally {
+      setIsReindexing(false);
+      setReindexStats(null);
+    }
+  };
 
   const backendProducts = pageData?.content || [];
   const totalElements = pageData ? pageData.totalElements : 0;
@@ -801,14 +848,14 @@ const AdminProducts = () => {
   const displayProducts = backendProducts.map((p) => {
     const stock = (p.id * 13) % 47;
     const status =
-      stock === 0 ? "Out of Stock" : stock <= 5 ? "Low Stock" : "Active";
+      stock === 0 ? "Hết hàng" : stock <= 5 ? "Sắp hết" : "Đang bán";
     return {
       id: p.id,
       name: p.name,
       slug: p.slug,
       description: p.description || "",
       sku: `LMR-PROD-${String(p.id).padStart(3, "0")}`,
-      categoryName: p.categoryName || "Uncategorized",
+      categoryName: p.categoryName || "Chưa phân loại",
       minPrice: p.minPrice,
       imageUrl: p.thumbnailUrl,
       stock: stock,
@@ -818,7 +865,7 @@ const AdminProducts = () => {
 
   // Filter display products by status locally if status filter is active
   const filteredDisplayProducts = displayProducts.filter((p) => {
-    if (selectedStatus === "All Status") return true;
+    if (selectedStatus === "Tất Cả Trạng Thái") return true;
     return p.status.toLowerCase() === selectedStatus.toLowerCase();
   });
 
@@ -878,16 +925,16 @@ const AdminProducts = () => {
             return updated;
           });
         },
-        onError: (err) => {
-          toast.error(err.response?.data?.message || "Xóa sản phẩm thất bại!");
+        onError: () => {
+          toast.error("Xóa sản phẩm thất bại. Vui lòng thử lại sau!");
         },
       });
     }
   };
 
   const handleClearFilters = () => {
-    setSelectedCategory("All Collections");
-    setSelectedStatus("All Status");
+    setSelectedCategory("Tất Cả Danh Mục");
+    setSelectedStatus("Tất Cả Trạng Thái");
     setActivePage(1);
   };
 
@@ -956,8 +1003,8 @@ const AdminProducts = () => {
             setNewProduct({ name: "", slug: "", description: "", categoryId: "" });
             setSelectedFile(null);
           },
-          onError: (err) => {
-            const msg = err.response?.data?.message || "Cập nhật sản phẩm thất bại!";
+          onError: () => {
+            const msg = "Cập nhật sản phẩm thất bại. Vui lòng kiểm tra lại thông tin!";
             setValidationError(msg);
             toast.error(msg);
           },
@@ -977,8 +1024,8 @@ const AdminProducts = () => {
             setNewProduct({ name: "", slug: "", description: "", categoryId: "" });
             setSelectedFile(null);
           },
-          onError: (err) => {
-            const msg = err.response?.data?.message || "Tạo sản phẩm thất bại!";
+          onError: () => {
+            const msg = "Tạo mới sản phẩm thất bại. Vui lòng kiểm tra lại slug hoặc thông tin danh mục!";
             setValidationError(msg);
             toast.error(msg);
           },
@@ -1003,20 +1050,38 @@ const AdminProducts = () => {
           <div className="flex justify-between items-end mb-6">
             <div>
               <nav className="flex mb-2 space-x-2 text-[9px] text-neutral-400 font-bold uppercase tracking-widest">
-                <span>Catalogue</span>
+                <span>Quản Trị</span>
                 <span>/</span>
-                <span className="text-black">All Products</span>
+                <span className="text-black">Sản Phẩm</span>
               </nav>
               <h2 className="font-serif text-[30px] md:text-[34px] leading-tight text-black font-semibold uppercase">
-                Inventory
+                Quản Lý Sản Phẩm
               </h2>
             </div>
-            <button
-              onClick={handleOpenAddProduct}
-              className="bg-black text-white text-[10px] font-bold px-5 py-2.5 uppercase tracking-widest hover:bg-neutral-800 transition-colors active:scale-95 cursor-pointer"
-            >
-              Add New Product
-            </button>
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={handleStartAutoReindex}
+                disabled={isReindexing}
+                className="flex items-center gap-2 border border-[#C5A880] bg-[#FAF6EE] text-[#8C6B38] hover:bg-[#F3ECE0] hover:border-[#8C6B38] disabled:opacity-60 text-[10px] font-bold px-4 py-2.5 rounded-full uppercase tracking-wider transition-all shadow-xs cursor-pointer active:scale-95"
+                title="Tự động đồng bộ và nạp vector đặc trưng Fashion-CLIP 512-dim cho tất cả màu sắc sản phẩm còn thiếu"
+              >
+                <FiZap className={isReindexing ? "animate-spin text-[#8C6B38]" : "text-[#8C6B38]"} size={13} />
+                <span>
+                  {isReindexing
+                    ? reindexStats
+                    ? `ĐANG ĐỒNG BỘ (${reindexStats.processed}/${reindexStats.processed + reindexStats.remaining})`
+                    : "ĐANG ĐỒNG BỘ VECTOR..."
+                    : "CHỈ MỤC AI VECTOR"}
+                </span>
+              </button>
+              <button
+                onClick={handleOpenAddProduct}
+                className="bg-black text-white text-[10px] font-bold px-5 py-2.5 uppercase tracking-widest hover:bg-neutral-800 transition-colors active:scale-95 cursor-pointer"
+              >
+                Thêm Sản Phẩm Mới
+              </button>
+            </div>
           </div>
 
           {/* Filter Bar */}
@@ -1024,7 +1089,7 @@ const AdminProducts = () => {
             <div className="flex items-center space-x-4">
               <div className="flex items-center bg-white border border-[#cfc4c5] px-4 py-2">
                 <span className="text-[10px] text-neutral-400 font-bold mr-3 uppercase tracking-wider">
-                  Category:
+                  Danh mục:
                 </span>
                 <select
                   value={selectedCategory}
@@ -1034,7 +1099,7 @@ const AdminProducts = () => {
                   }}
                   className="border-none p-0 text-[10px] font-bold focus:ring-0 bg-transparent uppercase cursor-pointer"
                 >
-                  <option>All Collections</option>
+                  <option>Tất Cả Danh Mục</option>
                   {backendCategories.map((cat) => (
                     <option key={cat.id} value={cat.name}>
                       {cat.name}
@@ -1044,7 +1109,7 @@ const AdminProducts = () => {
               </div>
               <div className="flex items-center bg-white border border-[#cfc4c5] px-4 py-2">
                 <span className="text-[10px] text-neutral-400 font-bold mr-3 uppercase tracking-wider">
-                  Status:
+                  Trạng thái:
                 </span>
                 <select
                   value={selectedStatus}
@@ -1054,21 +1119,21 @@ const AdminProducts = () => {
                   }}
                   className="border-none p-0 text-[10px] font-bold focus:ring-0 bg-transparent uppercase cursor-pointer"
                 >
-                  <option>All Status</option>
-                  <option>Active</option>
-                  <option>Low Stock</option>
-                  <option>Out of Stock</option>
+                  <option>Tất Cả Trạng Thái</option>
+                  <option>Đang bán</option>
+                  <option>Sắp hết</option>
+                  <option>Hết hàng</option>
                 </select>
               </div>
               <button
                 onClick={handleClearFilters}
                 className="text-[10px] font-bold uppercase underline decoration-[#cfc4c5] underline-offset-4 hover:text-black transition-colors cursor-pointer"
               >
-                Clear Filters
+                Xóa Bộ Lọc
               </button>
             </div>
             <div className="text-[10px] font-bold text-neutral-400 uppercase tracking-wider">
-              Showing {totalElements} items
+              Hiển thị {totalElements} sản phẩm
             </div>
           </div>
 
@@ -1090,22 +1155,22 @@ const AdminProducts = () => {
                     />
                   </th>
                   <th className="px-6 py-4 font-semibold text-[10px] text-neutral-400 uppercase tracking-widest">
-                    Product Details
+                    Thông Tin Sản Phẩm
                   </th>
                   <th className="px-6 py-4 font-semibold text-[10px] text-neutral-400 uppercase tracking-widest">
-                    Category
+                    Danh Mục
                   </th>
                   <th className="px-6 py-4 font-semibold text-[10px] text-neutral-400 uppercase tracking-widest">
-                    Price
+                    Đơn Giá
                   </th>
                   <th className="px-6 py-4 font-semibold text-[10px] text-neutral-400 uppercase tracking-widest text-center">
-                    Stock
+                    Tồn Kho
                   </th>
                   <th className="px-6 py-4 font-semibold text-[10px] text-neutral-400 uppercase tracking-widest">
-                    Status
+                    Trạng Thái
                   </th>
                   <th className="px-6 py-4 font-semibold text-[10px] text-neutral-400 uppercase tracking-widest text-right">
-                    Actions
+                    Thao Tác
                   </th>
                 </tr>
               </thead>
@@ -1166,7 +1231,7 @@ const AdminProducts = () => {
             {/* Pagination */}
             <div className="px-6 py-6 border-t border-[#cfc4c5] flex items-center justify-between bg-[#fbf9f9] select-none">
               <div className="text-[10px] font-bold text-neutral-400 uppercase tracking-wider">
-                Page {activePage} of {totalPages}
+                Trang {activePage} / {totalPages}
               </div>
               <div className="flex space-x-2">
                 <button
@@ -1213,7 +1278,7 @@ const AdminProducts = () => {
           {/* Footer Meta */}
           <footer className="mt-12 text-center select-none opacity-50">
             <p className="text-[9px] font-bold text-neutral-500 uppercase tracking-[0.25em]">
-              © 2026 Lumière Couture • Internal Store Management Platform
+              © 2026 Lumière Couture • Hệ Thống Quản Lý Cửa Hàng Nội Bộ
             </p>
           </footer>
         </div>
@@ -1238,7 +1303,7 @@ const AdminProducts = () => {
               close
             </button>
             <h3 className="font-serif text-2xl font-semibold text-black uppercase tracking-wider mb-8 select-none">
-              {editingProduct ? "Edit Product" : "Add New Product"}
+              {editingProduct ? "Chỉnh Sửa Sản Phẩm" : "Thêm Sản Phẩm Mới"}
             </h3>
 
             {validationError && (
@@ -1251,14 +1316,14 @@ const AdminProducts = () => {
               {/* Product Name */}
               <div className="flex flex-col space-y-1.5">
                 <label className="text-[10px] font-bold text-neutral-400 uppercase tracking-wider">
-                  Product Name
+                  Tên Sản Phẩm
                 </label>
                 <input
                   type="text"
                   value={newProduct.name}
                   onChange={handleNameChange}
                   required
-                  placeholder="e.g. Silk Evening Blazer"
+                  placeholder="Ví dụ: Áo Vest Lụa Dạ Hội"
                   className="bg-[#f5f3f3] border-none focus:ring-1 focus:ring-black text-sm px-4 py-3 rounded-none"
                 />
               </div>
@@ -1266,7 +1331,7 @@ const AdminProducts = () => {
               {/* Slug */}
               <div className="flex flex-col space-y-1.5">
                 <label className="text-[10px] font-bold text-neutral-400 uppercase tracking-wider">
-                  Slug
+                  Đường Dẫn Tĩnh (Slug)
                 </label>
                 <input
                   type="text"
@@ -1275,7 +1340,7 @@ const AdminProducts = () => {
                     setNewProduct((prev) => ({ ...prev, slug: e.target.value }))
                   }
                   required
-                  placeholder="e.g. silk-evening-blazer"
+                  placeholder="Ví dụ: ao-vest-lua-da-hoi"
                   className="bg-[#f5f3f3] border-none focus:ring-1 focus:ring-black text-sm px-4 py-3 rounded-none"
                 />
               </div>
@@ -1283,7 +1348,7 @@ const AdminProducts = () => {
               {/* Category */}
               <div className="flex flex-col space-y-1.5">
                 <label className="text-[10px] font-bold text-neutral-400 uppercase tracking-wider">
-                  Category
+                  Danh Mục
                 </label>
                 <select
                   value={newProduct.categoryId}
@@ -1296,7 +1361,7 @@ const AdminProducts = () => {
                   required
                   className="bg-[#f5f3f3] border-none focus:ring-1 focus:ring-black text-sm px-4 py-3 cursor-pointer uppercase text-xs font-bold rounded-none"
                 >
-                  <option value="">Select Category</option>
+                  <option value="">Chọn Danh Mục</option>
                   {backendCategories.map((cat) => (
                     <option key={cat.id} value={cat.id}>
                       {cat.name}
@@ -1308,7 +1373,7 @@ const AdminProducts = () => {
               {/* Description */}
               <div className="flex flex-col space-y-1.5">
                 <label className="text-[10px] font-bold text-neutral-400 uppercase tracking-wider">
-                  Description
+                  Mô Tả Sản Phẩm
                 </label>
                 <textarea
                   value={newProduct.description}
@@ -1318,7 +1383,7 @@ const AdminProducts = () => {
                       description: e.target.value,
                     }))
                   }
-                  placeholder="Describe the product..."
+                  placeholder="Nhập mô tả chi tiết sản phẩm..."
                   rows="3"
                   className="bg-[#f5f3f3] border-none focus:ring-1 focus:ring-black text-sm px-4 py-3 resize-none rounded-none"
                 />
@@ -1327,7 +1392,7 @@ const AdminProducts = () => {
               {/* Thumbnail Image Selector */}
               <div className="flex flex-col space-y-1.5">
                 <label className="text-[10px] font-bold text-neutral-400 uppercase tracking-wider">
-                  Thumbnail Image {editingProduct && "(Leave empty to keep existing)"}
+                  Ảnh Đại Diện {editingProduct && "(Để trống nếu giữ nguyên ảnh hiện tại)"}
                 </label>
                 <input
                   type="file"
@@ -1345,7 +1410,7 @@ const AdminProducts = () => {
                   onClick={() => setIsModalOpen(false)}
                   className="border border-[#cfc4c5] hover:bg-[#efeded] text-[10px] font-bold uppercase tracking-wider px-6 py-3 cursor-pointer select-none rounded-none"
                 >
-                  Cancel
+                  Hủy Bỏ
                 </button>
                 <button
                   type="submit"
@@ -1357,10 +1422,10 @@ const AdminProducts = () => {
                 >
                   {createProductMutation.isPending ||
                   updateProductMutation.isPending
-                    ? "Saving..."
+                    ? "Đang lưu..."
                     : editingProduct
-                    ? "Update Product"
-                    : "Save Product"}
+                    ? "Cập Nhật Sản Phẩm"
+                    : "Lưu Sản Phẩm"}
                 </button>
               </div>
             </form>

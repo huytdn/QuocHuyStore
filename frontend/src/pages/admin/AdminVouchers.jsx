@@ -246,10 +246,8 @@ const AdminVouchers = () => {
             toast.success(`Cập nhật voucher "${payload.code}" thành công!`);
             setIsModalOpen(false);
           },
-          onError: (err) => {
-            toast.error(
-              err.response?.data?.message || "Cập nhật voucher thất bại!",
-            );
+          onError: () => {
+            toast.error("Cập nhật thông tin voucher thất bại. Vui lòng kiểm tra lại dữ liệu!");
           },
         },
       );
@@ -260,10 +258,8 @@ const AdminVouchers = () => {
           toast.success(`Tạo mới voucher "${payload.code}" thành công!`);
           setIsModalOpen(false);
         },
-        onError: (err) => {
-          toast.error(
-            err.response?.data?.message || "Tạo mới voucher thất bại!",
-          );
+        onError: () => {
+          toast.error("Tạo mới voucher thất bại. Vui lòng kiểm tra lại mã hoặc điều kiện!");
         },
       });
     }
@@ -280,10 +276,8 @@ const AdminVouchers = () => {
         onSuccess: () => {
           toast.success(`Đã vô hiệu hóa voucher "${voucher.code}" thành công!`);
         },
-        onError: (err) => {
-          toast.error(
-            err.response?.data?.message || "Vô hiệu hóa voucher thất bại!",
-          );
+        onError: () => {
+          toast.error("Vô hiệu hóa voucher thất bại. Vui lòng thử lại sau!");
         },
       });
     }
