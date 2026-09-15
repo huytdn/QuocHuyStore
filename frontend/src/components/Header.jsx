@@ -397,28 +397,28 @@ const Header = () => {
             onClick={toggleMenu}
             className="font-serif text-3xl font-semibold tracking-wider hover:text-secondary transition-colors"
           >
-            SẢN PHẨM / COLLECTIONS
+            SẢN PHẨM
           </Link>
           <Link
-            to="/product"
+            to="/smart-search"
             onClick={toggleMenu}
             className="font-serif text-3xl font-semibold tracking-wider hover:text-secondary transition-colors"
           >
-            BỘ SƯU TẬP / LOOKBOOK
+            TÌM KIẾM THÔNG MINH
           </Link>
           <Link
             to="/about"
             onClick={toggleMenu}
             className="font-serif text-3xl font-semibold tracking-wider hover:text-secondary transition-colors"
           >
-            VỀ CHÚNG TÔI / ABOUT US
+            VỀ CHÚNG TÔI
           </Link>
           <Link
             to="/support"
             onClick={toggleMenu}
             className="font-serif text-3xl font-semibold tracking-wider hover:text-secondary transition-colors"
           >
-            HỖ TRỢ / SUPPORT
+            HỖ TRỢ
           </Link>
           {user ? (
             <>
@@ -448,7 +448,7 @@ const Header = () => {
                   toggleMenu();
                   handleLogout();
                 }}
-                className="font-serif text-3xl font-semibold tracking-wider text-red-400 hover:text-red-300 transition-colors uppercase"
+                className="font-serif text-3xl font-semibold tracking-wider text-red-400 hover:text-red-300 transition-colors uppercase cursor-pointer"
               >
                 ĐĂNG XUẤT
               </button>
@@ -460,7 +460,7 @@ const Header = () => {
               onClick={toggleMenu}
               className="font-serif text-3xl font-semibold tracking-wider hover:text-secondary transition-colors"
             >
-              ĐĂNG NHẬP / SIGN IN
+              ĐĂNG NHẬP
             </Link>
           )}
         </nav>

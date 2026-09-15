@@ -135,10 +135,8 @@ const AdminOrders = () => {
             setSelectedOrder(updatedData);
           }
         },
-        onError: (err) => {
-          toast.error(
-            err.response?.data?.message || "Cập nhật trạng thái thất bại!"
-          );
+        onError: () => {
+          toast.error("Cập nhật trạng thái đơn hàng thất bại. Vui lòng thử lại sau!");
           setUpdatingOrderId(null);
         },
       }

@@ -162,8 +162,8 @@ const ProductDetail = () => {
             setAddedToCart(false);
           }, 2000);
         },
-        onError: (err) => {
-          toast.error(err.response?.data?.message || "Thêm vào giỏ hàng thất bại!");
+        onError: () => {
+          toast.error("Thêm vào giỏ hàng thất bại. Vui lòng thử lại sau!");
         },
       }
     );
@@ -188,8 +188,8 @@ const ProductDetail = () => {
         onSuccess: () => {
           navigate("/cart");
         },
-        onError: (err) => {
-          toast.error(err.response?.data?.message || "Mua hàng thất bại!");
+        onError: () => {
+          toast.error("Không thể xử lý yêu cầu mua hàng. Vui lòng thử lại sau!");
         },
       }
     );
@@ -212,8 +212,8 @@ const ProductDetail = () => {
           toast.info(`Đã xóa "${product.name}" khỏi danh sách yêu thích!`);
         }
       },
-      onError: (err) => {
-        toast.error(err.response?.data?.message || "Không thể cập nhật danh sách yêu thích!");
+      onError: () => {
+        toast.error("Không thể cập nhật danh sách yêu thích. Vui lòng thử lại sau!");
       },
     });
   };
@@ -838,8 +838,8 @@ const ProductDetail = () => {
                           toast.info(`Đã xóa "${item.name}" khỏi danh sách yêu thích!`);
                         }
                       },
-                      onError: (err) => {
-                        toast.error(err.response?.data?.message || "Không thể cập nhật danh sách yêu thích!");
+                      onError: () => {
+                        toast.error("Không thể cập nhật danh sách yêu thích. Vui lòng thử lại sau!");
                       },
                     });
                   }}

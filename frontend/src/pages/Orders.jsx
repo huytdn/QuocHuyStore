@@ -77,8 +77,8 @@ const Orders = () => {
             setSelectedOrder(null);
           }
         },
-        onError: (err) => {
-          toast.error(err.response?.data?.message || "Hủy đơn hàng thất bại!");
+        onError: () => {
+          toast.error("Hủy đơn hàng thất bại. Vui lòng thử lại sau!");
           setCancelingOrderId(null);
         },
       });
@@ -116,7 +116,7 @@ const Orders = () => {
     e.preventDefault();
     const targetItemId = reviewingItem?.orderItemId || reviewingItem?.id;
     if (!targetItemId) {
-      toast.error("Không tìm thấy mã định danh dòng đơn hàng hợp lệ!");
+      toast.error("Không tìm thấy thông tin dòng sản phẩm để đánh giá!");
       return;
     }
     if (!reviewFormRating || reviewFormRating < 1 || reviewFormRating > 5) {
@@ -139,10 +139,9 @@ const Orders = () => {
           setReviewFormFilePreview(null);
           refetch();
         },
-        onError: (err) => {
+        onError: () => {
           toast.error(
-            err.response?.data?.message ||
-              "Không thể gửi đánh giá. Vui lòng kiểm tra lại quyền đánh giá của đơn hàng!"
+            "Không thể gửi đánh giá. Vui lòng kiểm tra lại quyền đánh giá của đơn hàng!"
           );
         },
       }

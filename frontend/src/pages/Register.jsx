@@ -78,8 +78,13 @@ const Register = () => {
           }, 2000);
         },
         onError: (error) => {
-          const errorMsg =
-            error.response?.data?.message || "Đăng ký thất bại, vui lòng thử lại!";
+          const status = error.response?.status;
+          let errorMsg = "Đăng ký thất bại, vui lòng kiểm tra lại thông tin và thử lại!";
+          if (status === 409) {
+            errorMsg = "Email hoặc số điện thoại này đã được sử dụng. Vui lòng chọn tài khoản khác!";
+          } else if (status === 400) {
+            errorMsg = "Thông tin đăng ký không hợp lệ. Vui lòng kiểm tra lại!";
+          }
           showAlert("error", errorMsg);
         },
       }

@@ -113,7 +113,10 @@ const SmartSearch = () => {
     if (searchStatus === "results" && resultsRef.current) {
       setResultsVisible(true);
       setTimeout(() => {
-        resultsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+        resultsRef.current?.scrollIntoView({
+          behavior: "smooth",
+          block: "start",
+        });
       }, 150);
     } else {
       setResultsVisible(false);
@@ -225,7 +228,7 @@ const SmartSearch = () => {
         performSearch(capturedFile);
       },
       "image/jpeg",
-      0.95
+      0.95,
     );
   };
 
@@ -238,7 +241,7 @@ const SmartSearch = () => {
 
     if (!ALLOWED_MIME_TYPES.includes(file.type)) {
       toast.error(
-        "Định dạng tệp không được hỗ trợ! Vui lòng chọn ảnh JPEG, PNG hoặc WEBP."
+        "Định dạng tệp không được hỗ trợ! Vui lòng chọn ảnh JPEG, PNG hoặc WEBP.",
       );
       return false;
     }
@@ -276,7 +279,7 @@ const SmartSearch = () => {
           setSearchStatus("results");
           if (results.length === 0) {
             toast.info(
-              "Không tìm thấy sản phẩm có độ tương đồng đủ cao trong kho hàng."
+              "Không tìm thấy sản phẩm có độ tương đồng đủ cao trong kho hàng.",
             );
           } else {
             toast.success(`Tìm thấy ${results.length} thiết kế tương đồng!`);
@@ -285,23 +288,26 @@ const SmartSearch = () => {
         onError: (err) => {
           setSearchStatus("idle");
           const status = err.response?.status;
-          const msg = err.response?.data?.message;
 
           if (status === 429) {
             toast.error(
-              "Bạn đã vượt quá giới hạn tìm kiếm (tối đa 10 lượt/phút). Vui lòng đợi trong giây lát!"
+              "Bạn đã thực hiện quá nhiều lượt tìm kiếm (tối đa 10 lượt/phút). Vui lòng đợi trong giây lát!",
             );
           } else if (status === 503) {
             toast.error(
-              "Dịch vụ AI Visual Search hiện đang bảo trì hoặc quá tải. Vui lòng thử lại sau!"
+              "Dịch vụ tìm kiếm bằng hình ảnh hiện đang bảo trì hoặc quá tải. Vui lòng thử lại sau!",
             );
           } else if (status === 400) {
-            toast.error(msg || "Tệp ảnh không hợp lệ hoặc không đúng chuẩn.");
+            toast.error(
+              "Tệp ảnh không hợp lệ hoặc định dạng không được hỗ trợ. Vui lòng chọn ảnh JPEG, PNG hoặc WEBP!",
+            );
           } else {
-            toast.error(msg || "Đã xảy ra lỗi khi tìm kiếm bằng hình ảnh!");
+            toast.error(
+              "Đã xảy ra lỗi trong quá trình tìm kiếm bằng hình ảnh. Vui lòng thử lại!",
+            );
           }
         },
-      }
+      },
     );
   };
 
@@ -435,11 +441,6 @@ const SmartSearch = () => {
 
         {/* Hero Section & Title */}
         <section className="max-w-[960px] mx-auto px-6 text-center mb-16">
-          <div className="inline-flex items-center gap-2 px-3 py-1 bg-neutral-100 border border-neutral-200 text-neutral-600 rounded-full text-[10px] font-bold uppercase tracking-widest mb-6">
-            <FiCpu className="text-black" size={13} />
-            Fashion-CLIP & YOLOv8n Vector Retrieval
-          </div>
-
           <h1 className="font-serif text-[34px] sm:text-[44px] md:text-[52px] font-semibold mb-4 text-black uppercase tracking-tight leading-tight">
             TÌM KIẾM BẰNG HÌNH ẢNH
           </h1>
@@ -449,31 +450,28 @@ const SmartSearch = () => {
           </p>
 
           {/* Upload & Ingestion Box */}
-          <div className="relative max-w-[760px] mx-auto">
-            {/* Box Container */}
-            <div
-              onDragOver={handleDragOver}
-              onDragLeave={handleDragLeave}
-              onDrop={handleDrop}
-              onClick={() => {
-                if (searchStatus === "idle") fileInputRef.current?.click();
-              }}
-              className={`group relative aspect-[16/10] md:aspect-[21/10] border-2 border-dashed flex flex-col items-center justify-center transition-all duration-500 overflow-hidden select-none rounded-sm ${
-                dragOver
-                  ? "border-black bg-neutral-100 scale-[1.01]"
-                  : "border-neutral-300 bg-white hover:border-neutral-600 hover:bg-neutral-50/50"
-              } ${searchStatus === "idle" ? "cursor-pointer" : "cursor-default"}`}
-            >
-              <input
-                type="file"
-                accept="image/jpeg,image/png,image/webp"
-                ref={fileInputRef}
-                onChange={handleFileChange}
-                className="hidden"
-              />
+          <div className="relative max-w-[760px] mx-auto flex justify-center">
+            <input
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              ref={fileInputRef}
+              onChange={handleFileChange}
+              className="hidden"
+            />
 
-              {/* 1. Idle UI State */}
-              {searchStatus === "idle" && (
+            {/* 1. Idle UI State */}
+            {searchStatus === "idle" && (
+              <div
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                onDrop={handleDrop}
+                onClick={() => fileInputRef.current?.click()}
+                className={`group relative w-full min-h-[260px] md:min-h-[280px] border-2 border-dashed flex flex-col items-center justify-center transition-all duration-500 overflow-hidden select-none rounded-sm cursor-pointer ${
+                  dragOver
+                    ? "border-black bg-neutral-100 scale-[1.01]"
+                    : "border-neutral-300 bg-white hover:border-neutral-600 hover:bg-neutral-50/50"
+                }`}
+              >
                 <div className="flex flex-col items-center p-8 transition-transform duration-500 group-hover:scale-[1.02]">
                   <div className="w-16 h-16 rounded-full bg-neutral-100 flex items-center justify-center mb-4 text-neutral-700 group-hover:bg-black group-hover:text-white transition-colors duration-300">
                     <FiUploadCloud size={28} className="stroke-[1.5]" />
@@ -506,124 +504,129 @@ const SmartSearch = () => {
                     </button>
                   </div>
                 </div>
-              )}
+              </div>
+            )}
 
-              {/* 2. Live Camera Viewfinder State */}
-              {searchStatus === "camera" && (
-                <div
-                  className="absolute inset-0 bg-black flex flex-col items-center justify-center"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <video
-                    ref={videoRef}
-                    autoPlay
-                    playsInline
-                    muted
-                    className="w-full h-full object-cover"
-                  />
+            {/* 2. Live Camera Viewfinder State */}
+            {searchStatus === "camera" && (
+              <div
+                className="relative w-full aspect-[4/3] sm:aspect-[16/9] max-h-[520px] bg-black rounded-sm overflow-hidden flex flex-col items-center justify-center shadow-md"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <video
+                  ref={videoRef}
+                  autoPlay
+                  playsInline
+                  muted
+                  className="w-full h-full object-cover"
+                />
 
-                  {/* Viewfinder Target Framing Brackets */}
-                  <div className="absolute inset-8 border border-white/30 pointer-events-none rounded-xs flex flex-col justify-between p-4">
-                    <div className="flex justify-between">
-                      <div className="w-6 h-6 border-t-2 border-l-2 border-[#C5A880]" />
-                      <div className="w-6 h-6 border-t-2 border-r-2 border-[#C5A880]" />
-                    </div>
-                    <p className="text-center text-[10px] uppercase tracking-widest text-white/80 font-bold bg-black/40 py-1 px-3 self-center rounded-full backdrop-blur-xs">
-                      Căn chỉnh trang phục vào khung ngắm
-                    </p>
-                    <div className="flex justify-between">
-                      <div className="w-6 h-6 border-b-2 border-l-2 border-[#C5A880]" />
-                      <div className="w-6 h-6 border-b-2 border-r-2 border-[#C5A880]" />
-                    </div>
+                {/* Viewfinder Target Framing Brackets */}
+                <div className="absolute inset-8 border border-white/30 pointer-events-none rounded-xs flex flex-col justify-between p-4">
+                  <div className="flex justify-between">
+                    <div className="w-6 h-6 border-t-2 border-l-2 border-[#C5A880]" />
+                    <div className="w-6 h-6 border-t-2 border-r-2 border-[#C5A880]" />
                   </div>
-
-                  {/* Camera Control Bar */}
-                  <div className="absolute bottom-4 flex items-center gap-4 z-30">
-                    <button
-                      type="button"
-                      onClick={handleToggleFacingMode}
-                      className="p-3 bg-white/20 hover:bg-white/40 text-white rounded-full backdrop-blur-md transition-colors cursor-pointer"
-                      title="Chuyển đổi camera"
-                    >
-                      <FiRefreshCw size={16} />
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={handleCapturePhoto}
-                      className="w-14 h-14 rounded-full border-4 border-white bg-red-600 hover:bg-red-700 flex items-center justify-center text-white shadow-lg transition-transform active:scale-95 cursor-pointer"
-                      title="Chụp ảnh"
-                    >
-                      <div className="w-6 h-6 rounded-full bg-white" />
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => {
-                        stopCameraStream();
-                        setSearchStatus("idle");
-                      }}
-                      className="p-3 bg-white/20 hover:bg-white/40 text-white rounded-full backdrop-blur-md transition-colors cursor-pointer"
-                      title="Đóng camera"
-                    >
-                      <FiX size={16} />
-                    </button>
+                  <p className="text-center text-[10px] uppercase tracking-widest text-white/80 font-bold bg-black/40 py-1 px-3 self-center rounded-full backdrop-blur-xs">
+                    Căn chỉnh trang phục vào khung ngắm
+                  </p>
+                  <div className="flex justify-between">
+                    <div className="w-6 h-6 border-b-2 border-l-2 border-[#C5A880]" />
+                    <div className="w-6 h-6 border-b-2 border-r-2 border-[#C5A880]" />
                   </div>
                 </div>
-              )}
 
-              {/* 3. Scanning & Analysis / Preview State */}
-              {(searchStatus === "scanning" || searchStatus === "results") &&
-                imagePreview && (
-                  <div className="absolute inset-0 w-full h-full bg-black flex items-center justify-center">
-                    <img
-                      src={imagePreview}
-                      alt="Query Image Preview"
-                      className={`w-full h-full object-cover transition-opacity duration-700 ${
-                        searchStatus === "scanning" ? "opacity-40" : "opacity-90"
-                      }`}
-                    />
+                {/* Camera Control Bar */}
+                <div className="absolute bottom-4 flex items-center gap-4 z-30">
+                  <button
+                    type="button"
+                    onClick={handleToggleFacingMode}
+                    className="p-3 bg-white/20 hover:bg-white/40 text-white rounded-full backdrop-blur-md transition-colors cursor-pointer"
+                    title="Chuyển đổi camera"
+                  >
+                    <FiRefreshCw size={16} />
+                  </button>
 
-                    {/* Scanning Laser Line */}
-                    {searchStatus === "scanning" && (
-                      <div className="absolute inset-0 z-20 pointer-events-none overflow-hidden">
-                        <div className="w-full h-1 bg-gradient-to-r from-transparent via-[#C5A880] to-transparent shadow-[0_0_15px_#C5A880] absolute left-0 right-0 animate-[scan_2.8s_ease-in-out_infinite]" />
-                        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-white/10 via-transparent to-black/60 pointer-events-none" />
-                      </div>
-                    )}
+                  <button
+                    type="button"
+                    onClick={handleCapturePhoto}
+                    className="w-14 h-14 rounded-full border-4 border-white bg-red-600 hover:bg-red-700 flex items-center justify-center text-white shadow-lg transition-transform active:scale-95 cursor-pointer"
+                    title="Chụp ảnh"
+                  >
+                    <div className="w-6 h-6 rounded-full bg-white" />
+                  </button>
 
-                    {/* AI Step Overlay Message */}
-                    {searchStatus === "scanning" && (
-                      <div className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center p-6 backdrop-blur-[2px] z-30">
-                        <div className="bg-white/95 px-6 py-4 border border-black shadow-lg text-center max-w-md">
-                          <div className="flex items-center justify-center gap-2 mb-2">
-                            <FiZap className="text-[#8C6B38] animate-bounce" size={16} />
-                            <span className="label-sm text-[11px] text-black font-bold tracking-widest">
-                              ĐANG PHÂN TÍCH THỊ GIÁC AI
-                            </span>
-                          </div>
-                          <p className="text-xs text-neutral-600 font-medium transition-all duration-300">
-                            {AI_PIPELINE_STEPS[aiStepIndex]}
-                          </p>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      stopCameraStream();
+                      setSearchStatus("idle");
+                    }}
+                    className="p-3 bg-white/20 hover:bg-white/40 text-white rounded-full backdrop-blur-md transition-colors cursor-pointer"
+                    title="Đóng camera"
+                  >
+                    <FiX size={16} />
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* 3. Scanning & Analysis / Flexible Image Preview State */}
+            {(searchStatus === "scanning" || searchStatus === "results") &&
+              imagePreview && (
+                <div className="relative inline-flex flex-col items-center justify-center max-w-full max-h-[560px] bg-neutral-950 border border-neutral-300 rounded-sm overflow-hidden shadow-md transition-all duration-500">
+                  <img
+                    src={imagePreview}
+                    alt="Query Image Preview"
+                    className={`max-w-full max-h-[560px] w-auto h-auto object-contain block transition-opacity duration-700 ${
+                      searchStatus === "scanning"
+                        ? "opacity-50"
+                        : "opacity-95"
+                    }`}
+                  />
+
+                  {/* Scanning Laser Line */}
+                  {searchStatus === "scanning" && (
+                    <div className="absolute inset-0 z-20 pointer-events-none overflow-hidden">
+                      <div className="w-full h-1 bg-gradient-to-r from-transparent via-[#C5A880] to-transparent shadow-[0_0_15px_#C5A880] absolute left-0 right-0 animate-[scan_2.8s_ease-in-out_infinite]" />
+                      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-white/10 via-transparent to-black/60 pointer-events-none" />
+                    </div>
+                  )}
+
+                  {/* AI Step Overlay Message */}
+                  {searchStatus === "scanning" && (
+                    <div className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center p-4 backdrop-blur-[2px] z-30">
+                      <div className="bg-white/95 px-5 py-3.5 border border-black shadow-lg text-center max-w-sm rounded-xs">
+                        <div className="flex items-center justify-center gap-2 mb-1.5">
+                          <FiZap
+                            className="text-[#8C6B38] animate-bounce"
+                            size={15}
+                          />
+                          <span className="label-sm text-[10px] text-black font-bold tracking-widest">
+                            ĐANG PHÂN TÍCH THỊ GIÁC AI
+                          </span>
                         </div>
+                        <p className="text-[11px] text-neutral-600 font-medium transition-all duration-300">
+                          {AI_PIPELINE_STEPS[aiStepIndex]}
+                        </p>
                       </div>
-                    )}
+                    </div>
+                  )}
 
-                    {/* Quick Reset Button in Results mode */}
-                    {searchStatus === "results" && (
-                      <button
-                        type="button"
-                        onClick={handleResetSearch}
-                        className="absolute top-4 right-4 bg-black/80 hover:bg-black text-white px-3 py-2 rounded-full text-xs font-bold flex items-center gap-1.5 transition-all z-30 cursor-pointer shadow-md backdrop-blur-xs"
-                        title="Tìm ảnh khác"
-                      >
-                        <FiRefreshCw size={13} />
-                        <span>Ảnh Mới</span>
-                      </button>
-                    )}
-                  </div>
-                )}
-            </div>
+                  {/* Quick Reset Button in Results mode */}
+                  {searchStatus === "results" && (
+                    <button
+                      type="button"
+                      onClick={handleResetSearch}
+                      className="absolute top-3 right-3 bg-black/80 hover:bg-black text-white px-3 py-1.5 rounded-full text-xs font-bold flex items-center gap-1.5 transition-all z-30 cursor-pointer shadow-md backdrop-blur-xs"
+                      title="Tìm ảnh khác"
+                    >
+                      <FiRefreshCw size={12} />
+                      <span>Ảnh Mới</span>
+                    </button>
+                  )}
+                </div>
+              )}
           </div>
 
           {/* Curated 1-Click Demo Looks Bar */}
@@ -771,14 +774,19 @@ const SmartSearch = () => {
               <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
                 {searchResults.map((item) => {
                   const product = item.product || {};
-                  const isLiked = likedMap[product.id] ?? product.isLikedByMe ?? false;
-                  const { pct, badgeColor } = getSimilarityBadge(item.similarity);
-                  const displayImage = item.colorImageUrl || product.thumbnailUrl;
+                  const isLiked =
+                    likedMap[product.id] ?? product.isLikedByMe ?? false;
+                  const { pct, badgeColor } = getSimilarityBadge(
+                    item.similarity,
+                  );
+                  const displayImage =
+                    item.colorImageUrl || product.thumbnailUrl;
                   const formattedPrice = product.minPrice
                     ? Number(product.minPrice).toLocaleString("vi-VN") + "₫"
                     : "Liên hệ";
                   const displayRating =
-                    product.averageStar !== undefined && product.averageStar !== null
+                    product.averageStar !== undefined &&
+                    product.averageStar !== null
                       ? Number(product.averageStar).toFixed(1)
                       : null;
 
@@ -818,7 +826,10 @@ const SmartSearch = () => {
                           className="absolute top-2.5 right-2.5 z-10 w-8 h-8 rounded-full bg-white/80 hover:bg-white text-black flex items-center justify-center shadow-xs backdrop-blur-xs transition-colors cursor-pointer"
                         >
                           {isLiked ? (
-                            <FaHeart size={14} className="text-red-600 animate-pulse" />
+                            <FaHeart
+                              size={14}
+                              className="text-red-600 animate-pulse"
+                            />
                           ) : (
                             <FiHeart size={14} className="stroke-[1.75]" />
                           )}
@@ -892,65 +903,6 @@ const SmartSearch = () => {
                 <span>Xem Thêm Bộ Sưu Tập</span>
                 <FiArrowRight size={14} />
               </button>
-            </div>
-          </section>
-        )}
-
-        {/* Informative Deep Dive: How AI Visual Search Works */}
-        {searchStatus !== "results" && (
-          <section className="max-w-[1280px] mx-auto px-6 md:px-16 mt-20 border-t border-neutral-200/80 pt-16">
-            <div className="text-center mb-12">
-              <span className="label-sm text-[10px] text-neutral-400 font-bold tracking-widest block mb-1">
-                KIẾN TRÚC THỊ GIÁC MÁY TÍNH
-              </span>
-              <h2 className="font-serif text-[24px] md:text-[30px] font-semibold text-black uppercase tracking-tight">
-                CƠ CHẾ HOẠT ĐỘNG CỦA AI VISUAL RETRIEVAL
-              </h2>
-              <div className="w-12 h-[1px] bg-black mx-auto mt-4" />
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              <div className="bg-white border border-neutral-200 p-6 rounded-xs space-y-3 text-left hover:border-black transition-colors">
-                <div className="w-10 h-10 rounded-full bg-neutral-100 flex items-center justify-center text-black font-bold font-serif">
-                  01
-                </div>
-                <h3 className="label-sm text-xs tracking-wider text-black font-bold">
-                  YOLOv8n DYNAMIC CROP
-                </h3>
-                <p className="text-xs text-neutral-500 font-light leading-relaxed">
-                  Tự động phát hiện chủ thể người mặc, loại bỏ 100% bối cảnh
-                  nhiễu xung quanh với cơ chế padding an toàn 10%, giữ trọn vẹn
-                  phom dáng trang phục.
-                </p>
-              </div>
-
-              <div className="bg-white border border-neutral-200 p-6 rounded-xs space-y-3 text-left hover:border-black transition-colors">
-                <div className="w-10 h-10 rounded-full bg-neutral-100 flex items-center justify-center text-black font-bold font-serif">
-                  02
-                </div>
-                <h3 className="label-sm text-xs tracking-wider text-black font-bold">
-                  FASHION-CLIP EMBEDDING
-                </h3>
-                <p className="text-xs text-neutral-500 font-light leading-relaxed">
-                  Mô hình Vision Transformer (ViT-B/32) trích xuất vector đặc
-                  trưng 512 chiều chuyên sâu về cổ áo, độ dài ống tay, chất liệu
-                  dệt và sắc độ màu sắc thời trang.
-                </p>
-              </div>
-
-              <div className="bg-white border border-neutral-200 p-6 rounded-xs space-y-3 text-left hover:border-black transition-colors">
-                <div className="w-10 h-10 rounded-full bg-neutral-100 flex items-center justify-center text-black font-bold font-serif">
-                  03
-                </div>
-                <h3 className="label-sm text-xs tracking-wider text-black font-bold">
-                  PGVECTOR COSINE SIMILARITY
-                </h3>
-                <p className="text-xs text-neutral-500 font-light leading-relaxed">
-                  Toán tử khoảng cách Cosine trên PostgreSQL 16 kết hợp mệnh đề
-                  DISTINCT ON lọc ngay màu sắc tương thích nhất của mỗi sản phẩm
-                  với độ trễ dưới 15ms.
-                </p>
-              </div>
             </div>
           </section>
         )}

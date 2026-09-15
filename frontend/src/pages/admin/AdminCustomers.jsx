@@ -106,8 +106,8 @@ const AdminCustomers = () => {
         toast.success(res.message || `Đã cập nhật chi tiêu cho ${res.affectedUsers || 0} tài khoản!`);
         refetch();
       },
-      onError: (err) => {
-        toast.error(err.response?.data?.message || "Đối soát thất bại!");
+      onError: () => {
+        toast.error("Đối soát chi tiêu thất bại. Vui lòng thử lại sau!");
       },
     });
   };
@@ -133,10 +133,8 @@ const AdminCustomers = () => {
           setIsBroadcastModalOpen(false);
           setBroadcastForm({ content: "", minTotalSpent: 0 });
         },
-        onError: (err) => {
-          toast.error(
-            err.response?.data?.message || "Gửi tin nhắn hàng loạt thất bại!"
-          );
+        onError: () => {
+          toast.error("Gửi tin nhắn hàng loạt thất bại. Vui lòng thử lại sau!");
         },
       }
     );

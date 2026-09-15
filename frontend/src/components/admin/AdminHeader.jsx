@@ -4,13 +4,13 @@ const AdminHeader = () => {
       <div className="flex items-center space-x-4">
         <button
           className="material-symbols-outlined text-neutral-400 hover:text-black transition-all active:scale-95 cursor-pointer text-xl"
-          title="Notifications"
+          title="Thông báo"
         >
           notifications
         </button>
         <button
           className="material-symbols-outlined text-neutral-400 hover:text-black transition-all active:scale-95 cursor-pointer text-xl"
-          title="Settings"
+          title="Cài đặt"
         >
           settings
         </button>

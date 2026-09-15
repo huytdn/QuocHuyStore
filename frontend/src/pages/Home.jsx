@@ -85,10 +85,10 @@ const Home = () => {
         <div className="relative h-full max-w-[1440px] mx-auto px-6 md:px-16 flex flex-col justify-end pb-24 md:pb-32 text-white">
           <div className="max-w-[500px]">
             <span className="label-sm text-white/90 tracking-[0.25em] text-xs font-semibold mb-3 block">
-              AUTUMN WINTER 2024
+              BỘ SƯU TẬP THU ĐÔNG
             </span>
             <h1 className="font-serif text-[32px] md:text-[48px] font-bold leading-[1.1] uppercase tracking-normal mb-5">
-              THE NEW CLASSIC
+              CHUẨN MỰC KINH ĐIỂN MỚI
             </h1>
             <p className="text-white/80 font-normal leading-relaxed text-xs md:text-sm mb-6 font-dmsans">
               Khám phá sự giao thoa giữa nghệ thuật cắt may tinh xảo và phong
@@ -110,23 +110,23 @@ const Home = () => {
         <div className="max-w-[1280px] mx-auto flex flex-col lg:flex-row lg:items-center justify-between gap-6">
           <div>
             <h2 className="font-serif text-2xl md:text-3xl font-normal uppercase tracking-wider mb-1.5">
-              END OF SEASON SALE
+              ƯU ĐÃI CUỐI MÙA
             </h2>
             <p className="label-sm text-neutral-400 tracking-[0.2em] text-[10px]">
-              UP TO 50% OFF ON SELECTED ITEMS
+              GIẢM ĐẾN 50% CHO CÁC SẢN PHẨM TUYỂN CHỌN
             </p>
           </div>
           <div className="flex flex-col md:flex-row md:items-center gap-6 lg:gap-10 max-w-xl">
             <p className="text-neutral-300 text-xs md:text-sm font-light leading-relaxed">
-              Limited time offer. Discover our curated collection of timeless
-              pieces at exceptional prices.
+              Ưu đãi có giới hạn. Khám phá bộ sưu tập phong cách tối giản với mức
+              giá đặc quyền.
             </p>
             <Button
               variant="white"
               onClick={() => navigate("/product")}
               className="whitespace-nowrap px-6 py-2.5 self-start text-xs"
             >
-              SHOP NOW
+              MUA NGAY
             </Button>
           </div>
         </div>
@@ -137,7 +137,7 @@ const Home = () => {
         <div className="max-w-[1280px] mx-auto grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16">
           <div>
             <span className="label-sm text-neutral-500 tracking-[0.2em] text-xs font-semibold mb-3 block">
-              PHILOSOPHY
+              TRIẾT LÝ THIẾT KẾ
             </span>
             <h2 className="font-serif text-[26px] md:text-[34px] font-medium leading-[1.2] text-black">
               Vẻ đẹp trường tồn qua từng đường kim mũi chỉ.
@@ -209,7 +209,7 @@ const Home = () => {
         <div className="relative h-full max-w-[1440px] mx-auto px-6 md:px-16 flex flex-col justify-center items-end text-white text-right z-10">
           <div className="max-w-[500px] flex flex-col items-end">
             <span className="label-sm text-white/90 tracking-[0.25em] text-xs font-semibold mb-3 block uppercase">
-              THE ARCHIVE SERIES
+              BỘ SƯU TẬP ARCHIVE
             </span>
             <h2 className="font-serif text-[38px] md:text-[54px] font-medium leading-[1.15] uppercase tracking-normal mb-6">
               TÂM HỒN CỦA SỰ <br /> TINH TẾ

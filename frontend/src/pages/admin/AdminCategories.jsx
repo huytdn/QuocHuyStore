@@ -65,8 +65,8 @@ const AdminCategories = () => {
             setCategoryName("");
             setEditingCategory(null);
           },
-          onError: (err) => {
-            const msg = err.response?.data?.message || "Cập nhật danh mục thất bại!";
+          onError: () => {
+            const msg = "Cập nhật tên danh mục thất bại. Vui lòng thử lại sau!";
             setErrorMessage(msg);
             toast.error(msg);
           },
@@ -82,8 +82,8 @@ const AdminCategories = () => {
             setIsModalOpen(false);
             setCategoryName("");
           },
-          onError: (err) => {
-            const msg = err.response?.data?.message || "Thêm danh mục thất bại!";
+          onError: () => {
+            const msg = "Thêm danh mục mới thất bại. Vui lòng kiểm tra lại tên danh mục!";
             setErrorMessage(msg);
             toast.error(msg);
           },
@@ -98,8 +98,8 @@ const AdminCategories = () => {
         onSuccess: () => {
           toast.success("Xóa danh mục thành công!");
         },
-        onError: (err) => {
-          toast.error(err.response?.data?.message || "Xóa danh mục thất bại!");
+        onError: () => {
+          toast.error("Xóa danh mục thất bại! Vui lòng kiểm tra xem có sản phẩm thuộc danh mục này không.");
         },
       });
     }
@@ -134,26 +134,26 @@ const AdminCategories = () => {
           <div className="flex justify-between items-end mb-6">
             <div>
               <nav className="flex mb-2 space-x-2 text-[9px] text-neutral-400 font-bold uppercase tracking-widest">
-                <span>Catalogue</span>
+                <span>Quản Trị</span>
                 <span>/</span>
-                <span className="text-black">Categories</span>
+                <span className="text-black">Danh Mục</span>
               </nav>
               <h2 className="font-serif text-[30px] md:text-[34px] leading-tight text-black font-semibold uppercase">
-                Categories
+                Quản Lý Danh Mục
               </h2>
             </div>
             <button
               onClick={handleOpenAddModal}
               className="bg-black text-white text-[10px] font-bold px-5 py-2.5 uppercase tracking-widest hover:bg-neutral-800 transition-colors active:scale-95 cursor-pointer"
             >
-              Add New Category
+              Thêm Danh Mục Mới
             </button>
           </div>
 
           {/* Filter / Meta Bar */}
           <div className="flex items-center justify-between mb-5 border-b border-[#cfc4c5] pb-4">
             <div className="text-[10px] font-bold text-neutral-400 uppercase tracking-wider">
-              Total Categories: {totalElements}
+              Tổng Số Danh Mục: {totalElements}
             </div>
           </div>
 
@@ -166,13 +166,13 @@ const AdminCategories = () => {
                     #ID
                   </th>
                   <th className="px-4 py-2.5 font-semibold text-[9px] text-neutral-400 uppercase tracking-widest">
-                    Category Name
+                    Tên Danh Mục
                   </th>
                   <th className="px-4 py-2.5 font-semibold text-[9px] text-neutral-400 uppercase tracking-widest">
-                    Created At
+                    Ngày Tạo
                   </th>
                   <th className="px-4 py-2.5 font-semibold text-[9px] text-neutral-400 uppercase tracking-widest text-right">
-                    Actions
+                    Thao Tác
                   </th>
                 </tr>
               </thead>
@@ -255,7 +255,7 @@ const AdminCategories = () => {
             {/* Pagination */}
             <div className="px-6 py-6 border-t border-[#cfc4c5] flex items-center justify-between bg-[#fbf9f9] select-none">
               <div className="text-[10px] font-bold text-neutral-400 uppercase tracking-wider">
-                Page {activePage} of {totalPages}
+                Trang {activePage} / {totalPages}
               </div>
               <div className="flex space-x-2">
                 <button
@@ -302,7 +302,7 @@ const AdminCategories = () => {
           {/* Footer Meta */}
           <footer className="mt-12 text-center select-none opacity-50">
             <p className="text-[9px] font-bold text-neutral-500 uppercase tracking-[0.25em]">
-              © 2026 Lumière Couture • Internal Store Management Platform
+              © 2026 Lumière Couture • Hệ Thống Quản Lý Cửa Hàng Nội Bộ
             </p>
           </footer>
         </div>
@@ -319,7 +319,7 @@ const AdminCategories = () => {
               close
             </button>
             <h3 className="font-serif text-2xl font-semibold text-black uppercase tracking-wider mb-6 select-none">
-              {editingCategory ? "Edit Category" : "Add New Category"}
+              {editingCategory ? "Chỉnh Sửa Danh Mục" : "Thêm Danh Mục Mới"}
             </h3>
 
             {errorMessage && (
@@ -331,13 +331,13 @@ const AdminCategories = () => {
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="flex flex-col space-y-1.5">
                 <label className="text-[10px] font-bold text-neutral-400 uppercase tracking-wider">
-                  Category Name
+                  Tên Danh Mục
                 </label>
                 <input
                   type="text"
                   value={categoryName}
                   onChange={(e) => setCategoryName(e.target.value)}
-                  placeholder="e.g. Thời trang Nam, Trang sức"
+                  placeholder="Ví dụ: Thời trang Nam, Trang sức, Phụ kiện"
                   required
                   className="bg-[#f5f3f3] border-none focus:ring-1 focus:ring-black text-sm px-4 py-3 rounded-none"
                 />
@@ -349,7 +349,7 @@ const AdminCategories = () => {
                   onClick={() => setIsModalOpen(false)}
                   className="border border-[#cfc4c5] hover:bg-[#efeded] text-[10px] font-bold uppercase tracking-wider px-6 py-3 cursor-pointer select-none rounded-none"
                 >
-                  Cancel
+                  Hủy Bỏ
                 </button>
                 <button
                   type="submit"
@@ -361,8 +361,10 @@ const AdminCategories = () => {
                 >
                   {createCategoryMutation.isPending ||
                   updateCategoryMutation.isPending
-                    ? "Saving..."
-                    : "Save Category"}
+                    ? "Đang lưu..."
+                    : editingCategory
+                    ? "Cập Nhật Danh Mục"
+                    : "Lưu Danh Mục"}
                 </button>
               </div>
             </form>
